@@ -10,6 +10,8 @@ using LigaVolley.Application.CompetitionFormats;
 using LigaVolley.Domain.CompetitionFormats;
 using LigaVolley.Domain.Divisions;
 using LigaVolley.Domain.Seasons;
+using LigaVolley.Application.Competitions;
+using LigaVolley.Domain.Competitions;
 using LigaVolley.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -30,6 +32,37 @@ public sealed class AdminCatalogEndpointsTests : IClassFixture<LigaVolleyApiFact
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         options.Converters.Add(new JsonStringEnumConverter());
         return options;
+    }
+
+    [Fact]
+    public async Task CompetitionEndpoints_CreateFromFormatAndFromCompetitionWithIndependentStructures()
+    {
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        var seasonResponse = await factory.Client.PostAsJsonAsync("/api/admin/seasons", new CreateSeasonRequest(2041, $"Season {suffix}", null, null));
+        seasonResponse.EnsureSuccessStatusCode();
+        var season = (await seasonResponse.Content.ReadFromJsonAsync<SeasonDto>(JsonOptions))!;
+        var divisionResponse = await factory.Client.PostAsJsonAsync("/api/admin/divisions", new CreateDivisionRequest($"Competition {suffix}", 41, Gender.Female), JsonOptions);
+        divisionResponse.EnsureSuccessStatusCode();
+        var division = (await divisionResponse.Content.ReadFromJsonAsync<DivisionDto>(JsonOptions))!;
+        var definition = new CompetitionFormatDefinitionDto([new("REGULAR", "Regular", PhaseType.RoundRobin, PhaseRole.Regular, 1, 2, FixtureMode.MirroredHomeAway, [], [])], [], [], [], []);
+        var formatResponse = await factory.Client.PostAsJsonAsync("/api/admin/competition-formats", new CreateCompetitionFormatRequest($"CF_{suffix}", $"Format {suffix}", null, 4, 8, definition));
+        formatResponse.EnsureSuccessStatusCode();
+        var format = (await formatResponse.Content.ReadFromJsonAsync<CompetitionFormatDto>(JsonOptions))!;
+
+        var fromFormatResponse = await factory.Client.PostAsJsonAsync("/api/admin/competitions", new CreateCompetitionRequest($"Opening {suffix}", season.SeasonId, division.DivisionId, CompetitionPeriodType.Opening, null, null, new(CompetitionStructureSourceType.Format, format.CompetitionFormatId, null)), JsonOptions);
+        Assert.Equal(HttpStatusCode.Created, fromFormatResponse.StatusCode);
+        var fromFormat = (await fromFormatResponse.Content.ReadFromJsonAsync<CompetitionDto>(JsonOptions))!;
+        var firstStructure = (await factory.Client.GetFromJsonAsync<CompetitionStructureDto>($"/api/admin/competitions/{fromFormat.CompetitionId}/structure", JsonOptions))!;
+
+        var fromCompetitionResponse = await factory.Client.PostAsJsonAsync("/api/admin/competitions", new CreateCompetitionRequest($"Closing {suffix}", season.SeasonId, division.DivisionId, CompetitionPeriodType.Closing, null, null, new(CompetitionStructureSourceType.Competition, null, fromFormat.CompetitionId)), JsonOptions);
+        Assert.Equal(HttpStatusCode.Created, fromCompetitionResponse.StatusCode);
+        var fromCompetition = (await fromCompetitionResponse.Content.ReadFromJsonAsync<CompetitionDto>(JsonOptions))!;
+        var secondStructure = (await factory.Client.GetFromJsonAsync<CompetitionStructureDto>($"/api/admin/competitions/{fromCompetition.CompetitionId}/structure", JsonOptions))!;
+
+        Assert.Equal(format.CompetitionFormatId, fromFormat.Format.CompetitionFormatId);
+        Assert.Equal(fromFormat.Format.CompetitionFormatId, fromCompetition.Format.CompetitionFormatId);
+        Assert.Single(firstStructure.Phases); Assert.Single(secondStructure.Phases);
+        Assert.NotEqual(firstStructure.Phases[0].PhaseId, secondStructure.Phases[0].PhaseId);
     }
 
     [Fact]

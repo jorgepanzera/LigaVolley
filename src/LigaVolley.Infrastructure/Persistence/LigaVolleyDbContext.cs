@@ -3,6 +3,7 @@ using LigaVolley.Application.Common;
 using LigaVolley.Domain.Divisions;
 using LigaVolley.Domain.Seasons;
 using LigaVolley.Domain.CompetitionFormats;
+using LigaVolley.Domain.Competitions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,7 @@ public sealed class LigaVolleyDbContext(DbContextOptions<LigaVolleyDbContext> op
     public DbSet<Season> Seasons => Set<Season>();
     public DbSet<Division> Divisions => Set<Division>();
     public DbSet<CompetitionFormat> CompetitionFormats => Set<CompetitionFormat>();
+    public DbSet<Competition> Competitions => Set<Competition>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         => modelBuilder.ApplyConfigurationsFromAssembly(typeof(LigaVolleyDbContext).Assembly);

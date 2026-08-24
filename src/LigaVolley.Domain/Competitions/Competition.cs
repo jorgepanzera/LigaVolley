@@ -1,0 +1,146 @@
+using LigaVolley.Domain.Common;
+using LigaVolley.Domain.CompetitionFormats;
+using LigaVolley.Domain.Divisions;
+using LigaVolley.Domain.Seasons;
+
+namespace LigaVolley.Domain.Competitions;
+
+public enum CompetitionPeriodType { Annual, Opening, Closing, Other }
+public enum CompetitionStatus { Draft, Scheduled, InProgress, Finished, Cancelled }
+public enum CompetitionPhaseStatus { Pending, InProgress, Finished, Cancelled }
+public enum PlayoffSeriesStatus { Pending, Ready, InProgress, Finished, Cancelled }
+
+public sealed class Competition
+{
+    private Competition() { }
+
+    public Competition(string name, Season season, Division division, CompetitionFormat format,
+        CompetitionPeriodType periodType, DateOnly? startDate, DateOnly? endDate)
+    {
+        Season = season ?? throw new DomainValidationException("Season is required.");
+        Division = division ?? throw new DomainValidationException("Division is required.");
+        CompetitionFormat = format ?? throw new DomainValidationException("CompetitionFormat is required.");
+        Update(name, periodType, startDate, endDate);
+        Status = CompetitionStatus.Draft;
+        InstantiateStructure(format);
+    }
+
+    public int CompetitionId { get; private set; }
+    public string Name { get; private set; } = string.Empty;
+    public int SeasonId { get; private set; }
+    public Season Season { get; private set; } = null!;
+    public int DivisionId { get; private set; }
+    public Division Division { get; private set; } = null!;
+    public int CompetitionFormatId { get; private set; }
+    public CompetitionFormat CompetitionFormat { get; private set; } = null!;
+    public CompetitionPeriodType PeriodType { get; private set; }
+    public DateOnly? StartDate { get; private set; }
+    public DateOnly? EndDate { get; private set; }
+    public CompetitionStatus Status { get; private set; }
+    public List<CompetitionPhase> Phases { get; private set; } = [];
+
+    public void Update(string name, CompetitionPeriodType periodType, DateOnly? startDate, DateOnly? endDate)
+    {
+        if (Status != CompetitionStatus.Draft)
+            throw new DomainValidationException("Competition metadata can only be changed while it is in Draft status.");
+        var normalized = name?.Trim() ?? string.Empty;
+        if (normalized.Length == 0) throw new DomainValidationException("Name is required.");
+        if (normalized.Length > 150) throw new DomainValidationException("Name cannot exceed 150 characters.");
+        if (!Enum.IsDefined(periodType)) throw new DomainValidationException("PeriodType is invalid.");
+        if (startDate.HasValue && endDate.HasValue && endDate < startDate)
+            throw new DomainValidationException("EndDate cannot be earlier than StartDate.");
+        Name = normalized; PeriodType = periodType; StartDate = startDate; EndDate = endDate;
+    }
+
+    public void ChangeStatus(CompetitionStatus target)
+    {
+        if (target == Status) return;
+        if (target == CompetitionStatus.Cancelled && Status is CompetitionStatus.Draft or CompetitionStatus.Scheduled)
+        { Status = target; return; }
+        throw new DomainValidationException($"Transition from {Status} to {target} is not available without the fixture/progression use cases.");
+    }
+
+    private void InstantiateStructure(CompetitionFormat format)
+    {
+        var phaseMap = format.Phases.ToDictionary(x => x, x => new CompetitionPhase(x));
+        Phases.AddRange(format.Phases.OrderBy(x => x.Sequence).Select(x => phaseMap[x]));
+        var seriesMap = new Dictionary<FormatPlayoffSeries, CompetitionPlayoffSeries>();
+        foreach (var formatPhase in format.Phases)
+        {
+            var phase = phaseMap[formatPhase];
+            phase.Groups.AddRange(formatPhase.Groups.OrderBy(x => x.Sequence).Select(x => new CompetitionPhaseGroup(x)));
+            foreach (var source in formatPhase.Series.OrderBy(x => x.Sequence))
+            { var series = new CompetitionPlayoffSeries(source); phase.Series.Add(series); seriesMap[source] = series; }
+        }
+        foreach (var formatSeries in seriesMap.Keys)
+            foreach (var source in formatSeries.ParticipantSources)
+                seriesMap[formatSeries].ParticipantSources.Add(new CompetitionSeriesParticipantSource(source.TargetSide, source.SourceType, seriesMap[source.SourceSeries]));
+    }
+}
+
+public sealed class CompetitionPhase
+{
+    private CompetitionPhase() { }
+    internal CompetitionPhase(FormatPhase source) { FormatPhase = source; Code = source.Code; Name = source.Name; PhaseType = source.PhaseType; PhaseRole = source.PhaseRole; Sequence = source.Sequence; Rounds = source.Rounds; FixtureMode = source.FixtureMode; }
+    public int CompetitionPhaseId { get; private set; }
+    public int CompetitionId { get; private set; }
+    public int FormatPhaseId { get; private set; }
+    public FormatPhase FormatPhase { get; private set; } = null!;
+    public string Code { get; private set; } = string.Empty;
+    public string Name { get; private set; } = string.Empty;
+    public PhaseType PhaseType { get; private set; }
+    public PhaseRole PhaseRole { get; private set; }
+    public short Sequence { get; private set; }
+    public short? Rounds { get; private set; }
+    public FixtureMode? FixtureMode { get; private set; }
+    public CompetitionPhaseStatus Status { get; private set; } = CompetitionPhaseStatus.Pending;
+    public List<CompetitionPhaseGroup> Groups { get; private set; } = [];
+    public List<CompetitionPlayoffSeries> Series { get; private set; } = [];
+}
+
+public sealed class CompetitionPhaseGroup
+{
+    private CompetitionPhaseGroup() { }
+    internal CompetitionPhaseGroup(FormatGroup source) { FormatGroup = source; Code = source.Code; Name = source.Name; GroupRole = source.GroupRole; Sequence = source.Sequence; Rounds = source.Rounds; FixtureMode = source.FixtureMode; CarryOverMode = source.CarryOverMode; }
+    public int PhaseGroupId { get; private set; }
+    public int CompetitionPhaseId { get; private set; }
+    public int FormatGroupId { get; private set; }
+    public FormatGroup FormatGroup { get; private set; } = null!;
+    public string Code { get; private set; } = string.Empty;
+    public string Name { get; private set; } = string.Empty;
+    public GroupRole GroupRole { get; private set; }
+    public short Sequence { get; private set; }
+    public short Rounds { get; private set; }
+    public FixtureMode FixtureMode { get; private set; }
+    public CarryOverMode CarryOverMode { get; private set; }
+}
+
+public sealed class CompetitionPlayoffSeries
+{
+    private CompetitionPlayoffSeries() { }
+    internal CompetitionPlayoffSeries(FormatPlayoffSeries source) { FormatSeries = source; Code = source.Code; Name = source.Name; Sequence = source.Sequence; WinsRequired = source.WinsRequired; Team1InitialWins = source.Team1InitialWins; Team2InitialWins = source.Team2InitialWins; }
+    public int PlayoffSeriesId { get; private set; }
+    public int CompetitionPhaseId { get; private set; }
+    public int FormatSeriesId { get; private set; }
+    public FormatPlayoffSeries FormatSeries { get; private set; } = null!;
+    public string Code { get; private set; } = string.Empty;
+    public string Name { get; private set; } = string.Empty;
+    public short Sequence { get; private set; }
+    public short WinsRequired { get; private set; }
+    public short Team1InitialWins { get; private set; }
+    public short Team2InitialWins { get; private set; }
+    public PlayoffSeriesStatus Status { get; private set; } = PlayoffSeriesStatus.Pending;
+    public List<CompetitionSeriesParticipantSource> ParticipantSources { get; private set; } = [];
+}
+
+public sealed class CompetitionSeriesParticipantSource
+{
+    private CompetitionSeriesParticipantSource() { }
+    internal CompetitionSeriesParticipantSource(byte side, SeriesParticipantSourceType type, CompetitionPlayoffSeries source) { TargetSide = side; SourceType = type; SourceSeries = source; }
+    public int SeriesParticipantSourceId { get; private set; }
+    public int TargetPlayoffSeriesId { get; private set; }
+    public byte TargetSide { get; private set; }
+    public SeriesParticipantSourceType SourceType { get; private set; }
+    public int SourcePlayoffSeriesId { get; private set; }
+    public CompetitionPlayoffSeries SourceSeries { get; private set; } = null!;
+}

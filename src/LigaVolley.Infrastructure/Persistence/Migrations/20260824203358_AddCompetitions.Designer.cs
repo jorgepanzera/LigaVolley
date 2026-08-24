@@ -4,6 +4,7 @@ using LigaVolley.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LigaVolley.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(LigaVolleyDbContext))]
-    partial class LigaVolleyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260824203358_AddCompetitions")]
+    partial class AddCompetitions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -621,7 +624,9 @@ namespace LigaVolley.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("DivisionId");
 
-                    b.HasIndex("SeasonId");
+                    b.HasIndex("SeasonId", "DivisionId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_COMPETITION_season_division_name");
 
                     b.ToTable("COMPETITION", "dbo", t =>
                         {

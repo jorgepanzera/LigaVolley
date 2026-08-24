@@ -4,6 +4,7 @@ using LigaVolley.Api.ErrorHandling;
 using LigaVolley.Application.Divisions;
 using LigaVolley.Application.Seasons;
 using LigaVolley.Application.CompetitionFormats;
+using LigaVolley.Application.Competitions;
 using LigaVolley.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,7 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddScoped<SeasonService>();
 builder.Services.AddScoped<DivisionService>();
 builder.Services.AddScoped<CompetitionFormatService>();
+builder.Services.AddScoped<CompetitionService>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -23,6 +25,7 @@ app.UseExceptionHandler();
 app.MapSeasonEndpoints();
 app.MapDivisionEndpoints();
 app.MapCompetitionFormatEndpoints();
+app.MapCompetitionEndpoints();
 
 app.Run();
 

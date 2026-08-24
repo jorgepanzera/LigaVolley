@@ -2,6 +2,7 @@ using LigaVolley.Application.Abstractions.Persistence;
 using LigaVolley.Domain.Divisions;
 using LigaVolley.Domain.Seasons;
 using LigaVolley.Domain.CompetitionFormats;
+using LigaVolley.Domain.Competitions;
 
 namespace LigaVolley.Application.Tests;
 
@@ -43,6 +44,17 @@ internal sealed class FakeDivisionRepository : IDivisionRepository
         => Task.FromResult(divisions.Any(x => x.Key != excludingId && x.Value.Name == name && x.Value.Gender == gender));
     public Task<bool> LevelExistsAsync(short levelOrder, Gender gender, int? excludingId, CancellationToken cancellationToken)
         => Task.FromResult(divisions.Any(x => x.Key != excludingId && x.Value.LevelOrder == levelOrder && x.Value.Gender == gender));
+}
+
+internal sealed class FakeCompetitionRepository : ICompetitionRepository
+{
+    private readonly Dictionary<int, Competition> competitions = [];
+    public Competition? Added { get; private set; }
+    public void Seed(int id, Competition competition) => competitions[id] = competition;
+    public void Add(Competition competition) => Added = competition;
+    public Task<Competition?> GetAsync(int id, bool tracking, CancellationToken ct) => Task.FromResult(competitions.GetValueOrDefault(id));
+    public Task<IReadOnlyList<Competition>> ListAsync(int? seasonId, int? divisionId, CompetitionStatus? status, CancellationToken ct)
+        => Task.FromResult<IReadOnlyList<Competition>>(competitions.Values.Where(x => (!seasonId.HasValue || x.SeasonId == seasonId) && (!divisionId.HasValue || x.DivisionId == divisionId) && (!status.HasValue || x.Status == status)).ToArray());
 }
 
 internal sealed class FakeCompetitionFormatRepository : ICompetitionFormatRepository
