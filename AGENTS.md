@@ -52,22 +52,28 @@ No reutilizar automáticamente el mismo DTO para Admin, Scorer y Public. Cada su
 
 ## Reglas clave de competición
 
-Una competición puede crearse:
+Toda `Competition` debe estar asociada obligatoriamente a:
 
-- desde cero;
-- basada en otra competición existente.
+- una `Season`;
+- una `Divisional`;
+- un `CompetitionFormat`.
 
-Al clonar una competición se copia únicamente su **estructura de competencia/formato**, incluyendo lo que corresponda a:
+Una competición puede crearse de dos formas técnicas:
 
-- fases;
-- orden/secuencia de fases;
-- grupos;
-- reglas de clasificación;
-- series de playoff;
-- fuentes/orígenes de participantes de cada serie;
-- ventajas deportivas o reglas estructurales parametrizadas.
+- `FROM_FORMAT`: seleccionando un `CompetitionFormat` existente;
+- `FROM_COMPETITION`: tomando otra competición como referencia de estructura.
 
-No se deben copiar:
+La opción funcional "desde cero" significa crear o seleccionar previamente un `CompetitionFormat`; no se crea una `Competition` sin formato.
+
+Cuando una competición se crea basada en otra competición:
+
+- se reutiliza el `CompetitionFormat` de la competición modelo;
+- se crean nuevas instancias de fases, grupos y series para la nueva competición;
+- no se duplica físicamente el `CompetitionFormat` como parte de ese caso de uso.
+
+La clonación física de un formato es un caso de uso diferente (`CloneCompetitionFormat`).
+
+Al crear una nueva competición basada en otra no se deben copiar:
 
 - equipos;
 - `TEAM_ENTRY`;
@@ -77,6 +83,8 @@ No se deben copiar:
 - fechas concretas;
 - jugadores;
 - planteles.
+
+Un `CompetitionFormat` que ya haya sido utilizado por una competición operativa no debe modificarse estructuralmente. Para introducir una variante estructural se debe clonar el formato y modificar el clon. Los cambios descriptivos o de activación podrán permitirse según el caso de uso.
 
 ## Modelo de personas y planteles
 
@@ -158,6 +166,8 @@ Las decisiones concretas de tecnología y protocolo de sincronización quedan ab
 - Evitar que controllers/endpoints contengan reglas de negocio.
 - Evitar dependencias de Infrastructure desde Domain/Application.
 - No modificar documentos de arquitectura para justificar una implementación distinta: si hay contradicción, detener el cambio de código y señalarla.
+- No exponer tablas internas de formato como CRUD HTTP por defecto; priorizar casos de uso sobre el agregado `CompetitionFormat`.
+- No permitir que el frontend determine reglas estructurales que ya pertenecen al `CompetitionFormat` al generar fixture.
 
 ## Fuente de verdad
 
@@ -169,7 +179,6 @@ En orden de prioridad:
 4. código y tests existentes.
 
 Si dos documentos contradicen una decisión más reciente, actualizar la documentación antes de continuar implementando.
-
 
 ## Publicación pública
 
