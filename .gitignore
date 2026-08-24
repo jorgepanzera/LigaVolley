@@ -1,6 +1,10 @@
 # .NET
 bin/
 obj/
+.nuget/
+.package-cache/
+.dotnet-home/.dotnet/.workloadAdvertising*
+.dotnet-home/.dotnet/sdk-advertising/
 *.user
 *.suo
 .vs/

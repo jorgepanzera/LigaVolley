@@ -41,6 +41,7 @@ LigaVolley/
 
 ## Estado
 
-Este repositorio contiene inicialmente la estructura y el contexto de arquitectura. La implementación se hará de forma incremental, comenzando por el backend/API.
-
+La implementación backend se realiza incrementalmente por vertical slices. El
+primer slice disponible contiene los catálogos administrativos `Season` y
+`Division`, con persistencia SQL Server administrada mediante EF Core Migrations.
 

@@ -20,6 +20,6 @@ internal sealed class SeasonConfiguration : IEntityTypeConfiguration<Season>
         builder.Property(x => x.StartDate).HasColumnName("start_date").HasColumnType("date");
         builder.Property(x => x.EndDate).HasColumnName("end_date").HasColumnType("date");
         builder.Property(x => x.Active).HasColumnName("active").HasDefaultValue(true).IsRequired();
-        builder.HasIndex(x => x.Year).IsUnique().HasDatabaseName("UQ_SEASON_year");
+        builder.HasAlternateKey(x => x.Year).HasName("UQ_SEASON_year");
     }
 }

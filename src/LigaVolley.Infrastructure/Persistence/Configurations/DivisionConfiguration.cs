@@ -24,7 +24,7 @@ internal sealed class DivisionConfiguration : IEntityTypeConfiguration<Division>
             .HasConversion(value => value == Gender.Male ? "M" : "F", value => value == "M" ? Gender.Male : Gender.Female)
             .IsRequired();
         builder.Property(x => x.Active).HasColumnName("active").HasDefaultValue(true).IsRequired();
-        builder.HasIndex(x => new { x.Name, x.Gender }).IsUnique().HasDatabaseName("UQ_DIVISION_name_gender");
-        builder.HasIndex(x => new { x.LevelOrder, x.Gender }).IsUnique().HasDatabaseName("UQ_DIVISION_level_gender");
+        builder.HasAlternateKey(x => new { x.Name, x.Gender }).HasName("UQ_DIVISION_name_gender");
+        builder.HasAlternateKey(x => new { x.LevelOrder, x.Gender }).HasName("UQ_DIVISION_level_gender");
     }
 }
