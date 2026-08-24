@@ -17,6 +17,8 @@ using LigaVolley.Application.Teams;
 using LigaVolley.Application.Venues;
 using LigaVolley.Application.TeamEntries;
 using LigaVolley.Application.Fixtures;
+using LigaVolley.Application.Matches;
+using LigaVolley.Domain.Fixtures;
 using LigaVolley.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -51,6 +53,11 @@ public sealed class AdminCatalogEndpointsTests : IClassFixture<LigaVolleyApiFact
         for(var i=1;i<=5;i++){var teamResponse=await factory.Client.PostAsJsonAsync("/api/admin/teams",new CreateTeamRequest($"Fixture {suffix} {i}",Gender.Female,null),JsonOptions);teamResponse.EnsureSuccessStatusCode();var team=(await teamResponse.Content.ReadFromJsonAsync<TeamDto>(JsonOptions))!;var entryResponse=await factory.Client.PostAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/entries",new AddTeamEntryRequest(team.TeamId,null));entryResponse.EnsureSuccessStatusCode();}
         var generate=await factory.Client.PostAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/fixture/generate",new GenerateFixtureRequest(12345));Assert.Equal(HttpStatusCode.OK,generate.StatusCode);var response=(await generate.Content.ReadFromJsonAsync<GenerateFixtureResponse>(JsonOptions))!;Assert.Equal(10,response.MatchesCreated);
         var fixture=(await factory.Client.GetFromJsonAsync<CompetitionFixtureDto>($"/api/admin/competitions/{competition.CompetitionId}/fixture",JsonOptions))!;var phase=Assert.Single(fixture.Phases);Assert.True(phase.Generated);Assert.Equal(10,phase.Matches.Count);Assert.All(phase.Matches,x=>{Assert.Null(x.MatchDate);Assert.Null(x.VenueId);});
+        var matchId=phase.Matches[0].MatchId;
+        var match=await factory.Client.GetFromJsonAsync<MatchAdminDto>($"/api/admin/matches/{matchId}",JsonOptions);Assert.NotNull(match);Assert.Equal(matchId,match.MatchId);Assert.Equal(MatchStatus.Pending,match.Status);
+        var venueResponse=await factory.Client.PostAsJsonAsync("/api/admin/venues",new CreateVenueRequest($"Fixture venue {suffix}","Address"));venueResponse.EnsureSuccessStatusCode();var venue=(await venueResponse.Content.ReadFromJsonAsync<VenueDto>(JsonOptions))!;
+        var date=new DateTimeOffset(2043,9,12,19,30,0,TimeSpan.FromHours(-3));var schedule=await factory.Client.PutAsJsonAsync($"/api/admin/matches/{matchId}/schedule",new ScheduleMatchRequest(date,venue.VenueId),JsonOptions);Assert.Equal(HttpStatusCode.OK,schedule.StatusCode);var scheduled=(await schedule.Content.ReadFromJsonAsync<MatchAdminDto>(JsonOptions))!;Assert.Equal(MatchStatus.Scheduled,scheduled.Status);Assert.Equal(date.UtcDateTime,scheduled.MatchDate!.Value.UtcDateTime);Assert.Equal(venue.VenueId,scheduled.Venue!.VenueId);
+        var clear=await factory.Client.PutAsJsonAsync($"/api/admin/matches/{matchId}/schedule",new ScheduleMatchRequest(null,null),JsonOptions);clear.EnsureSuccessStatusCode();var pending=(await clear.Content.ReadFromJsonAsync<MatchAdminDto>(JsonOptions))!;Assert.Equal(MatchStatus.Pending,pending.Status);Assert.Null(pending.MatchDate);Assert.Null(pending.Venue);
         var duplicate=await factory.Client.PostAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/fixture/generate",new GenerateFixtureRequest(12345));Assert.Equal(HttpStatusCode.Conflict,duplicate.StatusCode);
     }
 

@@ -54,6 +54,7 @@ internal sealed class FakeDivisionRepository : IDivisionRepository
 internal sealed class FakeFixtureRepository : IFixtureRepository
 {
     public bool GenerationExists {get;set;} public List<FixtureGeneration> Generations {get;}=[]; public List<Match> Matches {get;}=[];
+    public Task<Match?> GetMatchAsync(int matchId,bool tracking,CancellationToken ct)=>Task.FromResult(Matches.SingleOrDefault(x=>x.MatchId==matchId));
     public Task<bool> GenerationExistsAsync(int competitionId,int phaseId,int? phaseGroupId,CancellationToken ct)=>Task.FromResult(GenerationExists);
     public Task<IReadOnlyList<FixtureGeneration>> ListGenerationsAsync(int competitionId,CancellationToken ct)=>Task.FromResult<IReadOnlyList<FixtureGeneration>>(Generations);
     public Task<IReadOnlyList<Match>> ListMatchesAsync(int competitionId,CancellationToken ct)=>Task.FromResult<IReadOnlyList<Match>>(Matches);

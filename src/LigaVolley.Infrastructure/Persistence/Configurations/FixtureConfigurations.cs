@@ -35,7 +35,7 @@ internal sealed class MatchConfiguration : IEntityTypeConfiguration<Match>
         b.HasOne(x=>x.HomeTeamEntry).WithMany().HasForeignKey(x=>new{x.HomeTeamEntryId,x.CompetitionId}).HasPrincipalKey(x=>new{x.TeamEntryId,x.CompetitionId}).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_MATCH_HOME_TEAM");
         b.HasOne(x=>x.AwayTeamEntry).WithMany().HasForeignKey(x=>new{x.AwayTeamEntryId,x.CompetitionId}).HasPrincipalKey(x=>new{x.TeamEntryId,x.CompetitionId}).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_MATCH_AWAY_TEAM");
         b.HasOne<TeamEntry>().WithMany().HasForeignKey(x=>new{x.WinnerTeamEntryId,x.CompetitionId}).HasPrincipalKey(x=>new{x.TeamEntryId,x.CompetitionId}).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_MATCH_WINNER");
-        b.HasOne<Venue>().WithMany().HasForeignKey(x=>x.VenueId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_MATCH_VENUE");
+        b.HasOne(x=>x.Venue).WithMany().HasForeignKey(x=>x.VenueId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_MATCH_VENUE");
         b.HasIndex(x=>new{x.CompetitionId,x.PhaseId,x.MatchNumber}).IsUnique().HasFilter("[phase_group_id] IS NULL AND [series_id] IS NULL").HasDatabaseName("UQ_MATCH_phase_scope_number");
         b.HasIndex(x=>new{x.CompetitionId,x.PhaseId,x.PhaseGroupId,x.MatchNumber}).IsUnique().HasFilter("[phase_group_id] IS NOT NULL").HasDatabaseName("UQ_MATCH_group_scope_number");
         b.HasIndex(x=>new{x.CompetitionId,x.MatchDate}).HasDatabaseName("IX_MATCH_competition_date"); b.HasIndex(x=>new{x.PhaseId,x.RoundNumber}).HasDatabaseName("IX_MATCH_phase_round");

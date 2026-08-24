@@ -1,6 +1,7 @@
 using LigaVolley.Domain.Common;
 using LigaVolley.Domain.Competitions;
 using LigaVolley.Domain.TeamEntries;
+using LigaVolley.Domain.Venues;
 
 namespace LigaVolley.Domain.Fixtures;
 
@@ -48,10 +49,21 @@ public sealed class Match
     public TeamEntry? AwayTeamEntry { get; private set; }
     public DateTime? MatchDate { get; private set; }
     public int? VenueId { get; private set; }
+    public Venue? Venue { get; private set; }
     public short RoundNumber { get; private set; }
     public short MatchNumber { get; private set; }
     public MatchStatus Status { get; private set; }
     public byte? HomeSets { get; private set; }
     public byte? AwaySets { get; private set; }
     public int? WinnerTeamEntryId { get; private set; }
+
+    public void Schedule(DateTime? matchDate, int? venueId)
+    {
+        if (Status is not MatchStatus.Pending and not MatchStatus.Scheduled)
+            throw new DomainValidationException("Only a pending or scheduled match can have its scheduling modified.");
+
+        MatchDate = matchDate;
+        VenueId = venueId;
+        Status = matchDate.HasValue || venueId.HasValue ? MatchStatus.Scheduled : MatchStatus.Pending;
+    }
 }
