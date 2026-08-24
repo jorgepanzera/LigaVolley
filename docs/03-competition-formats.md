@@ -403,7 +403,7 @@ Semántica v1:
 
 ## Resolución de series posteriores
 
-`PLAYOFF_SERIES_PARTICIPANT_SOURCE` resuelve automáticamente participantes dependientes de una serie previa.
+En la definición del agregado, `FORMAT_SERIES_PARTICIPANT_SOURCE` describe los participantes dependientes de una serie previa. Su futura instancia operativa se resolverá al crear y progresar una `Competition`.
 
 Ejemplo:
 

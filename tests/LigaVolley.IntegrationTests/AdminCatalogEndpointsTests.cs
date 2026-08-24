@@ -6,6 +6,8 @@ using LigaVolley.Application.Abstractions.Persistence;
 using LigaVolley.Application.Common;
 using LigaVolley.Application.Divisions;
 using LigaVolley.Application.Seasons;
+using LigaVolley.Application.CompetitionFormats;
+using LigaVolley.Domain.CompetitionFormats;
 using LigaVolley.Domain.Divisions;
 using LigaVolley.Domain.Seasons;
 using LigaVolley.Infrastructure.Persistence;
@@ -28,6 +30,35 @@ public sealed class AdminCatalogEndpointsTests : IClassFixture<LigaVolleyApiFact
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         options.Converters.Add(new JsonStringEnumConverter());
         return options;
+    }
+
+    [Fact]
+    public async Task CompetitionFormatEndpoints_ProvideAggregateLifecycle()
+    {
+        var definition = new CompetitionFormatDefinitionDto(
+            [new("REGULAR", "Regular", PhaseType.RoundRobin, PhaseRole.Regular, 1, 2, FixtureMode.MirroredHomeAway, [], [])], [], [], [], []);
+        var validation = await factory.Client.PostAsJsonAsync("/api/admin/competition-formats/validate", new ValidateCompetitionFormatRequest(8, 8, definition));
+        validation.EnsureSuccessStatusCode();
+        Assert.True((await validation.Content.ReadFromJsonAsync<CompetitionFormatValidationDto>(JsonOptions))!.IsValid);
+
+        var create = await factory.Client.PostAsJsonAsync("/api/admin/competition-formats", new CreateCompetitionFormatRequest("INT_RR8", "Integration RR8", null, 8, 8, definition));
+        Assert.Equal(HttpStatusCode.Created, create.StatusCode);
+        var created = (await create.Content.ReadFromJsonAsync<CompetitionFormatDto>(JsonOptions))!;
+        Assert.Single(created.Definition.Phases);
+        Assert.Equal("INT_RR8", (await factory.Client.GetFromJsonAsync<CompetitionFormatDto>($"/api/admin/competition-formats/{created.CompetitionFormatId}", JsonOptions))!.Code);
+        var list = await factory.Client.GetFromJsonAsync<CompetitionFormatSummaryDto[]>("/api/admin/competition-formats?active=true&teamCount=8", JsonOptions);
+        Assert.Contains(list!, x => x.CompetitionFormatId == created.CompetitionFormatId);
+
+        var update = await factory.Client.PutAsJsonAsync($"/api/admin/competition-formats/{created.CompetitionFormatId}", new UpdateCompetitionFormatRequest("INT_RR8", "Updated RR8", "updated", 8, 10, definition));
+        update.EnsureSuccessStatusCode();
+        var cloneResponse = await factory.Client.PostAsJsonAsync($"/api/admin/competition-formats/{created.CompetitionFormatId}/clone", new CloneCompetitionFormatRequest("INT_RR8_CLONE", "Clone", null));
+        Assert.Equal(HttpStatusCode.Created, cloneResponse.StatusCode);
+        var clone = (await cloneResponse.Content.ReadFromJsonAsync<CompetitionFormatDto>(JsonOptions))!;
+        Assert.NotEqual(created.CompetitionFormatId, clone.CompetitionFormatId);
+
+        var deactivate = await factory.Client.PatchAsJsonAsync($"/api/admin/competition-formats/{created.CompetitionFormatId}/active", new SetActiveRequest(false));
+        deactivate.EnsureSuccessStatusCode();
+        Assert.False((await deactivate.Content.ReadFromJsonAsync<CompetitionFormatDto>(JsonOptions))!.Active);
     }
 
     [Fact]
