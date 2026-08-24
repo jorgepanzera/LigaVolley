@@ -180,6 +180,7 @@ Las decisiones concretas de tecnología y protocolo de sincronización quedan ab
 - Las migraciones/esquemas SQL deben respetar las PK, FK y restricciones del modelo aprobado.
 - Mantener nombres del dominio en inglés en código y base de datos, salvo que se acuerde lo contrario.
 - Evitar que controllers/endpoints contengan reglas de negocio.
+- En cada clase de endpoints implementada con Minimal API, agregar inmediatamente antes de cada `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete` un comentario con un ejemplo completo de método y URL; cuando el endpoint reciba body, agregar también un ejemplo JSON del body.
 - Evitar dependencias de Infrastructure desde Domain/Application.
 - No modificar documentos de arquitectura para justificar una implementación distinta: si hay contradicción, detener el cambio de código y señalarla.
 - No exponer tablas internas de formato como CRUD HTTP por defecto; priorizar casos de uso sobre el agregado `CompetitionFormat`.
