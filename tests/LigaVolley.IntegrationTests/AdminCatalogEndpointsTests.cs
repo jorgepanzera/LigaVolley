@@ -12,6 +12,9 @@ using LigaVolley.Domain.Divisions;
 using LigaVolley.Domain.Seasons;
 using LigaVolley.Application.Competitions;
 using LigaVolley.Domain.Competitions;
+using LigaVolley.Application.Clubs;
+using LigaVolley.Application.Teams;
+using LigaVolley.Application.Venues;
 using LigaVolley.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,6 +35,20 @@ public sealed class AdminCatalogEndpointsTests : IClassFixture<LigaVolleyApiFact
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         options.Converters.Add(new JsonStringEnumConverter());
         return options;
+    }
+
+    [Fact]
+    public async Task ClubTeamVenueEndpoints_ProvideCatalogLifecyclesAndRelations()
+    {
+        var suffix=Guid.NewGuid().ToString("N")[..8];
+        var clubResponse=await factory.Client.PostAsJsonAsync("/api/admin/clubs",new CreateClubRequest($"Club {suffix}",suffix));
+        Assert.Equal(HttpStatusCode.Created,clubResponse.StatusCode); var club=(await clubResponse.Content.ReadFromJsonAsync<ClubDto>(JsonOptions))!;
+        var teamResponse=await factory.Client.PostAsJsonAsync("/api/admin/teams",new CreateTeamRequest($"Team {suffix}",Gender.Female,club.ClubId),JsonOptions);
+        Assert.Equal(HttpStatusCode.Created,teamResponse.StatusCode); var team=(await teamResponse.Content.ReadFromJsonAsync<TeamDto>(JsonOptions))!; Assert.Equal(club.ClubId,team.Club!.ClubId);
+        var teams=await factory.Client.GetFromJsonAsync<TeamSummaryDto[]>($"/api/admin/teams?clubId={club.ClubId}&gender=Female&active=true",JsonOptions); Assert.Contains(teams!,x=>x.TeamId==team.TeamId);
+        var venueResponse=await factory.Client.PostAsJsonAsync("/api/admin/venues",new CreateVenueRequest($"Venue {suffix}","Address"));
+        Assert.Equal(HttpStatusCode.Created,venueResponse.StatusCode); var venue=(await venueResponse.Content.ReadFromJsonAsync<VenueDto>(JsonOptions))!;
+        var deactivate=await factory.Client.PatchAsJsonAsync($"/api/admin/venues/{venue.VenueId}/active",new SetActiveRequest(false)); deactivate.EnsureSuccessStatusCode(); Assert.False((await deactivate.Content.ReadFromJsonAsync<VenueDto>(JsonOptions))!.Active);
     }
 
     [Fact]

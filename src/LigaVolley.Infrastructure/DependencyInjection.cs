@@ -19,6 +19,9 @@ public static class DependencyInjection
         services.AddScoped<IDivisionRepository, DivisionRepository>();
         services.AddScoped<ICompetitionFormatRepository, CompetitionFormatRepository>();
         services.AddScoped<ICompetitionRepository, CompetitionRepository>();
+        services.AddScoped<IClubRepository, ClubRepository>();
+        services.AddScoped<ITeamRepository, TeamRepository>();
+        services.AddScoped<IVenueRepository, VenueRepository>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<LigaVolleyDbContext>());
         return services;
     }

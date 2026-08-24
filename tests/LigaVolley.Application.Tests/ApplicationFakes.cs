@@ -3,6 +3,9 @@ using LigaVolley.Domain.Divisions;
 using LigaVolley.Domain.Seasons;
 using LigaVolley.Domain.CompetitionFormats;
 using LigaVolley.Domain.Competitions;
+using LigaVolley.Domain.Clubs;
+using LigaVolley.Domain.Teams;
+using LigaVolley.Domain.Venues;
 
 namespace LigaVolley.Application.Tests;
 
@@ -44,6 +47,28 @@ internal sealed class FakeDivisionRepository : IDivisionRepository
         => Task.FromResult(divisions.Any(x => x.Key != excludingId && x.Value.Name == name && x.Value.Gender == gender));
     public Task<bool> LevelExistsAsync(short levelOrder, Gender gender, int? excludingId, CancellationToken cancellationToken)
         => Task.FromResult(divisions.Any(x => x.Key != excludingId && x.Value.LevelOrder == levelOrder && x.Value.Gender == gender));
+}
+
+internal sealed class FakeClubRepository : IClubRepository
+{
+    private readonly Dictionary<int, Club> values=[]; public Club? Added {get;private set;} public void Seed(int id,Club value)=>values[id]=value; public void Add(Club value)=>Added=value;
+    public Task<Club?> GetAsync(int id,bool tracking,CancellationToken ct)=>Task.FromResult(values.GetValueOrDefault(id));
+    public Task<IReadOnlyList<Club>> ListAsync(bool? active,CancellationToken ct)=>Task.FromResult<IReadOnlyList<Club>>(values.Values.Where(x=>!active.HasValue||x.Active==active).ToArray());
+    public Task<bool> NameExistsAsync(string name,int? excludingId,CancellationToken ct)=>Task.FromResult(values.Any(x=>x.Key!=excludingId&&x.Value.Name==name));
+}
+internal sealed class FakeTeamRepository : ITeamRepository
+{
+    private readonly Dictionary<int, Team> values=[]; public Team? Added {get;private set;} public void Seed(int id,Team value)=>values[id]=value; public void Add(Team value)=>Added=value;
+    public Task<Team?> GetAsync(int id,bool tracking,CancellationToken ct)=>Task.FromResult(values.GetValueOrDefault(id));
+    public Task<IReadOnlyList<Team>> ListAsync(int? clubId,Gender? gender,bool? active,CancellationToken ct)=>Task.FromResult<IReadOnlyList<Team>>(values.Values.Where(x=>(!clubId.HasValue||x.ClubId==clubId)&&(!gender.HasValue||x.Gender==gender)&&(!active.HasValue||x.Active==active)).ToArray());
+    public Task<bool> NameGenderExistsAsync(string name,Gender gender,int? excludingId,CancellationToken ct)=>Task.FromResult(values.Any(x=>x.Key!=excludingId&&x.Value.Name==name&&x.Value.Gender==gender));
+}
+internal sealed class FakeVenueRepository : IVenueRepository
+{
+    private readonly Dictionary<int, Venue> values=[]; public Venue? Added {get;private set;} public void Seed(int id,Venue value)=>values[id]=value; public void Add(Venue value)=>Added=value;
+    public Task<Venue?> GetAsync(int id,bool tracking,CancellationToken ct)=>Task.FromResult(values.GetValueOrDefault(id));
+    public Task<IReadOnlyList<Venue>> ListAsync(bool? active,CancellationToken ct)=>Task.FromResult<IReadOnlyList<Venue>>(values.Values.Where(x=>!active.HasValue||x.Active==active).ToArray());
+    public Task<bool> NameExistsAsync(string name,int? excludingId,CancellationToken ct)=>Task.FromResult(values.Any(x=>x.Key!=excludingId&&x.Value.Name==name));
 }
 
 internal sealed class FakeCompetitionRepository : ICompetitionRepository
