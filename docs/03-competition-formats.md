@@ -239,3 +239,205 @@ El generador debe leer de la estructura instanciada, entre otros:
 Para modos aleatorios/balanceados puede aceptarse un `randomSeed` opcional para reproducibilidad y pruebas.
 
 No es necesario crear partidos de playoff con participantes nulos desde el comienzo. La estrategia inicial será crear partidos de fases posteriores cuando sus participantes estén resueltos y puedan programarse.
+
+## Progresión de fases y clasificación
+
+La progresión deportiva se separa conceptualmente en tres responsabilidades:
+
+`resultado deportivo → progresión → generación incremental de fixture`
+
+Los resultados de `MATCH` alimentan la tabla de posiciones. La clasificación final de una fase se obtiene aplicando las reglas parametrizadas de puntuación y desempate. Luego `FORMAT_QUALIFICATION_RULE` determina qué `TEAM_ENTRY` avanza hacia grupos o series posteriores.
+
+Para fases de liga o grupos (`ROUND_ROBIN` / `GROUP_STAGE`), el cierre es un caso de uso administrativo explícito. No se debe hacer que el último partido finalizado dispare silenciosamente toda la progresión de la competición.
+
+El cierre de una fase debe:
+
+1. validar que todos los partidos requeridos estén resueltos;
+2. obtener la clasificación definitiva;
+3. aplicar las `QualificationRules`;
+4. materializar participantes en `PHASE_GROUP_ENTRY` o lados de `PLAYOFF_SERIES`;
+5. generar incrementalmente los partidos de la etapa siguiente que ya tengan participantes resueltos;
+6. actualizar estados de fase/serie de manera transaccional e idempotente.
+
+Un partido `CANCELLED` no se considera automáticamente resuelto para permitir el cierre de una fase. La consecuencia deportiva de una cancelación requiere una regla explícita posterior.
+
+### Preview antes de completar una fase
+
+Antes del cierre debe poder consultarse una previsualización sin efectos persistentes que muestre:
+
+- si la fase puede cerrarse;
+- bloqueos existentes;
+- tabla final proyectada;
+- clasificados que resultarán de cada regla;
+- grupos/series que quedarán preparados;
+- fixture posterior que podría generarse.
+
+## Semántica de TOP_HALF y BOTTOM_HALF
+
+`TOP_HALF` y `BOTTOM_HALF` deben cubrir conjuntamente a todos los participantes ordenados de la fuente.
+
+Si `N` es par:
+
+- `TOP_HALF = N / 2`;
+- `BOTTOM_HALF = N / 2`.
+
+Si `N` es impar, el participante adicional queda en Championship/mitad superior:
+
+- `TOP_HALF = (N + 1) / 2`;
+- `BOTTOM_HALF = (N - 1) / 2`.
+
+Ejemplos:
+
+| Equipos | TOP_HALF / Championship | BOTTOM_HALF / Relegation |
+|---:|---:|---:|
+| 9 | 5 | 4 |
+| 10 | 5 | 5 |
+| 11 | 6 | 5 |
+| 12 | 6 | 6 |
+
+La selección se aplica sobre el orden definitivo producido por las reglas de puntuación y desempate del formato.
+
+## Semántica de PHASE_GROUP_ENTRY
+
+`PHASE_GROUP_ENTRY.source_position` conserva la posición de clasificación obtenida en la fase/grupo origen.
+
+Ejemplo: un equipo que finaliza 1.º en Regular y clasifica a Championship mantiene `source_position = 1`.
+
+`seed` es un concepto independiente y sólo debe utilizarse cuando una regla o modo de fixture requiera un orden específico dentro del nuevo grupo.
+
+## CarryOverMode soportado en v1
+
+El modelo puede contener los valores:
+
+- `NONE`;
+- `ALL`;
+- `QUALIFIED_ONLY`.
+
+Sin embargo, en v1 el motor de progresión soporta operativamente sólo:
+
+`CarryOverMode.NONE`
+
+`ALL` y `QUALIFIED_ONLY` permanecen modelados pero deben rechazarse para formatos operativos hasta definir explícitamente cómo se trasladan resultados, puntos de tabla, victorias, set ratio, point ratio y demás efectos deportivos.
+
+Codex no debe inferir esa semántica.
+
+## Progresión de fases con grupos
+
+Cuando una fase contiene varios grupos, la unidad de cierre en v1 es la `COMPETITION_PHASE` completa.
+
+Para completar la fase:
+
+- todos los grupos requeridos deben tener sus partidos resueltos;
+- no se habilita en v1 un `CompletePhaseGroup` independiente.
+
+Ejemplo:
+
+`SECOND_STAGE = CHAMPIONSHIP + RELEGATION`
+
+Aunque Championship haya terminado, la fase no se completa hasta que también esté resuelto Relegation. Recién entonces se aplican las reglas que dependan de esa fase.
+
+## Generación incremental del fixture
+
+El fixture se genera conforme se conocen los participantes reales de cada etapa.
+
+Flujo conceptual:
+
+`fixture inicial → fase regular → clasificación → segunda fase → semifinales → final/tercer puesto`
+
+No se deben crear por defecto partidos futuros con participantes nulos.
+
+Para grupos de segunda fase:
+
+1. completar la fase previa;
+2. aplicar QualificationRules;
+3. poblar `PHASE_GROUP_ENTRY`;
+4. generar partidos de cada grupo según `rounds` y `fixture_mode`.
+
+Para playoffs:
+
+1. resolver ambos participantes de la serie;
+2. cambiar la serie a `READY`;
+3. generar únicamente el siguiente partido real requerido.
+
+## Series de playoff
+
+Semifinal, Final y Tercer Puesto se representan siempre mediante `PLAYOFF_SERIES`.
+
+Un partido único se representa con:
+
+- `wins_required = 1`;
+- `team1_initial_wins = 0`;
+- `team2_initial_wins = 0`.
+
+Una serie al mejor de tres se representa normalmente con `wins_required = 2`.
+
+Las semifinales con ventaja deportiva se representan con victorias iniciales, por ejemplo:
+
+- `wins_required = 2`;
+- favorito: `initial_wins = 1`;
+- rival: `initial_wins = 0`.
+
+No se crean partidos ficticios para representar ventajas.
+
+### Generación de partidos dentro de una serie
+
+Después de cada partido real finalizado:
+
+`teamWins = initialWins + partidos reales ganados`
+
+Si un participante alcanza `wins_required`, la serie pasa a `FINISHED` y se determina ganador/perdedor.
+
+Si ninguno alcanzó `wins_required`, se crea el siguiente `MATCH` de la serie.
+
+Por tanto, una semifinal con ventaja 1-0 y `wins_required = 2` puede requerir uno o dos partidos reales; no se crean ambos obligatoriamente desde el comienzo.
+
+## Estados de PLAYOFF_SERIES
+
+Semántica v1:
+
+- `PENDING`: todavía no están resueltos ambos participantes;
+- `READY`: ambos participantes están resueltos y todavía no comenzó un partido real;
+- `IN_PROGRESS`: la serie comenzó y todavía no existe ganador;
+- `FINISHED`: un participante alcanzó `wins_required`;
+- `CANCELLED`: cancelación administrativa; su consecuencia deportiva queda pendiente de reglas específicas.
+
+## Resolución de series posteriores
+
+`PLAYOFF_SERIES_PARTICIPANT_SOURCE` resuelve automáticamente participantes dependientes de una serie previa.
+
+Ejemplo:
+
+- ganador SF1 → Final side 1;
+- ganador SF2 → Final side 2;
+- perdedor SF1 → Third Place side 1;
+- perdedor SF2 → Third Place side 2.
+
+La resolución no depende del orden cronológico de finalización de SF1 y SF2. Una serie destino permanece `PENDING` mientras falte uno de sus participantes y pasa a `READY` cuando ambos estén resueltos.
+
+Esta progresión de playoffs es automática a partir del resultado concluyente de una serie y no requiere un cierre administrativo adicional de cada serie.
+
+## Estados y cierre de Competition
+
+Regla v1:
+
+- `DRAFT → SCHEDULED`: cuando se cumplen las invariantes de preparación y existe fixture inicial válido;
+- `SCHEDULED → IN_PROGRESS`: automáticamente cuando comienza el primer partido oficial;
+- `IN_PROGRESS → FINISHED`: mediante un caso de uso administrativo explícito `CompleteCompetition`;
+- `DRAFT / SCHEDULED → CANCELLED`: cancelación administrativa inicial.
+
+`CompleteCompetition` sólo puede ejecutarse cuando todas las fases obligatorias y series requeridas estén resueltas.
+
+La Competition no se cierra automáticamente al terminar la final porque pueden existir tercer puesto, grupo de descenso, partidos pendientes o validaciones administrativas.
+
+Las reglas de movimiento (`FORMAT_MOVEMENT_RULE`) pueden utilizarse para calcular/promostrar ascensos y descensos resultantes, pero v1 no crea automáticamente inscripciones en una competición futura.
+
+## Regeneración de fixture
+
+Regla conservadora v1:
+
+- puede regenerarse un fixture de un ámbito mientras ningún partido de ese ámbito haya comenzado o finalizado;
+- si existe algún partido `IN_PROGRESS` o `FINISHED`, la regeneración debe rechazarse;
+- regenerar reemplaza los emparejamientos generados y puede invalidar/perder fecha y sede previamente programadas;
+- el frontend debe recibir una advertencia/preview cuando existan programaciones que se perderían.
+
+La programación (`fecha/hora/sede`) permanece conceptualmente separada de la generación de emparejamientos.

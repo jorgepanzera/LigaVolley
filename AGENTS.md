@@ -86,6 +86,22 @@ Al crear una nueva competición basada en otra no se deben copiar:
 
 Un `CompetitionFormat` que ya haya sido utilizado por una competición operativa no debe modificarse estructuralmente. Para introducir una variante estructural se debe clonar el formato y modificar el clon. Los cambios descriptivos o de activación podrán permitirse según el caso de uso.
 
+### Reglas resumidas de progresión y Scheduling
+
+- La progresión de fases de liga/grupos se ejecuta mediante un caso de uso explícito `CompletePhase`; no finalizar fases cambiando libremente un status.
+- Antes de completar una fase debe existir un preview sin persistencia y `CompletePhase` debe ser transaccional e idempotente.
+- `TOP_HALF`/`BOTTOM_HALF`: si `N` es impar, la mitad superior/Championship recibe `(N+1)/2` y Relegation `(N-1)/2`.
+- En v1 sólo se implementa `CarryOverMode.NONE`. No inventar semántica para `ALL` ni `QUALIFIED_ONLY`.
+- `PHASE_GROUP_ENTRY` se materializa a partir de QualificationRules, no mediante CRUD libre.
+- El fixture se genera incrementalmente cuando se conocen los participantes reales; no crear por defecto partidos futuros con participantes nulos.
+- Semifinal, Final y Tercer Puesto son `PLAYOFF_SERIES`. Partido único equivale a `winsRequired = 1`.
+- En playoffs se genera sólo el siguiente partido real necesario; las victorias de serie son `initialWins + realMatchWins`.
+- Final y Tercer Puesto resuelven participantes mediante ganador/perdedor de semifinales.
+- La Competition pasa automáticamente de `SCHEDULED` a `IN_PROGRESS` cuando comienza el primer partido oficial.
+- El paso a `FINISHED` requiere `CompleteCompetition`; no cerrar automáticamente al terminar la Final.
+- La regeneración de fixture debe rechazarse si algún partido del ámbito afectado ya está `IN_PROGRESS` o `FINISHED`.
+
+
 ## Modelo de personas y planteles
 
 Entidades acordadas para este bloque:

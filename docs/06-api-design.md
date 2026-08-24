@@ -12,7 +12,12 @@ Este documento incorpora el contrato inicial detallado para:
 - `Competition`;
 - `TeamEntry`;
 - generación y consulta inicial de fixture;
-- programación administrativa de partidos.
+- programación administrativa de partidos;
+- progresión de fases y grupos;
+- aplicación de QualificationRules;
+- generación incremental de segunda fase y playoffs;
+- cierre deportivo de fases y Competition;
+- regeneración controlada de fixture.
 
 ## Superficies
 
@@ -718,6 +723,7 @@ TEAM ENTRIES
 
 FIXTURE
 ├─ POST   /competitions/{id}/fixture/generate
+├─ POST   /competitions/{id}/fixture/regenerate
 ├─ GET    /competitions/{id}/fixture
 ├─ GET    /matches/{matchId}
 └─ PUT    /matches/{matchId}/schedule
@@ -745,4 +751,333 @@ programar fechas/sedes
 Competition → SCHEDULED
 ```
 
-La progresión entre fases, clasificación automática, generación de segunda fase/playoffs y cierre deportivo completo se detallará como siguiente bloque de Scheduling antes de implementarlo.
+La progresión entre fases, clasificación automática, generación incremental de segunda fase/playoffs y cierre deportivo de Competition queda definida en las secciones siguientes.
+
+# 11. Progresión de fases
+
+## Principio
+
+La progresión se modela como caso de uso de Application y no como CRUD de estados ni como cascada implícita al cerrar el último partido.
+
+Para fases de liga/grupos:
+
+`resultados → standings → CompletePhase → QualificationRules → participantes posteriores → fixture incremental`
+
+No se exponen endpoints técnicos independientes para `ApplyQualificationRules`, `PopulatePhaseGroupEntries`, `ResolveSeriesParticipants` o `GenerateNextSeriesMatch`. Son responsabilidades internas de los casos de uso de progresión.
+
+## Endpoints
+
+| Caso de uso | Método + endpoint | Request | Response | Entidades afectadas | Reglas principales |
+|---|---|---|---|---|---|
+| Previsualizar cierre de fase | `GET /api/admin/competitions/{competitionId}/phases/{phaseId}/completion-preview` | — | `PhaseCompletionPreviewDto` | ninguna | sin persistencia; devuelve blockers, standings y clasificados |
+| Completar fase | `POST /api/admin/competitions/{competitionId}/phases/{phaseId}/complete` | sin body | `PhaseCompletionResultDto` | `COMPETITION_PHASE`, `PHASE_GROUP_ENTRY`, `PLAYOFF_SERIES`, `MATCH` | transaccional e idempotente |
+| Consultar progresión | `GET /api/admin/competitions/{competitionId}/progression` | — | `CompetitionProgressionDto` | consulta | muestra avance de fases/partidos/series |
+
+No se incorpora `PATCH /phases/{id}/status` para finalizar fases. Finalizar una fase tiene consecuencias de dominio y debe pasar por `CompletePhase`.
+
+## Condiciones para completar una fase de liga/grupos
+
+Una fase sólo puede completarse cuando todos sus partidos requeridos están resueltos.
+
+Un `MATCH` `CANCELLED` no cuenta automáticamente como resuelto para esta validación porque su efecto deportivo requiere una regla explícita posterior.
+
+Cuando la fase contiene varios grupos, v1 la completa como unidad: todos los grupos requeridos deben estar resueltos. No se define todavía `CompletePhaseGroup`.
+
+## Semántica TOP_HALF / BOTTOM_HALF
+
+Si `N` es par:
+
+- `TOP_HALF = N / 2`;
+- `BOTTOM_HALF = N / 2`.
+
+Si `N` es impar:
+
+- `TOP_HALF = (N + 1) / 2`;
+- `BOTTOM_HALF = (N - 1) / 2`.
+
+El participante adicional queda en Championship/mitad superior.
+
+Ejemplos: 9 → 5/4; 10 → 5/5; 11 → 6/5; 12 → 6/6.
+
+## CarryOverMode
+
+En v1 sólo se admite operativamente `NONE`.
+
+Los valores `ALL` y `QUALIFIED_ONLY` pueden permanecer en el modelo pero deben rechazarse hasta definir explícitamente su semántica deportiva.
+
+## DTOs
+
+```csharp
+public sealed record PhaseCompletionBlockerDto(
+    string Code,
+    string Message,
+    IReadOnlyList<int>? MatchIds
+);
+
+public sealed record QualificationPreviewDto(
+    int TeamEntryId,
+    string TeamName,
+    int SourcePosition,
+    string TargetPhaseCode,
+    string? TargetGroupCode,
+    string? TargetSeriesCode,
+    byte? TargetSide
+);
+
+public sealed record PhaseCompletionPreviewDto(
+    int CompetitionId,
+    int PhaseId,
+    string PhaseName,
+    bool CanComplete,
+    IReadOnlyList<PhaseCompletionBlockerDto> Blockers,
+    IReadOnlyList<StandingPositionDto> FinalStandings,
+    IReadOnlyList<QualificationPreviewDto> Qualifications
+);
+
+public sealed record QualifiedTeamDto(
+    int TeamEntryId,
+    string TeamName,
+    int SourcePosition,
+    string TargetPhaseCode,
+    string? TargetGroupCode,
+    string? TargetSeriesCode,
+    byte? TargetSide
+);
+
+public sealed record GeneratedFixtureSummaryDto(
+    int PhaseId,
+    int? PhaseGroupId,
+    int MatchesCreated
+);
+
+public sealed record ResolvedSeriesDto(
+    int SeriesId,
+    string SeriesCode,
+    int? Team1EntryId,
+    int? Team2EntryId,
+    PlayoffSeriesStatus Status
+);
+
+public sealed record PhaseCompletionResultDto(
+    int CompetitionId,
+    int PhaseId,
+    CompetitionPhaseStatus Status,
+    bool AlreadyCompleted,
+    IReadOnlyList<StandingPositionDto> FinalStandings,
+    IReadOnlyList<QualifiedTeamDto> Qualifications,
+    IReadOnlyList<GeneratedFixtureSummaryDto> GeneratedFixtures,
+    IReadOnlyList<ResolvedSeriesDto> ResolvedSeries
+);
+```
+
+`CompletePhase` debe ser idempotente en sus efectos. Si la fase ya fue completada correctamente, un reintento puede devolver `200 OK` con `AlreadyCompleted = true`; nunca debe duplicar `PHASE_GROUP_ENTRY` ni `MATCH`.
+
+# 12. Generación incremental de fixture
+
+El fixture no se crea completo para todas las fases al inicio de la Competition.
+
+Regla:
+
+`generar partidos cuando sus participantes reales estén resueltos`
+
+### Segunda fase
+
+Al completar la fase previa:
+
+1. obtener standings definitivos;
+2. aplicar QualificationRules;
+3. poblar `PHASE_GROUP_ENTRY`;
+4. generar partidos para cada grupo según su configuración instanciada.
+
+`source_position` conserva la posición de clasificación desde la fuente. `seed` es independiente.
+
+### Playoffs
+
+No crear por defecto `MATCH` con participantes nulos.
+
+Cuando ambos participantes de una `PLAYOFF_SERIES` están resueltos:
+
+1. la serie pasa de `PENDING` a `READY`;
+2. se genera únicamente el siguiente partido real requerido.
+
+Después de cada partido finalizado:
+
+`wins = initialWins + realMatchWins`
+
+Si un participante alcanza `winsRequired`, la serie termina. En caso contrario se genera el siguiente partido.
+
+Esto permite que una semifinal con ventaja 1-0 y `winsRequired = 2` genere un segundo partido sólo si realmente es necesario.
+
+# 13. Final y tercer puesto
+
+Semifinal, Final y Tercer Puesto se modelan siempre como `PLAYOFF_SERIES`.
+
+Partido único:
+
+```text
+winsRequired = 1
+team1InitialWins = 0
+team2InitialWins = 0
+```
+
+Serie al mejor de tres:
+
+```text
+winsRequired = 2
+```
+
+La ventaja deportiva se representa mediante `initialWins`, nunca mediante partidos ficticios.
+
+Las fuentes de participantes de Final y Third Place se resuelven automáticamente al finalizar las semifinales:
+
+- `SERIES_WINNER`;
+- `SERIES_LOSER`.
+
+No importa cuál semifinal termine primero. Una serie destino queda `PENDING` hasta tener ambos participantes y pasa a `READY` cuando los dos están resueltos.
+
+# 14. Estados de series y fases
+
+## PLAYOFF_SERIES
+
+- `PENDING`: faltan participantes;
+- `READY`: participantes completos, sin partido iniciado;
+- `IN_PROGRESS`: serie iniciada sin ganador;
+- `FINISHED`: un participante alcanzó `winsRequired`;
+- `CANCELLED`: cancelada administrativamente.
+
+La progresión entre series se produce automáticamente cuando una serie queda `FINISHED`.
+
+## COMPETITION_PHASE
+
+Para fases de liga/grupos:
+
+`PENDING → IN_PROGRESS → FINISHED`
+
+- `PENDING → IN_PROGRESS`: al comenzar el primer partido de la fase;
+- `IN_PROGRESS → FINISHED`: mediante `CompletePhase`.
+
+Para fases playoff, el estado puede derivarse del avance de sus series y quedar `FINISHED` cuando todas las series requeridas estén `FINISHED`.
+
+# 15. Progresión y cierre de Competition
+
+## SCHEDULED → IN_PROGRESS
+
+La Competition pasa automáticamente de `SCHEDULED` a `IN_PROGRESS` cuando comienza el primer partido oficial.
+
+No se cambia por fecha de calendario ni mediante un botón administrativo genérico.
+
+## Cierre explícito
+
+Se incorporan:
+
+| Caso de uso | Método + endpoint | Request | Response |
+|---|---|---|---|
+| Previsualizar cierre | `GET /api/admin/competitions/{competitionId}/completion-preview` | — | `CompetitionCompletionPreviewDto` |
+| Completar Competition | `POST /api/admin/competitions/{competitionId}/complete` | sin body | `CompetitionCompletionResultDto` |
+
+La Competition no pasa automáticamente a `FINISHED` al terminar la Final.
+
+`CompleteCompetition` debe validar que todas las fases y series obligatorias estén resueltas.
+
+Las `FORMAT_MOVEMENT_RULE` pueden producir un resultado calculado de promoción/relegación en el preview/cierre, pero en v1 no crean automáticamente `TeamEntry` en futuras competiciones.
+
+DTOs conceptuales:
+
+```csharp
+public sealed record CompetitionPhaseProgressDto(
+    int PhaseId,
+    string PhaseName,
+    CompetitionPhaseStatus Status,
+    int FinishedMatches,
+    int TotalMatches
+);
+
+public sealed record CompetitionProgressionDto(
+    int CompetitionId,
+    CompetitionStatus Status,
+    IReadOnlyList<CompetitionPhaseProgressDto> Phases
+);
+
+public sealed record CompetitionCompletionPreviewDto(
+    int CompetitionId,
+    bool CanComplete,
+    IReadOnlyList<string> Blockers,
+    IReadOnlyList<MovementResultDto> Movements
+);
+
+public sealed record CompetitionCompletionResultDto(
+    int CompetitionId,
+    CompetitionStatus Status,
+    IReadOnlyList<MovementResultDto> Movements
+);
+```
+
+# 16. Regeneración controlada de fixture
+
+Se incorpora:
+
+`POST /api/admin/competitions/{competitionId}/fixture/regenerate`
+
+Regla conservadora v1:
+
+- puede regenerarse el fixture del ámbito soportado mientras ningún partido de ese ámbito esté `IN_PROGRESS` o `FINISHED`;
+- si existe un partido iniciado/finalizado, responder conflicto de dominio;
+- la regeneración reemplaza emparejamientos generados;
+- fecha/hora/sede previamente programadas pueden quedar invalidadas y perderse;
+- el frontend debe advertir al administrador cuando la regeneración afectará programación existente.
+
+La generación de emparejamientos y la programación de fecha/sede siguen siendo responsabilidades separadas.
+
+# 17. Catálogo Admin adicional de Scheduling avanzado
+
+```text
+PHASE PROGRESSION
+├─ GET  /competitions/{competitionId}/phases/{phaseId}/completion-preview
+└─ POST /competitions/{competitionId}/phases/{phaseId}/complete
+
+COMPETITION PROGRESSION
+└─ GET  /competitions/{competitionId}/progression
+
+COMPETITION COMPLETION
+├─ GET  /competitions/{competitionId}/completion-preview
+└─ POST /competitions/{competitionId}/complete
+
+FIXTURE
+└─ POST /competitions/{competitionId}/fixture/regenerate
+```
+
+# 18. Flujo deportivo soportado
+
+```text
+Competition DRAFT
+        ↓
+TeamEntry + fixture inicial
+        ↓
+Competition SCHEDULED
+        ↓
+primer partido comienza
+        ↓
+Competition IN_PROGRESS
+        ↓
+fase regular/grupos
+        ↓
+completion-preview
+        ↓
+CompletePhase
+        ↓
+Standings + QualificationRules
+        ↓
+PHASE_GROUP_ENTRY / participantes de series
+        ↓
+fixture incremental
+        ↓
+PlayoffSeriesResolver
+        ↓
+Final / Third Place
+        ↓
+completion-preview de Competition
+        ↓
+CompleteCompetition
+        ↓
+Competition FINISHED
+```

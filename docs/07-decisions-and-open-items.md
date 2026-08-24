@@ -48,6 +48,28 @@
 - Se contempla tercer puesto además de semifinales y final.
 - Scorer debe contemplar offline/sincronización.
 
+- La progresión deportiva se separa en resultados → standings → progresión → generación incremental de fixture.
+- El cierre de fases de liga/grupos es un caso de uso administrativo explícito `CompletePhase`; no se expone un cambio libre de status para finalizar una fase.
+- Antes de completar una fase existe un `completion-preview` sin efectos persistentes.
+- `CompletePhase` debe ser transaccional e idempotente y no puede duplicar clasificados ni partidos ante reintentos.
+- Una fase de liga/grupos sólo se completa cuando todos sus partidos requeridos están resueltos; `CANCELLED` no cuenta automáticamente como resultado deportivo resuelto.
+- Una fase con varios grupos se completa como unidad en v1; no existe `CompletePhaseGroup`.
+- `TOP_HALF`/`BOTTOM_HALF`: con N par se divide N/2 y N/2; con N impar Championship/TOP_HALF recibe `(N+1)/2` y Relegation/BOTTOM_HALF `(N-1)/2`.
+- En v1 `CarryOverMode` soportado operativamente es sólo `NONE`; `ALL` y `QUALIFIED_ONLY` permanecen sin semántica implementable.
+- `PHASE_GROUP_ENTRY.source_position` conserva la posición de clasificación en el origen y es independiente de `seed`.
+- El fixture se genera incrementalmente cuando se resuelven los participantes reales de cada fase/grupo/serie.
+- Semifinal, Final y Tercer Puesto se modelan siempre como `PLAYOFF_SERIES`.
+- Un playoff a partido único se representa con `winsRequired = 1` e `initialWins = 0/0`.
+- En una serie se genera sólo el siguiente partido real requerido; no se crean anticipadamente partidos que quizá no deban jugarse.
+- Las victorias de una serie se calculan como `initialWins + realMatchWins`.
+- Estados de `PLAYOFF_SERIES`: `PENDING`, `READY`, `IN_PROGRESS`, `FINISHED`, `CANCELLED` con la semántica documentada en `03` y `06`.
+- Los participantes de Final y Tercer Puesto se resuelven automáticamente mediante `SERIES_WINNER`/`SERIES_LOSER`; el orden de finalización de semifinales no afecta la resolución.
+- La progresión entre series playoff es automática al quedar una serie `FINISHED`; no requiere `CompletePhase` por cada serie.
+- `SCHEDULED → IN_PROGRESS` ocurre automáticamente al comenzar el primer partido oficial.
+- `IN_PROGRESS → FINISHED` requiere `CompleteCompetition`; no se cierra automáticamente al terminar la Final.
+- Existe `completion-preview` de Competition antes del cierre.
+- `FORMAT_MOVEMENT_RULE` puede calcular movimientos resultantes, pero v1 no crea automáticamente inscripciones en competiciones futuras.
+- Regeneración de fixture: se permite sólo mientras ningún partido del ámbito afectado esté `IN_PROGRESS` o `FINISHED`; puede invalidar programación de fecha/sede.
 ## Endpoints Admin cerrados en esta etapa
 
 ### Season
@@ -93,12 +115,24 @@
 - `PATCH /api/admin/competitions/{id}/entries/{entryId}/status`
 - `DELETE /api/admin/competitions/{id}/entries/{entryId}`
 
-### Fixture / Scheduling inicial
+### Fixture / Scheduling inicial y avanzado
 
 - `POST /api/admin/competitions/{id}/fixture/generate`
+- `POST /api/admin/competitions/{id}/fixture/regenerate`
 - `GET /api/admin/competitions/{id}/fixture`
 - `GET /api/admin/matches/{matchId}`
 - `PUT /api/admin/matches/{matchId}/schedule`
+
+### Progresión de fases
+
+- `GET /api/admin/competitions/{competitionId}/phases/{phaseId}/completion-preview`
+- `POST /api/admin/competitions/{competitionId}/phases/{phaseId}/complete`
+- `GET /api/admin/competitions/{competitionId}/progression`
+
+### Cierre de Competition
+
+- `GET /api/admin/competitions/{competitionId}/completion-preview`
+- `POST /api/admin/competitions/{competitionId}/complete`
 
 ## Pendientes que NO deben inventarse durante implementación
 
@@ -107,14 +141,14 @@
 3. Reglas finas de permisos.
 4. Catálogo completo de endpoints de módulos aún no diseñados.
 5. DTOs finales de People/Rosters/Match Officials/Scorer/Public.
-6. Progresión completa entre fases: cierre de fase, aplicación de QualificationRules, poblamiento de grupos y generación automática/semiautomática de fases siguientes.
-7. Algoritmo exacto de generación de fixtures para cada `FixtureMode`, aunque el contrato inicial ya está definido.
-8. Política exacta para regenerar/reemplazar un fixture ya existente.
-9. Reglas exactas para considerar una Competition preparada para pasar de `DRAFT` a `SCHEDULED` además de la existencia del fixture inicial.
-10. Momento exacto de transición automática o manual `SCHEDULED → IN_PROGRESS` y `IN_PROGRESS → FINISHED`.
-11. Política de edición de metadatos de Competition según estado.
-12. Política exacta de eliminación/retiro de TeamEntry cuando ya existen partidos o fases dependientes.
-13. Reglas funcionales finas de ascensos/descensos entre Apertura/Clausura o temporadas.
+6. Algoritmo exacto de generación de fixtures para cada `FixtureMode`; el contrato y las reglas de progresión ya están cerrados, pero no debe inventarse el algoritmo interno.
+7. Alcance exacto de la regeneración cuando existan partidos programados pero todavía no iniciados y UX de confirmación de pérdida de fecha/sede.
+8. Reglas exactas adicionales para considerar una Competition preparada para pasar de `DRAFT` a `SCHEDULED`, además de rango de equipos y fixture inicial válido.
+9. Política de edición de metadatos de Competition según estado.
+10. Política exacta de eliminación/retiro de TeamEntry cuando ya existen partidos o fases dependientes.
+11. Consecuencia deportiva exacta de `MATCH`/serie `CANCELLED`, suspendida o no disputada.
+12. Semántica deportiva futura de `CarryOverMode.ALL` y `CarryOverMode.QUALIFIED_ONLY`; v1 sólo implementa `NONE`.
+13. Reglas funcionales finas de ascensos/descensos entre Apertura/Clausura o temporadas y creación futura de inscripciones.
 14. Estrategia concreta de persistencia local/offline del Scorer.
 15. Protocolo de sincronización y resolución de conflictos.
 16. Mecanismo exacto de corrección/anulación/compensación/versionado de eventos.
@@ -126,19 +160,19 @@
 
 ## Próximo paso recomendado
 
-Antes de implementar el bloque completo de Scheduling avanzado, cerrar:
+El bloque de contratos de `Competitions + CompetitionFormat + Scheduling` queda funcionalmente cerrado para una primera implementación, con excepción de los pendientes explícitos anteriores.
 
-1. progresión de fases y grupos;
-2. aplicación de `FORMAT_QUALIFICATION_RULE` sobre instancias reales;
-3. generación de segunda fase y playoffs;
-4. resolución de participantes de series;
-5. política de regeneración y edición de fixture;
-6. transición de estados de Competition asociada al avance deportivo.
-
-Para implementación incremental con Codex, puede comenzarse por:
+Para implementación incremental con Codex:
 
 1. `Season` + `Divisional`;
 2. `CompetitionFormat`;
 3. `Competition` y creación de estructura;
 4. `TeamEntry`;
-5. fixture inicial.
+5. fixture inicial;
+6. standings necesarios para progresión;
+7. `completion-preview` + `CompletePhase`;
+8. poblamiento de `PHASE_GROUP_ENTRY` y fixture incremental;
+9. resolución de `PLAYOFF_SERIES`;
+10. `CompetitionProgression` + `CompleteCompetition`.
+
+Antes de implementar Scorer, diseñar en detalle su contrato `open → estado/eventos locales → sync → close`.
