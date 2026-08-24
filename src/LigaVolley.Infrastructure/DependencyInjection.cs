@@ -1,6 +1,7 @@
 using LigaVolley.Application.Abstractions.Persistence;
 using LigaVolley.Infrastructure.Persistence;
 using LigaVolley.Infrastructure.Persistence.Repositories;
+using LigaVolley.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<ITeamEntryRepository, TeamEntryRepository>();
         services.AddScoped<IFixtureRepository, FixtureRepository>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<LigaVolleyDbContext>());
+        services.AddScoped<Livosur2026Seeder>();
         return services;
     }
 }

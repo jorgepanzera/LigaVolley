@@ -12,8 +12,16 @@ using LigaVolley.Application.TeamEntries;
 using LigaVolley.Application.Fixtures;
 using LigaVolley.Application.Matches;
 using LigaVolley.Infrastructure;
+using LigaVolley.Infrastructure.Persistence.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var runLivosurSeed = args.Contains("--seed-livosur-2026", StringComparer.OrdinalIgnoreCase);
+if (runLivosurSeed)
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddConsole();
+}
 
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -32,6 +40,19 @@ builder.Services.AddScoped<MatchAdminService>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
+
+if (runLivosurSeed)
+{
+    if (!app.Environment.IsDevelopment())
+        throw new InvalidOperationException("The LIVOSUR 2026 seed can only run in the Development environment.");
+
+    await using var scope = app.Services.CreateAsyncScope();
+    var result = await scope.ServiceProvider.GetRequiredService<Livosur2026Seeder>().SeedAsync();
+    app.Logger.LogInformation(
+        "LIVOSUR 2026 seed completed: {Seasons} season, {Divisions} divisions, {Clubs} clubs, {Teams} teams, {Venues} venues, {Competitions} competitions and {TeamEntries} entries.",
+        result.Seasons, result.Divisions, result.Clubs, result.Teams, result.Venues, result.Competitions, result.TeamEntries);
+    return;
+}
 
 app.UseExceptionHandler();
 app.MapSeasonEndpoints();

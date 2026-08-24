@@ -1,0 +1,4077 @@
+{
+  "season": [
+    {
+      "sourceId": 1,
+      "year": 2026,
+      "name": "2026",
+      "active": true
+    }
+  ],
+  "divisions": [
+    {
+      "sourceId": 1,
+      "name": "Primera",
+      "levelOrder": 1,
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 2,
+      "name": "A",
+      "levelOrder": 2,
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 3,
+      "name": "B",
+      "levelOrder": 3,
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 4,
+      "name": "C",
+      "levelOrder": 4,
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 5,
+      "name": "D",
+      "levelOrder": 5,
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 6,
+      "name": "E",
+      "levelOrder": 6,
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 7,
+      "name": "F",
+      "levelOrder": 7,
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 8,
+      "name": "G",
+      "levelOrder": 8,
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 9,
+      "name": "H",
+      "levelOrder": 9,
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 10,
+      "name": "I",
+      "levelOrder": 10,
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 11,
+      "name": "J",
+      "levelOrder": 11,
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 12,
+      "name": "K",
+      "levelOrder": 12,
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 13,
+      "name": "Primera",
+      "levelOrder": 1,
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 14,
+      "name": "A",
+      "levelOrder": 2,
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 15,
+      "name": "B",
+      "levelOrder": 3,
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 16,
+      "name": "C",
+      "levelOrder": 4,
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 17,
+      "name": "D",
+      "levelOrder": 5,
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 18,
+      "name": "E",
+      "levelOrder": 6,
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 19,
+      "name": "F",
+      "levelOrder": 7,
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 20,
+      "name": "G",
+      "levelOrder": 8,
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 21,
+      "name": "H",
+      "levelOrder": 9,
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 22,
+      "name": "I",
+      "levelOrder": 10,
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 23,
+      "name": "J",
+      "levelOrder": 11,
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 24,
+      "name": "K",
+      "levelOrder": 12,
+      "gender": "Female",
+      "active": true
+    }
+  ],
+  "clubs": [
+    {
+      "sourceId": 1,
+      "name": "ACJ",
+      "active": true
+    },
+    {
+      "sourceId": 2,
+      "name": "ACJ PORTONES",
+      "active": true
+    },
+    {
+      "sourceId": 3,
+      "name": "AIRES PUROS",
+      "active": true
+    },
+    {
+      "sourceId": 4,
+      "name": "ALKIMIA",
+      "active": true
+    },
+    {
+      "sourceId": 5,
+      "name": "ARRIETA - CDV",
+      "active": true
+    },
+    {
+      "sourceId": 6,
+      "name": "ATENAS",
+      "active": true
+    },
+    {
+      "sourceId": 7,
+      "name": "BAGE",
+      "active": true
+    },
+    {
+      "sourceId": 8,
+      "name": "BIGUA",
+      "active": true
+    },
+    {
+      "sourceId": 9,
+      "name": "BIGUA BIARRITZ",
+      "active": true
+    },
+    {
+      "sourceId": 10,
+      "name": "BOHEMIOS",
+      "active": true
+    },
+    {
+      "sourceId": 11,
+      "name": "BOMBINI",
+      "active": true
+    },
+    {
+      "sourceId": 12,
+      "name": "BUCEO VOLEY",
+      "active": true
+    },
+    {
+      "sourceId": 13,
+      "name": "C Y V",
+      "active": true
+    },
+    {
+      "sourceId": 14,
+      "name": "C.A JUAN E. MILLER",
+      "active": true
+    },
+    {
+      "sourceId": 15,
+      "name": "C.A. 17 DE MAYO - BBC",
+      "active": true
+    },
+    {
+      "sourceId": 16,
+      "name": "C.D. ALBATROS",
+      "active": true
+    },
+    {
+      "sourceId": 17,
+      "name": "C.DOMINIO",
+      "active": true
+    },
+    {
+      "sourceId": 18,
+      "name": "C.S. SOLIS",
+      "active": true
+    },
+    {
+      "sourceId": 19,
+      "name": "CABERNET",
+      "active": true
+    },
+    {
+      "sourceId": 20,
+      "name": "CANELON CHICO",
+      "active": true
+    },
+    {
+      "sourceId": 21,
+      "name": "CBPS",
+      "active": true
+    },
+    {
+      "sourceId": 22,
+      "name": "CBR",
+      "active": true
+    },
+    {
+      "sourceId": 23,
+      "name": "CENTRO MELILLA",
+      "active": true
+    },
+    {
+      "sourceId": 24,
+      "name": "CITY PARK",
+      "active": true
+    },
+    {
+      "sourceId": 25,
+      "name": "COLEGIO ARETEIA",
+      "active": true
+    },
+    {
+      "sourceId": 26,
+      "name": "COLEGIO SAN PABLO",
+      "active": true
+    },
+    {
+      "sourceId": 27,
+      "name": "CORDON",
+      "active": true
+    },
+    {
+      "sourceId": 28,
+      "name": "COSTA AZUL",
+      "active": true
+    },
+    {
+      "sourceId": 29,
+      "name": "COUNTRY EL PINAR",
+      "active": true
+    },
+    {
+      "sourceId": 30,
+      "name": "CPCH PANDO",
+      "active": true
+    },
+    {
+      "sourceId": 31,
+      "name": "CRANDON",
+      "active": true
+    },
+    {
+      "sourceId": 32,
+      "name": "DEFENSOR DE MALDONADO",
+      "active": true
+    },
+    {
+      "sourceId": 33,
+      "name": "DEPORTIVO MALDONADO",
+      "active": true
+    },
+    {
+      "sourceId": 34,
+      "name": "DEPORTIVO MONTAÑES",
+      "active": true
+    },
+    {
+      "sourceId": 35,
+      "name": "DESPLAZADOS",
+      "active": true
+    },
+    {
+      "sourceId": 36,
+      "name": "EMPALME OLMOS",
+      "active": true
+    },
+    {
+      "sourceId": 37,
+      "name": "ENFOQUE",
+      "active": true
+    },
+    {
+      "sourceId": 38,
+      "name": "ESCUELA MILITAR",
+      "active": true
+    },
+    {
+      "sourceId": 39,
+      "name": "EVP Punta",
+      "active": true
+    },
+    {
+      "sourceId": 40,
+      "name": "GIMNASIO SAYAGO",
+      "active": true
+    },
+    {
+      "sourceId": 41,
+      "name": "HEBRAICA Y MACABI",
+      "active": true
+    },
+    {
+      "sourceId": 42,
+      "name": "HEROICA CELTICS",
+      "active": true
+    },
+    {
+      "sourceId": 43,
+      "name": "IMPERIO",
+      "active": true
+    },
+    {
+      "sourceId": 44,
+      "name": "INFIT CLUB LA COSTA",
+      "active": true
+    },
+    {
+      "sourceId": 45,
+      "name": "INSTITUTO BETA",
+      "active": true
+    },
+    {
+      "sourceId": 46,
+      "name": "J. SUAREZ V.C",
+      "active": true
+    },
+    {
+      "sourceId": 47,
+      "name": "JMLM UNIVERSITARIO",
+      "active": true
+    },
+    {
+      "sourceId": 48,
+      "name": "JUAN FERREIRA",
+      "active": true
+    },
+    {
+      "sourceId": 49,
+      "name": "KONRAD & Asociados",
+      "active": true
+    },
+    {
+      "sourceId": 50,
+      "name": "LA FRANJA",
+      "active": true
+    },
+    {
+      "sourceId": 51,
+      "name": "LA PAZ VOLEY",
+      "active": true
+    },
+    {
+      "sourceId": 52,
+      "name": "LAGOMAR",
+      "active": true
+    },
+    {
+      "sourceId": 53,
+      "name": "LAS ORIONAS",
+      "active": true
+    },
+    {
+      "sourceId": 54,
+      "name": "LAS PIEDRAS MVC",
+      "active": true
+    },
+    {
+      "sourceId": 55,
+      "name": "LEGENDS",
+      "active": true
+    },
+    {
+      "sourceId": 56,
+      "name": "LOBAS DEL ESTE",
+      "active": true
+    },
+    {
+      "sourceId": 57,
+      "name": "LOS TITANES LA TUNA",
+      "active": true
+    },
+    {
+      "sourceId": 58,
+      "name": "MALVIN",
+      "active": true
+    },
+    {
+      "sourceId": 59,
+      "name": "MILENIALS",
+      "active": true
+    },
+    {
+      "sourceId": 60,
+      "name": "MIRAMAR",
+      "active": true
+    },
+    {
+      "sourceId": 61,
+      "name": "MONTERREY",
+      "active": true
+    },
+    {
+      "sourceId": 62,
+      "name": "NACIONAL",
+      "active": true
+    },
+    {
+      "sourceId": 63,
+      "name": "NAUTICO",
+      "active": true
+    },
+    {
+      "sourceId": 64,
+      "name": "NEKOMA",
+      "active": true
+    },
+    {
+      "sourceId": 65,
+      "name": "OLD BRENDAN`S",
+      "active": true
+    },
+    {
+      "sourceId": 66,
+      "name": "OLIMPIA",
+      "active": true
+    },
+    {
+      "sourceId": 67,
+      "name": "ORT",
+      "active": true
+    },
+    {
+      "sourceId": 68,
+      "name": "P4 - YONI VOLEY",
+      "active": true
+    },
+    {
+      "sourceId": 69,
+      "name": "PAQUE",
+      "active": true
+    },
+    {
+      "sourceId": 70,
+      "name": "PARADA 6",
+      "active": true
+    },
+    {
+      "sourceId": 71,
+      "name": "PASO CARRASCO",
+      "active": true
+    },
+    {
+      "sourceId": 72,
+      "name": "PINAMAR",
+      "active": true
+    },
+    {
+      "sourceId": 73,
+      "name": "PLAYA PASCUAL",
+      "active": true
+    },
+    {
+      "sourceId": 74,
+      "name": "PLAZA 12",
+      "active": true
+    },
+    {
+      "sourceId": 75,
+      "name": "PLAZA HELVETICO",
+      "active": true
+    },
+    {
+      "sourceId": 76,
+      "name": "POQUITOS",
+      "active": true
+    },
+    {
+      "sourceId": 77,
+      "name": "PROGRESO",
+      "active": true
+    },
+    {
+      "sourceId": 78,
+      "name": "SAN JUAN UNIVERSITARIO",
+      "active": true
+    },
+    {
+      "sourceId": 79,
+      "name": "SANTA VOLEY",
+      "active": true
+    },
+    {
+      "sourceId": 80,
+      "name": "SAUCE B.B.C",
+      "active": true
+    },
+    {
+      "sourceId": 81,
+      "name": "SAYAGO",
+      "active": true
+    },
+    {
+      "sourceId": 82,
+      "name": "SJ DE CARRASCO",
+      "active": true
+    },
+    {
+      "sourceId": 83,
+      "name": "SJC",
+      "active": true
+    },
+    {
+      "sourceId": 84,
+      "name": "TIEMPO CERO",
+      "active": true
+    },
+    {
+      "sourceId": 85,
+      "name": "TINTOCO",
+      "active": true
+    },
+    {
+      "sourceId": 86,
+      "name": "TORNADO",
+      "active": true
+    },
+    {
+      "sourceId": 87,
+      "name": "U.A.S",
+      "active": true
+    },
+    {
+      "sourceId": 88,
+      "name": "UCU",
+      "active": true
+    },
+    {
+      "sourceId": 89,
+      "name": "UDELAR",
+      "active": true
+    },
+    {
+      "sourceId": 90,
+      "name": "UNION 4 DE JULIO",
+      "active": true
+    },
+    {
+      "sourceId": 91,
+      "name": "UNION SRS",
+      "active": true
+    },
+    {
+      "sourceId": 92,
+      "name": "UNION VECINAL",
+      "active": true
+    },
+    {
+      "sourceId": 93,
+      "name": "UNIVERSAL VOLEY",
+      "active": true
+    },
+    {
+      "sourceId": 94,
+      "name": "URUGUAY PEÑAROL",
+      "active": true
+    },
+    {
+      "sourceId": 95,
+      "name": "URUPAN",
+      "active": true
+    },
+    {
+      "sourceId": 96,
+      "name": "V8 - PPC",
+      "active": true
+    },
+    {
+      "sourceId": 97,
+      "name": "VALKIRIAS",
+      "active": true
+    },
+    {
+      "sourceId": 98,
+      "name": "ZONA 3",
+      "active": true
+    }
+  ],
+  "teams": [
+    {
+      "sourceId": 1,
+      "sourceTeamId": 1205,
+      "clubSourceId": 10,
+      "name": "BOHEMIOS",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 2,
+      "sourceTeamId": 1206,
+      "clubSourceId": 52,
+      "name": "LAGOMAR",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 3,
+      "sourceTeamId": 1207,
+      "clubSourceId": 22,
+      "name": "CBR A",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 4,
+      "sourceTeamId": 1208,
+      "clubSourceId": 22,
+      "name": "CBR L",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 5,
+      "sourceTeamId": 1209,
+      "clubSourceId": 22,
+      "name": "CBR S",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 6,
+      "sourceTeamId": 1210,
+      "clubSourceId": 25,
+      "name": "COLEGIO ARETEIA",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 7,
+      "sourceTeamId": 1211,
+      "clubSourceId": 70,
+      "name": "PARADA 6",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 8,
+      "sourceTeamId": 1212,
+      "clubSourceId": 37,
+      "name": "ENFOQUE",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 9,
+      "sourceTeamId": 1213,
+      "clubSourceId": 49,
+      "name": "KONRAD & Asociados",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 10,
+      "sourceTeamId": 1214,
+      "clubSourceId": 89,
+      "name": "UDELAR",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 11,
+      "sourceTeamId": 1215,
+      "clubSourceId": 25,
+      "name": "COLEGIO ARETEIA B",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 12,
+      "sourceTeamId": 1216,
+      "clubSourceId": 58,
+      "name": "MALVIN",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 13,
+      "sourceTeamId": 1217,
+      "clubSourceId": 37,
+      "name": "ENFOQUE B",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 14,
+      "sourceTeamId": 1218,
+      "clubSourceId": 20,
+      "name": "CANELON CHICO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 15,
+      "sourceTeamId": 1220,
+      "clubSourceId": 26,
+      "name": "COLEGIO SAN PABLO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 16,
+      "sourceTeamId": 1222,
+      "clubSourceId": 3,
+      "name": "AIRES PUROS",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 17,
+      "sourceTeamId": 1223,
+      "clubSourceId": 3,
+      "name": "AIRES PUROS B",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 18,
+      "sourceTeamId": 1224,
+      "clubSourceId": 3,
+      "name": "AIRES PUROS C",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 19,
+      "sourceTeamId": 1226,
+      "clubSourceId": 3,
+      "name": "AIRES PUROS S",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 20,
+      "sourceTeamId": 1227,
+      "clubSourceId": 66,
+      "name": "OLIMPIA",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 21,
+      "sourceTeamId": 1228,
+      "clubSourceId": 10,
+      "name": "BOHEMIOS J",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 22,
+      "sourceTeamId": 1229,
+      "clubSourceId": 33,
+      "name": "DEPORTIVO MALDONADO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 23,
+      "sourceTeamId": 1230,
+      "clubSourceId": 29,
+      "name": "COUNTRY EL PINAR",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 24,
+      "sourceTeamId": 1231,
+      "clubSourceId": 60,
+      "name": "MIRAMAR",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 25,
+      "sourceTeamId": 1232,
+      "clubSourceId": 60,
+      "name": "MIRAMAR LEGENDS",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 26,
+      "sourceTeamId": 1233,
+      "clubSourceId": 66,
+      "name": "OLIMPIA B",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 27,
+      "sourceTeamId": 1234,
+      "clubSourceId": 89,
+      "name": "UDELAR B",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 28,
+      "sourceTeamId": 1236,
+      "clubSourceId": 77,
+      "name": "PROGRESO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 29,
+      "sourceTeamId": 1237,
+      "clubSourceId": 25,
+      "name": "COLEGIO ARETEIA C",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 30,
+      "sourceTeamId": 1238,
+      "clubSourceId": 1,
+      "name": "ACJ",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 31,
+      "sourceTeamId": 1239,
+      "clubSourceId": 39,
+      "name": "EVP Punta",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 32,
+      "sourceTeamId": 1240,
+      "clubSourceId": 21,
+      "name": "CBPS AZUL",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 33,
+      "sourceTeamId": 1241,
+      "clubSourceId": 21,
+      "name": "CBPS ROJO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 34,
+      "sourceTeamId": 1242,
+      "clubSourceId": 21,
+      "name": "CBPS VERDE",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 35,
+      "sourceTeamId": 1243,
+      "clubSourceId": 21,
+      "name": "CBPS OLD SCHOOL",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 36,
+      "sourceTeamId": 1244,
+      "clubSourceId": 54,
+      "name": "LAS PIEDRAS MVC",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 37,
+      "sourceTeamId": 1245,
+      "clubSourceId": 14,
+      "name": "C.A JUAN E. MILLER",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 38,
+      "sourceTeamId": 1246,
+      "clubSourceId": 81,
+      "name": "SAYAGO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 39,
+      "sourceTeamId": 1247,
+      "clubSourceId": 27,
+      "name": "CORDON AZUL",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 40,
+      "sourceTeamId": 1248,
+      "clubSourceId": 27,
+      "name": "CORDON BLANCO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 41,
+      "sourceTeamId": 1249,
+      "clubSourceId": 98,
+      "name": "ZONA 3",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 42,
+      "sourceTeamId": 1250,
+      "clubSourceId": 36,
+      "name": "EMPALME OLMOS",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 43,
+      "sourceTeamId": 1251,
+      "clubSourceId": 62,
+      "name": "NACIONAL C",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 44,
+      "sourceTeamId": 1252,
+      "clubSourceId": 62,
+      "name": "NACIONAL B",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 45,
+      "sourceTeamId": 1254,
+      "clubSourceId": 24,
+      "name": "CITY PARK",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 46,
+      "sourceTeamId": 1255,
+      "clubSourceId": 24,
+      "name": "CITY PARK B",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 47,
+      "sourceTeamId": 1256,
+      "clubSourceId": 51,
+      "name": "LA PAZ Voley B",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 48,
+      "sourceTeamId": 1257,
+      "clubSourceId": 51,
+      "name": "LA PAZ Voley",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 49,
+      "sourceTeamId": 1258,
+      "clubSourceId": 94,
+      "name": "URUGUAY PEÑAROL",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 50,
+      "sourceTeamId": 1259,
+      "clubSourceId": 10,
+      "name": "BOHEMIOS M",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 51,
+      "sourceTeamId": 1260,
+      "clubSourceId": 84,
+      "name": "TIEMPO CERO B",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 52,
+      "sourceTeamId": 1261,
+      "clubSourceId": 6,
+      "name": "ATENAS",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 53,
+      "sourceTeamId": 1262,
+      "clubSourceId": 46,
+      "name": "J.SUAREZ V.C",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 54,
+      "sourceTeamId": 1263,
+      "clubSourceId": 18,
+      "name": "C.S.SOLIS",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 55,
+      "sourceTeamId": 1264,
+      "clubSourceId": 86,
+      "name": "TORNADO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 56,
+      "sourceTeamId": 1265,
+      "clubSourceId": 50,
+      "name": "LA FRANJA B",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 57,
+      "sourceTeamId": 1266,
+      "clubSourceId": 88,
+      "name": "U.C.U",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 58,
+      "sourceTeamId": 1267,
+      "clubSourceId": 76,
+      "name": "POQUITOS",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 59,
+      "sourceTeamId": 1269,
+      "clubSourceId": 92,
+      "name": "UNION VECINAL J",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 60,
+      "sourceTeamId": 1270,
+      "clubSourceId": 15,
+      "name": "C.A 17 DE MAYO BBC",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 61,
+      "sourceTeamId": 1271,
+      "clubSourceId": 95,
+      "name": "URUPAN",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 62,
+      "sourceTeamId": 1272,
+      "clubSourceId": 19,
+      "name": "CABERNET",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 63,
+      "sourceTeamId": 1273,
+      "clubSourceId": 35,
+      "name": "DESPLAZADOS",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 64,
+      "sourceTeamId": 1274,
+      "clubSourceId": 44,
+      "name": "INFIT CLUB LA COSTA",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 65,
+      "sourceTeamId": 1276,
+      "clubSourceId": 83,
+      "name": "SJC - TERCER TIEMPO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 66,
+      "sourceTeamId": 1278,
+      "clubSourceId": 46,
+      "name": "J.SUAREZ V.C - B",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 67,
+      "sourceTeamId": 1280,
+      "clubSourceId": 38,
+      "name": "ESCUELA MILITAR",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 68,
+      "sourceTeamId": 1281,
+      "clubSourceId": 18,
+      "name": "C.S.SOLIS F",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 69,
+      "sourceTeamId": 1282,
+      "clubSourceId": 71,
+      "name": "PASO CARRASCO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 70,
+      "sourceTeamId": 1284,
+      "clubSourceId": 21,
+      "name": "CBPS S",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 71,
+      "sourceTeamId": 1285,
+      "clubSourceId": 73,
+      "name": "PLAYA PASCUAL",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 72,
+      "sourceTeamId": 1286,
+      "clubSourceId": 12,
+      "name": "BUCEO VOLEY",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 73,
+      "sourceTeamId": 1287,
+      "clubSourceId": 85,
+      "name": "TINTOCO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 74,
+      "sourceTeamId": 1288,
+      "clubSourceId": 41,
+      "name": "HEBRAICA Y MACABI J",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 75,
+      "sourceTeamId": 1289,
+      "clubSourceId": 5,
+      "name": "ARRIETA - CDV",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 76,
+      "sourceTeamId": 1290,
+      "clubSourceId": 22,
+      "name": "CBR A",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 77,
+      "sourceTeamId": 1291,
+      "clubSourceId": 48,
+      "name": "JUAN FERREIRA",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 78,
+      "sourceTeamId": 1292,
+      "clubSourceId": 8,
+      "name": "BIGUA",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 79,
+      "sourceTeamId": 1293,
+      "clubSourceId": 62,
+      "name": "NACIONAL",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 80,
+      "sourceTeamId": 1294,
+      "clubSourceId": 62,
+      "name": "NACIONAL B",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 81,
+      "sourceTeamId": 1295,
+      "clubSourceId": 62,
+      "name": "NACIONAL C",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 82,
+      "sourceTeamId": 1296,
+      "clubSourceId": 10,
+      "name": "BOHEMIOS J",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 83,
+      "sourceTeamId": 1297,
+      "clubSourceId": 66,
+      "name": "OLIMPIA",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 84,
+      "sourceTeamId": 1298,
+      "clubSourceId": 22,
+      "name": "CBR B",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 85,
+      "sourceTeamId": 1299,
+      "clubSourceId": 7,
+      "name": "BAGE",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 86,
+      "sourceTeamId": 1300,
+      "clubSourceId": 41,
+      "name": "HEBRAICA Y MACABI",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 87,
+      "sourceTeamId": 1301,
+      "clubSourceId": 37,
+      "name": "ENFOQUE",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 88,
+      "sourceTeamId": 1302,
+      "clubSourceId": 32,
+      "name": "DEFENSOR DE MALDONADO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 89,
+      "sourceTeamId": 1303,
+      "clubSourceId": 63,
+      "name": "NAUTICO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 90,
+      "sourceTeamId": 1304,
+      "clubSourceId": 10,
+      "name": "BOHEMIOS",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 91,
+      "sourceTeamId": 1305,
+      "clubSourceId": 5,
+      "name": "ARRIETA-CDV-CENTENARIO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 92,
+      "sourceTeamId": 1306,
+      "clubSourceId": 82,
+      "name": "SJ DE CARRASCO B",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 93,
+      "sourceTeamId": 1307,
+      "clubSourceId": 58,
+      "name": "MALVIN",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 94,
+      "sourceTeamId": 1308,
+      "clubSourceId": 82,
+      "name": "SJ DE CARRASCO A",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 95,
+      "sourceTeamId": 1309,
+      "clubSourceId": 50,
+      "name": "LA FRANJA",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 96,
+      "sourceTeamId": 1310,
+      "clubSourceId": 9,
+      "name": "BIGUA BIARRITZ",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 97,
+      "sourceTeamId": 1311,
+      "clubSourceId": 60,
+      "name": "MIRAMAR",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 98,
+      "sourceTeamId": 1312,
+      "clubSourceId": 59,
+      "name": "MILENIAL`S",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 99,
+      "sourceTeamId": 1313,
+      "clubSourceId": 13,
+      "name": "C Y V",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 100,
+      "sourceTeamId": 1314,
+      "clubSourceId": 20,
+      "name": "CANELON CHICO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 101,
+      "sourceTeamId": 1315,
+      "clubSourceId": 69,
+      "name": "PAQUE",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 102,
+      "sourceTeamId": 1316,
+      "clubSourceId": 21,
+      "name": "CBPS AZUL",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 103,
+      "sourceTeamId": 1317,
+      "clubSourceId": 10,
+      "name": "BOHEMIOS M",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 104,
+      "sourceTeamId": 1318,
+      "clubSourceId": 83,
+      "name": "SJC - MAXI VOLEY",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 105,
+      "sourceTeamId": 1319,
+      "clubSourceId": 5,
+      "name": "ARRIETA - CENTENARIO U23",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 106,
+      "sourceTeamId": 1320,
+      "clubSourceId": 68,
+      "name": "P4 - YONI VOLEY",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 107,
+      "sourceTeamId": 1321,
+      "clubSourceId": 80,
+      "name": "SAUCE B.B.C",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 108,
+      "sourceTeamId": 1322,
+      "clubSourceId": 63,
+      "name": "NAUTICO SR",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 109,
+      "sourceTeamId": 1323,
+      "clubSourceId": 31,
+      "name": "CRANDON",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 110,
+      "sourceTeamId": 1324,
+      "clubSourceId": 83,
+      "name": "SJC - CHILL OUT",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 111,
+      "sourceTeamId": 1325,
+      "clubSourceId": 93,
+      "name": "UNIVERSAL VOLEY",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 112,
+      "sourceTeamId": 1326,
+      "clubSourceId": 94,
+      "name": "URUGUAY PEÑAROL",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 113,
+      "sourceTeamId": 1327,
+      "clubSourceId": 3,
+      "name": "AIRES PUROS",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 114,
+      "sourceTeamId": 1328,
+      "clubSourceId": 3,
+      "name": "AIRES PUROS J",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 115,
+      "sourceTeamId": 1329,
+      "clubSourceId": 3,
+      "name": "AIRES PUROS Z",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 116,
+      "sourceTeamId": 1330,
+      "clubSourceId": 63,
+      "name": "NAUTICO J",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 117,
+      "sourceTeamId": 1331,
+      "clubSourceId": 92,
+      "name": "UNION VECINAL AZUL",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 118,
+      "sourceTeamId": 1332,
+      "clubSourceId": 37,
+      "name": "ENFOQUE B",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 119,
+      "sourceTeamId": 1333,
+      "clubSourceId": 87,
+      "name": "U.A.S",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 120,
+      "sourceTeamId": 1334,
+      "clubSourceId": 51,
+      "name": "LA PAZ Voley",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 121,
+      "sourceTeamId": 1335,
+      "clubSourceId": 83,
+      "name": "SJC - VOSQUE",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 122,
+      "sourceTeamId": 1336,
+      "clubSourceId": 21,
+      "name": "CBPS S",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 123,
+      "sourceTeamId": 1337,
+      "clubSourceId": 52,
+      "name": "LAGOMAR",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 124,
+      "sourceTeamId": 1338,
+      "clubSourceId": 39,
+      "name": "EVP Punta",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 125,
+      "sourceTeamId": 1339,
+      "clubSourceId": 4,
+      "name": "ALKIMIA",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 126,
+      "sourceTeamId": 1340,
+      "clubSourceId": 54,
+      "name": "LAS PIEDRAS MVC",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 127,
+      "sourceTeamId": 1341,
+      "clubSourceId": 91,
+      "name": "UNION SRS C",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 128,
+      "sourceTeamId": 1342,
+      "clubSourceId": 77,
+      "name": "PROGRESO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 129,
+      "sourceTeamId": 1343,
+      "clubSourceId": 16,
+      "name": "C.D.ALBATROS",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 130,
+      "sourceTeamId": 1344,
+      "clubSourceId": 65,
+      "name": "OLD BRENDAN`S",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 131,
+      "sourceTeamId": 1345,
+      "clubSourceId": 52,
+      "name": "LAGOMAR B",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 132,
+      "sourceTeamId": 1346,
+      "clubSourceId": 89,
+      "name": "UDELAR",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 133,
+      "sourceTeamId": 1347,
+      "clubSourceId": 24,
+      "name": "CITY PARK A",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 134,
+      "sourceTeamId": 1349,
+      "clubSourceId": 56,
+      "name": "LOBAS DEL ESTE",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 135,
+      "sourceTeamId": 1350,
+      "clubSourceId": 78,
+      "name": "SAN JUAN UNIVERSITARIO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 136,
+      "sourceTeamId": 1351,
+      "clubSourceId": 84,
+      "name": "TIEMPO CERO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 137,
+      "sourceTeamId": 1353,
+      "clubSourceId": 48,
+      "name": "JUAN FERREIRA M",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 138,
+      "sourceTeamId": 1355,
+      "clubSourceId": 1,
+      "name": "ACJ",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 139,
+      "sourceTeamId": 1356,
+      "clubSourceId": 21,
+      "name": "CBPS ROJO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 140,
+      "sourceTeamId": 1357,
+      "clubSourceId": 47,
+      "name": "JMLM UNIVERSITARIO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 141,
+      "sourceTeamId": 1358,
+      "clubSourceId": 55,
+      "name": "LEGENDS",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 142,
+      "sourceTeamId": 1360,
+      "clubSourceId": 25,
+      "name": "COL. ARETEIA B",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 143,
+      "sourceTeamId": 1361,
+      "clubSourceId": 81,
+      "name": "SAYAGO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 144,
+      "sourceTeamId": 1362,
+      "clubSourceId": 42,
+      "name": "HEROICA CELTICS",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 145,
+      "sourceTeamId": 1363,
+      "clubSourceId": 98,
+      "name": "ZONA 3",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 146,
+      "sourceTeamId": 1365,
+      "clubSourceId": 92,
+      "name": "UNION VECINAL AMARILLO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 147,
+      "sourceTeamId": 1367,
+      "clubSourceId": 48,
+      "name": "JUAN FERREIRA",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 148,
+      "sourceTeamId": 1368,
+      "clubSourceId": 48,
+      "name": "JUAN FERREIRA C",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 149,
+      "sourceTeamId": 1369,
+      "clubSourceId": 5,
+      "name": "ARRIETA - CDV",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 150,
+      "sourceTeamId": 1370,
+      "clubSourceId": 34,
+      "name": "DEPORTIVO MONTAÑES",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 151,
+      "sourceTeamId": 1371,
+      "clubSourceId": 45,
+      "name": "INSTITUTO BETA",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 152,
+      "sourceTeamId": 1372,
+      "clubSourceId": 83,
+      "name": "SJC - AMIGOS",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 153,
+      "sourceTeamId": 1374,
+      "clubSourceId": 67,
+      "name": "ORT",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 154,
+      "sourceTeamId": 1376,
+      "clubSourceId": 5,
+      "name": "ARRIETA - CDV M",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 155,
+      "sourceTeamId": 1378,
+      "clubSourceId": 59,
+      "name": "MILENIALS LEGADO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 156,
+      "sourceTeamId": 1379,
+      "clubSourceId": 27,
+      "name": "CORDON NEGRO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 157,
+      "sourceTeamId": 1381,
+      "clubSourceId": 26,
+      "name": "COLEGIO SAN PABLO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 158,
+      "sourceTeamId": 1382,
+      "clubSourceId": 59,
+      "name": "MILENIALS C",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 159,
+      "sourceTeamId": 1383,
+      "clubSourceId": 83,
+      "name": "SJC - PIBAS",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 160,
+      "sourceTeamId": 1384,
+      "clubSourceId": 15,
+      "name": "C.A. 17 DE MAYO - BBC",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 161,
+      "sourceTeamId": 1385,
+      "clubSourceId": 64,
+      "name": "NEKOMA",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 162,
+      "sourceTeamId": 1386,
+      "clubSourceId": 67,
+      "name": "ORT",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 163,
+      "sourceTeamId": 1388,
+      "clubSourceId": 29,
+      "name": "COUNTRY EL PINAR B",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 164,
+      "sourceTeamId": 1389,
+      "clubSourceId": 94,
+      "name": "URUGUAY PEÑAROL M",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 165,
+      "sourceTeamId": 1390,
+      "clubSourceId": 6,
+      "name": "ATENAS",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 166,
+      "sourceTeamId": 1391,
+      "clubSourceId": 18,
+      "name": "C.S.SOLIS",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 167,
+      "sourceTeamId": 1392,
+      "clubSourceId": 5,
+      "name": "ARRIETA - CDV 33",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 168,
+      "sourceTeamId": 1393,
+      "clubSourceId": 23,
+      "name": "CENTRO MELILLA",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 169,
+      "sourceTeamId": 1394,
+      "clubSourceId": 53,
+      "name": "LAS ORIONAS",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 170,
+      "sourceTeamId": 1397,
+      "clubSourceId": 90,
+      "name": "UNION 4 DE JULIO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 171,
+      "sourceTeamId": 1398,
+      "clubSourceId": 24,
+      "name": "CITY PARK B",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 172,
+      "sourceTeamId": 1399,
+      "clubSourceId": 24,
+      "name": "CITY PARK C",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 173,
+      "sourceTeamId": 1401,
+      "clubSourceId": 71,
+      "name": "PASO CARRASCO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 174,
+      "sourceTeamId": 1402,
+      "clubSourceId": 50,
+      "name": "LA FRANJA B",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 175,
+      "sourceTeamId": 1404,
+      "clubSourceId": 77,
+      "name": "PROGRESO B",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 176,
+      "sourceTeamId": 1405,
+      "clubSourceId": 36,
+      "name": "EMPALME OLMOS A",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 177,
+      "sourceTeamId": 1406,
+      "clubSourceId": 76,
+      "name": "POQUITOS",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 178,
+      "sourceTeamId": 1407,
+      "clubSourceId": 84,
+      "name": "HALCONES TIEMPO CERO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 179,
+      "sourceTeamId": 1408,
+      "clubSourceId": 5,
+      "name": "ARRIETA CDV J",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 180,
+      "sourceTeamId": 1409,
+      "clubSourceId": 17,
+      "name": "C.DOMINIO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 181,
+      "sourceTeamId": 1410,
+      "clubSourceId": 73,
+      "name": "PLAYA PASCUAL B",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 182,
+      "sourceTeamId": 1411,
+      "clubSourceId": 28,
+      "name": "COSTA AZUL",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 183,
+      "sourceTeamId": 1412,
+      "clubSourceId": 72,
+      "name": "PINAMAR",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 184,
+      "sourceTeamId": 1413,
+      "clubSourceId": 11,
+      "name": "BOMBINI",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 185,
+      "sourceTeamId": 1414,
+      "clubSourceId": 91,
+      "name": "UNION SRS B. 25",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 186,
+      "sourceTeamId": 1415,
+      "clubSourceId": 91,
+      "name": "UNION SRS WHITE",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 187,
+      "sourceTeamId": 1416,
+      "clubSourceId": 40,
+      "name": "GIMNASIO SAYAGO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 188,
+      "sourceTeamId": 1417,
+      "clubSourceId": 16,
+      "name": "C.D. ALBATROS",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 189,
+      "sourceTeamId": 1418,
+      "clubSourceId": 23,
+      "name": "CENTRO MELILLA",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 190,
+      "sourceTeamId": 1419,
+      "clubSourceId": 75,
+      "name": "PLAZA HELVETICO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 191,
+      "sourceTeamId": 1420,
+      "clubSourceId": 96,
+      "name": "V8 - PPC",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 192,
+      "sourceTeamId": 1421,
+      "clubSourceId": 91,
+      "name": "UNION SRS BLUE",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 193,
+      "sourceTeamId": 1422,
+      "clubSourceId": 41,
+      "name": "HEBRAICA Y MACABI J",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 194,
+      "sourceTeamId": 1423,
+      "clubSourceId": 79,
+      "name": "SANTA VOLEY",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 195,
+      "sourceTeamId": 1424,
+      "clubSourceId": 74,
+      "name": "PLAZA 12",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 196,
+      "sourceTeamId": 1425,
+      "clubSourceId": 44,
+      "name": "INFIT CLUB LA COSTA",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 197,
+      "sourceTeamId": 1426,
+      "clubSourceId": 66,
+      "name": "OLIMPIA B",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 198,
+      "sourceTeamId": 1475,
+      "clubSourceId": 2,
+      "name": "ACJ PORTONES",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 199,
+      "sourceTeamId": 1476,
+      "clubSourceId": 61,
+      "name": "MONTERREY",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 200,
+      "sourceTeamId": 1477,
+      "clubSourceId": 30,
+      "name": "CPCH PANDO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 201,
+      "sourceTeamId": 1478,
+      "clubSourceId": 57,
+      "name": "LOS TITANES LA TUNA",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 202,
+      "sourceTeamId": 1479,
+      "clubSourceId": 63,
+      "name": "NAUTICO",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 203,
+      "sourceTeamId": 1480,
+      "clubSourceId": 59,
+      "name": "MILENIALS SUTEL",
+      "gender": "Male",
+      "active": true
+    },
+    {
+      "sourceId": 204,
+      "sourceTeamId": 1481,
+      "clubSourceId": 27,
+      "name": "CORDON CELESTE",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 205,
+      "sourceTeamId": 1482,
+      "clubSourceId": 3,
+      "name": "AIRES PUROS L",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 206,
+      "sourceTeamId": 1483,
+      "clubSourceId": 88,
+      "name": "UCU",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 207,
+      "sourceTeamId": 1484,
+      "clubSourceId": 30,
+      "name": "CPCH PANDO",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 208,
+      "sourceTeamId": 1485,
+      "clubSourceId": 92,
+      "name": "UNION VECINAL J",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 209,
+      "sourceTeamId": 1486,
+      "clubSourceId": 59,
+      "name": "MILENIALS SUTEL",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 210,
+      "sourceTeamId": 1487,
+      "clubSourceId": 97,
+      "name": "VALKIRIAS",
+      "gender": "Female",
+      "active": true
+    },
+    {
+      "sourceId": 211,
+      "sourceTeamId": 1488,
+      "clubSourceId": 43,
+      "name": "IMPERIO",
+      "gender": "Female",
+      "active": true
+    }
+  ],
+  "venues": [
+    {
+      "sourceId": 1,
+      "name": "ACJ",
+      "active": true
+    },
+    {
+      "sourceId": 2,
+      "name": "ACJ - PORTONES",
+      "active": true
+    },
+    {
+      "sourceId": 3,
+      "name": "ALBATROS",
+      "active": true
+    },
+    {
+      "sourceId": 4,
+      "name": "C.S. MIRAMAR",
+      "active": true
+    },
+    {
+      "sourceId": 5,
+      "name": "CDV 33",
+      "active": true
+    },
+    {
+      "sourceId": 6,
+      "name": "Cedemcar",
+      "active": true
+    },
+    {
+      "sourceId": 7,
+      "name": "City Park",
+      "active": true
+    },
+    {
+      "sourceId": 8,
+      "name": "Club Malvin",
+      "active": true
+    },
+    {
+      "sourceId": 9,
+      "name": "Club Sayago",
+      "active": true
+    },
+    {
+      "sourceId": 10,
+      "name": "COL. CRANDON",
+      "active": true
+    },
+    {
+      "sourceId": 11,
+      "name": "COL. ST BRENDAN`S",
+      "active": true
+    },
+    {
+      "sourceId": 12,
+      "name": "Colegio Areteia",
+      "active": true
+    },
+    {
+      "sourceId": 13,
+      "name": "COUNTRY EL PINAR",
+      "active": true
+    },
+    {
+      "sourceId": 14,
+      "name": "CPC PANDO",
+      "active": true
+    },
+    {
+      "sourceId": 15,
+      "name": "DEPORTIVO MALDONADO",
+      "active": true
+    },
+    {
+      "sourceId": 16,
+      "name": "Empalme Olmos",
+      "active": true
+    },
+    {
+      "sourceId": 17,
+      "name": "ENFOQUE",
+      "active": true
+    },
+    {
+      "sourceId": 18,
+      "name": "Fray Marcos",
+      "active": true
+    },
+    {
+      "sourceId": 19,
+      "name": "Gim \"A\" BOHEMIOS",
+      "active": true
+    },
+    {
+      "sourceId": 20,
+      "name": "Gim \"A\" CBR",
+      "active": true
+    },
+    {
+      "sourceId": 21,
+      "name": "Gim HEBRAICA",
+      "active": true
+    },
+    {
+      "sourceId": 22,
+      "name": "Gim Liceo Nro 15",
+      "active": true
+    },
+    {
+      "sourceId": 23,
+      "name": "Gim NAUTICO",
+      "active": true
+    },
+    {
+      "sourceId": 24,
+      "name": "Gim PAN DE AZUCAR",
+      "active": true
+    },
+    {
+      "sourceId": 25,
+      "name": "Gim. Aires Puros",
+      "active": true
+    },
+    {
+      "sourceId": 26,
+      "name": "Gim. C. A. Atenas",
+      "active": true
+    },
+    {
+      "sourceId": 27,
+      "name": "Gim. Centro Melilla",
+      "active": true
+    },
+    {
+      "sourceId": 28,
+      "name": "Gim. Club Bigua",
+      "active": true
+    },
+    {
+      "sourceId": 29,
+      "name": "Gim. Nueva Palmira",
+      "active": true
+    },
+    {
+      "sourceId": 30,
+      "name": "Gim. SJ de Carrasco",
+      "active": true
+    },
+    {
+      "sourceId": 31,
+      "name": "Gim. Unión Sta Rosa",
+      "active": true
+    },
+    {
+      "sourceId": 32,
+      "name": "Gimnasio B - Olimpia",
+      "active": true
+    },
+    {
+      "sourceId": 33,
+      "name": "Gimnasio CDV",
+      "active": true
+    },
+    {
+      "sourceId": 34,
+      "name": "Gimnasio Club BPS",
+      "active": true
+    },
+    {
+      "sourceId": 35,
+      "name": "Gimnasio Juan Ferreira",
+      "active": true
+    },
+    {
+      "sourceId": 36,
+      "name": "Gimnasio Juan XXIII",
+      "active": true
+    },
+    {
+      "sourceId": 37,
+      "name": "Gimnasio Sayago",
+      "active": true
+    },
+    {
+      "sourceId": 38,
+      "name": "ISEF",
+      "active": true
+    },
+    {
+      "sourceId": 39,
+      "name": "LAGOMAR",
+      "active": true
+    },
+    {
+      "sourceId": 40,
+      "name": "Liceo Militar",
+      "active": true
+    },
+    {
+      "sourceId": 41,
+      "name": "PLAZA NUEVA HELVECIA",
+      "active": true
+    },
+    {
+      "sourceId": 42,
+      "name": "Plaza Nº 12",
+      "active": true
+    },
+    {
+      "sourceId": 43,
+      "name": "Polideportivo",
+      "active": true
+    },
+    {
+      "sourceId": 44,
+      "name": "Polideportivo La Paz",
+      "active": true
+    },
+    {
+      "sourceId": 45,
+      "name": "Polideportivo Las Piedras",
+      "active": true
+    },
+    {
+      "sourceId": 46,
+      "name": "Polideportivo Suárez",
+      "active": true
+    },
+    {
+      "sourceId": 47,
+      "name": "Poquitos",
+      "active": true
+    },
+    {
+      "sourceId": 48,
+      "name": "PROGRESO",
+      "active": true
+    },
+    {
+      "sourceId": 49,
+      "name": "Sauce BBC",
+      "active": true
+    },
+    {
+      "sourceId": 50,
+      "name": "Solis de Pando",
+      "active": true
+    },
+    {
+      "sourceId": 51,
+      "name": "UAS",
+      "active": true
+    },
+    {
+      "sourceId": 52,
+      "name": "UGAB",
+      "active": true
+    },
+    {
+      "sourceId": 53,
+      "name": "URUGUAY PEÑAROL",
+      "active": true
+    },
+    {
+      "sourceId": 54,
+      "name": "Urupan",
+      "active": true
+    },
+    {
+      "sourceId": 55,
+      "name": "Zona 3",
+      "active": true
+    }
+  ],
+  "competitions": [
+    {
+      "sourceId": 255,
+      "name": "CLAUSURA 2026 - MASCULINO PRIMERA",
+      "seasonSourceId": 1,
+      "divisionSourceId": 1,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 256,
+      "name": "CLAUSURA 2026 - MASCULINO A",
+      "seasonSourceId": 1,
+      "divisionSourceId": 2,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 257,
+      "name": "CLAUSURA 2026 - MASCULINO B",
+      "seasonSourceId": 1,
+      "divisionSourceId": 3,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 258,
+      "name": "CLAUSURA 2026 - MASCULINO C",
+      "seasonSourceId": 1,
+      "divisionSourceId": 4,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 259,
+      "name": "CLAUSURA 2026 - MASCULINO D",
+      "seasonSourceId": 1,
+      "divisionSourceId": 5,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 260,
+      "name": "CLAUSURA 2026 - MASCULINO E",
+      "seasonSourceId": 1,
+      "divisionSourceId": 6,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 261,
+      "name": "CLAUSURA 2026 - MASCULINO F",
+      "seasonSourceId": 1,
+      "divisionSourceId": 7,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 262,
+      "name": "CLAUSURA 2026 - MASCULINO G",
+      "seasonSourceId": 1,
+      "divisionSourceId": 8,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 263,
+      "name": "CLAUSURA 2026 - MASCULINO H",
+      "seasonSourceId": 1,
+      "divisionSourceId": 9,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 264,
+      "name": "CLAUSURA 2026 - MASCULINO I",
+      "seasonSourceId": 1,
+      "divisionSourceId": 10,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 265,
+      "name": "CLAUSURA 2026 - MASCULINO J",
+      "seasonSourceId": 1,
+      "divisionSourceId": 11,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 266,
+      "name": "CLAUSURA 2026 - MASCULINO K",
+      "seasonSourceId": 1,
+      "divisionSourceId": 12,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 267,
+      "name": "CLAUSURA 2026 - FEMENINO PRIMERA",
+      "seasonSourceId": 1,
+      "divisionSourceId": 13,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 268,
+      "name": "CLAUSURA 2026 - FEMENINO A",
+      "seasonSourceId": 1,
+      "divisionSourceId": 14,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 269,
+      "name": "CLAUSURA 2026 - FEMENINO B",
+      "seasonSourceId": 1,
+      "divisionSourceId": 15,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 270,
+      "name": "CLAUSURA 2026 - FEMENINO C",
+      "seasonSourceId": 1,
+      "divisionSourceId": 16,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 271,
+      "name": "CLAUSURA 2026 - FEMENINO D",
+      "seasonSourceId": 1,
+      "divisionSourceId": 17,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 272,
+      "name": "CLAUSURA 2026 - FEMENINO E",
+      "seasonSourceId": 1,
+      "divisionSourceId": 18,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 273,
+      "name": "CLAUSURA 2026 - FEMENINO F",
+      "seasonSourceId": 1,
+      "divisionSourceId": 19,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 274,
+      "name": "CLAUSURA 2026 - FEMENINO G",
+      "seasonSourceId": 1,
+      "divisionSourceId": 20,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 275,
+      "name": "CLAUSURA 2026 - FEMENINO H",
+      "seasonSourceId": 1,
+      "divisionSourceId": 21,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 276,
+      "name": "CLAUSURA 2026 - FEMENINO I",
+      "seasonSourceId": 1,
+      "divisionSourceId": 22,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 277,
+      "name": "CLAUSURA 2026 - FEMENINO J",
+      "seasonSourceId": 1,
+      "divisionSourceId": 23,
+      "periodType": "Clausura"
+    },
+    {
+      "sourceId": 278,
+      "name": "CLAUSURA 2026 - FEMENINO K",
+      "seasonSourceId": 1,
+      "divisionSourceId": 24,
+      "periodType": "Clausura"
+    }
+  ],
+  "teamEntries": [
+    {
+      "sourceId": 1,
+      "competitionSourceId": 255,
+      "teamSourceId": 1,
+      "status": "Active"
+    },
+    {
+      "sourceId": 2,
+      "competitionSourceId": 255,
+      "teamSourceId": 2,
+      "status": "Active"
+    },
+    {
+      "sourceId": 3,
+      "competitionSourceId": 255,
+      "teamSourceId": 3,
+      "status": "Active"
+    },
+    {
+      "sourceId": 4,
+      "competitionSourceId": 255,
+      "teamSourceId": 6,
+      "status": "Active"
+    },
+    {
+      "sourceId": 5,
+      "competitionSourceId": 255,
+      "teamSourceId": 7,
+      "status": "Active"
+    },
+    {
+      "sourceId": 6,
+      "competitionSourceId": 255,
+      "teamSourceId": 8,
+      "status": "Active"
+    },
+    {
+      "sourceId": 7,
+      "competitionSourceId": 255,
+      "teamSourceId": 32,
+      "status": "Active"
+    },
+    {
+      "sourceId": 8,
+      "competitionSourceId": 255,
+      "teamSourceId": 33,
+      "status": "Active"
+    },
+    {
+      "sourceId": 9,
+      "competitionSourceId": 255,
+      "teamSourceId": 147,
+      "status": "Active"
+    },
+    {
+      "sourceId": 10,
+      "competitionSourceId": 255,
+      "teamSourceId": 149,
+      "status": "Active"
+    },
+    {
+      "sourceId": 11,
+      "competitionSourceId": 256,
+      "teamSourceId": 4,
+      "status": "Active"
+    },
+    {
+      "sourceId": 12,
+      "competitionSourceId": 256,
+      "teamSourceId": 9,
+      "status": "Active"
+    },
+    {
+      "sourceId": 13,
+      "competitionSourceId": 256,
+      "teamSourceId": 10,
+      "status": "Active"
+    },
+    {
+      "sourceId": 14,
+      "competitionSourceId": 256,
+      "teamSourceId": 13,
+      "status": "Active"
+    },
+    {
+      "sourceId": 15,
+      "competitionSourceId": 256,
+      "teamSourceId": 14,
+      "status": "Active"
+    },
+    {
+      "sourceId": 16,
+      "competitionSourceId": 256,
+      "teamSourceId": 16,
+      "status": "Active"
+    },
+    {
+      "sourceId": 17,
+      "competitionSourceId": 256,
+      "teamSourceId": 20,
+      "status": "Active"
+    },
+    {
+      "sourceId": 18,
+      "competitionSourceId": 256,
+      "teamSourceId": 44,
+      "status": "Active"
+    },
+    {
+      "sourceId": 19,
+      "competitionSourceId": 256,
+      "teamSourceId": 70,
+      "status": "Active"
+    },
+    {
+      "sourceId": 20,
+      "competitionSourceId": 256,
+      "teamSourceId": 74,
+      "status": "Active"
+    },
+    {
+      "sourceId": 21,
+      "competitionSourceId": 257,
+      "teamSourceId": 11,
+      "status": "Active"
+    },
+    {
+      "sourceId": 22,
+      "competitionSourceId": 257,
+      "teamSourceId": 12,
+      "status": "Active"
+    },
+    {
+      "sourceId": 23,
+      "competitionSourceId": 257,
+      "teamSourceId": 15,
+      "status": "Active"
+    },
+    {
+      "sourceId": 24,
+      "competitionSourceId": 257,
+      "teamSourceId": 22,
+      "status": "Active"
+    },
+    {
+      "sourceId": 25,
+      "competitionSourceId": 257,
+      "teamSourceId": 24,
+      "status": "Active"
+    },
+    {
+      "sourceId": 26,
+      "competitionSourceId": 257,
+      "teamSourceId": 48,
+      "status": "Active"
+    },
+    {
+      "sourceId": 27,
+      "competitionSourceId": 257,
+      "teamSourceId": 71,
+      "status": "Active"
+    },
+    {
+      "sourceId": 28,
+      "competitionSourceId": 257,
+      "teamSourceId": 72,
+      "status": "Active"
+    },
+    {
+      "sourceId": 29,
+      "competitionSourceId": 257,
+      "teamSourceId": 73,
+      "status": "Active"
+    },
+    {
+      "sourceId": 30,
+      "competitionSourceId": 257,
+      "teamSourceId": 178,
+      "status": "Active"
+    },
+    {
+      "sourceId": 31,
+      "competitionSourceId": 258,
+      "teamSourceId": 21,
+      "status": "Active"
+    },
+    {
+      "sourceId": 32,
+      "competitionSourceId": 258,
+      "teamSourceId": 29,
+      "status": "Active"
+    },
+    {
+      "sourceId": 33,
+      "competitionSourceId": 258,
+      "teamSourceId": 30,
+      "status": "Active"
+    },
+    {
+      "sourceId": 34,
+      "competitionSourceId": 258,
+      "teamSourceId": 31,
+      "status": "Active"
+    },
+    {
+      "sourceId": 35,
+      "competitionSourceId": 258,
+      "teamSourceId": 36,
+      "status": "Active"
+    },
+    {
+      "sourceId": 36,
+      "competitionSourceId": 258,
+      "teamSourceId": 37,
+      "status": "Active"
+    },
+    {
+      "sourceId": 37,
+      "competitionSourceId": 258,
+      "teamSourceId": 150,
+      "status": "Active"
+    },
+    {
+      "sourceId": 38,
+      "competitionSourceId": 258,
+      "teamSourceId": 151,
+      "status": "Active"
+    },
+    {
+      "sourceId": 39,
+      "competitionSourceId": 258,
+      "teamSourceId": 152,
+      "status": "Active"
+    },
+    {
+      "sourceId": 40,
+      "competitionSourceId": 258,
+      "teamSourceId": 179,
+      "status": "Active"
+    },
+    {
+      "sourceId": 41,
+      "competitionSourceId": 259,
+      "teamSourceId": 17,
+      "status": "Active"
+    },
+    {
+      "sourceId": 42,
+      "competitionSourceId": 259,
+      "teamSourceId": 26,
+      "status": "Active"
+    },
+    {
+      "sourceId": 43,
+      "competitionSourceId": 259,
+      "teamSourceId": 34,
+      "status": "Active"
+    },
+    {
+      "sourceId": 44,
+      "competitionSourceId": 259,
+      "teamSourceId": 38,
+      "status": "Active"
+    },
+    {
+      "sourceId": 45,
+      "competitionSourceId": 259,
+      "teamSourceId": 39,
+      "status": "Active"
+    },
+    {
+      "sourceId": 46,
+      "competitionSourceId": 259,
+      "teamSourceId": 42,
+      "status": "Active"
+    },
+    {
+      "sourceId": 47,
+      "competitionSourceId": 259,
+      "teamSourceId": 45,
+      "status": "Active"
+    },
+    {
+      "sourceId": 48,
+      "competitionSourceId": 259,
+      "teamSourceId": 153,
+      "status": "Active"
+    },
+    {
+      "sourceId": 49,
+      "competitionSourceId": 260,
+      "teamSourceId": 5,
+      "status": "Active"
+    },
+    {
+      "sourceId": 50,
+      "competitionSourceId": 260,
+      "teamSourceId": 23,
+      "status": "Active"
+    },
+    {
+      "sourceId": 51,
+      "competitionSourceId": 260,
+      "teamSourceId": 35,
+      "status": "Active"
+    },
+    {
+      "sourceId": 52,
+      "competitionSourceId": 260,
+      "teamSourceId": 41,
+      "status": "Active"
+    },
+    {
+      "sourceId": 53,
+      "competitionSourceId": 260,
+      "teamSourceId": 43,
+      "status": "Active"
+    },
+    {
+      "sourceId": 54,
+      "competitionSourceId": 260,
+      "teamSourceId": 49,
+      "status": "Active"
+    },
+    {
+      "sourceId": 55,
+      "competitionSourceId": 260,
+      "teamSourceId": 55,
+      "status": "Active"
+    },
+    {
+      "sourceId": 56,
+      "competitionSourceId": 260,
+      "teamSourceId": 154,
+      "status": "Active"
+    },
+    {
+      "sourceId": 57,
+      "competitionSourceId": 261,
+      "teamSourceId": 27,
+      "status": "Active"
+    },
+    {
+      "sourceId": 58,
+      "competitionSourceId": 261,
+      "teamSourceId": 47,
+      "status": "Active"
+    },
+    {
+      "sourceId": 59,
+      "competitionSourceId": 261,
+      "teamSourceId": 50,
+      "status": "Active"
+    },
+    {
+      "sourceId": 60,
+      "competitionSourceId": 261,
+      "teamSourceId": 52,
+      "status": "Active"
+    },
+    {
+      "sourceId": 61,
+      "competitionSourceId": 261,
+      "teamSourceId": 54,
+      "status": "Active"
+    },
+    {
+      "sourceId": 62,
+      "competitionSourceId": 261,
+      "teamSourceId": 56,
+      "status": "Active"
+    },
+    {
+      "sourceId": 63,
+      "competitionSourceId": 261,
+      "teamSourceId": 60,
+      "status": "Active"
+    },
+    {
+      "sourceId": 64,
+      "competitionSourceId": 261,
+      "teamSourceId": 180,
+      "status": "Active"
+    },
+    {
+      "sourceId": 65,
+      "competitionSourceId": 262,
+      "teamSourceId": 25,
+      "status": "Active"
+    },
+    {
+      "sourceId": 66,
+      "competitionSourceId": 262,
+      "teamSourceId": 28,
+      "status": "Active"
+    },
+    {
+      "sourceId": 67,
+      "competitionSourceId": 262,
+      "teamSourceId": 53,
+      "status": "Active"
+    },
+    {
+      "sourceId": 68,
+      "competitionSourceId": 262,
+      "teamSourceId": 57,
+      "status": "Active"
+    },
+    {
+      "sourceId": 69,
+      "competitionSourceId": 262,
+      "teamSourceId": 58,
+      "status": "Active"
+    },
+    {
+      "sourceId": 70,
+      "competitionSourceId": 262,
+      "teamSourceId": 62,
+      "status": "Active"
+    },
+    {
+      "sourceId": 71,
+      "competitionSourceId": 262,
+      "teamSourceId": 63,
+      "status": "Active"
+    },
+    {
+      "sourceId": 72,
+      "competitionSourceId": 262,
+      "teamSourceId": 64,
+      "status": "Active"
+    },
+    {
+      "sourceId": 73,
+      "competitionSourceId": 263,
+      "teamSourceId": 18,
+      "status": "Active"
+    },
+    {
+      "sourceId": 74,
+      "competitionSourceId": 263,
+      "teamSourceId": 19,
+      "status": "Active"
+    },
+    {
+      "sourceId": 75,
+      "competitionSourceId": 263,
+      "teamSourceId": 46,
+      "status": "Active"
+    },
+    {
+      "sourceId": 76,
+      "competitionSourceId": 263,
+      "teamSourceId": 59,
+      "status": "Active"
+    },
+    {
+      "sourceId": 77,
+      "competitionSourceId": 263,
+      "teamSourceId": 66,
+      "status": "Active"
+    },
+    {
+      "sourceId": 78,
+      "competitionSourceId": 263,
+      "teamSourceId": 67,
+      "status": "Active"
+    },
+    {
+      "sourceId": 79,
+      "competitionSourceId": 263,
+      "teamSourceId": 68,
+      "status": "Active"
+    },
+    {
+      "sourceId": 80,
+      "competitionSourceId": 263,
+      "teamSourceId": 155,
+      "status": "Active"
+    },
+    {
+      "sourceId": 81,
+      "competitionSourceId": 264,
+      "teamSourceId": 51,
+      "status": "Active"
+    },
+    {
+      "sourceId": 82,
+      "competitionSourceId": 264,
+      "teamSourceId": 61,
+      "status": "Active"
+    },
+    {
+      "sourceId": 83,
+      "competitionSourceId": 264,
+      "teamSourceId": 65,
+      "status": "Active"
+    },
+    {
+      "sourceId": 84,
+      "competitionSourceId": 264,
+      "teamSourceId": 69,
+      "status": "Active"
+    },
+    {
+      "sourceId": 85,
+      "competitionSourceId": 264,
+      "teamSourceId": 185,
+      "status": "Active"
+    },
+    {
+      "sourceId": 86,
+      "competitionSourceId": 264,
+      "teamSourceId": 188,
+      "status": "Active"
+    },
+    {
+      "sourceId": 87,
+      "competitionSourceId": 264,
+      "teamSourceId": 189,
+      "status": "Active"
+    },
+    {
+      "sourceId": 88,
+      "competitionSourceId": 265,
+      "teamSourceId": 148,
+      "status": "Active"
+    },
+    {
+      "sourceId": 89,
+      "competitionSourceId": 265,
+      "teamSourceId": 181,
+      "status": "Active"
+    },
+    {
+      "sourceId": 90,
+      "competitionSourceId": 265,
+      "teamSourceId": 182,
+      "status": "Active"
+    },
+    {
+      "sourceId": 91,
+      "competitionSourceId": 265,
+      "teamSourceId": 183,
+      "status": "Active"
+    },
+    {
+      "sourceId": 92,
+      "competitionSourceId": 265,
+      "teamSourceId": 184,
+      "status": "Active"
+    },
+    {
+      "sourceId": 93,
+      "competitionSourceId": 265,
+      "teamSourceId": 186,
+      "status": "Active"
+    },
+    {
+      "sourceId": 94,
+      "competitionSourceId": 265,
+      "teamSourceId": 187,
+      "status": "Active"
+    },
+    {
+      "sourceId": 95,
+      "competitionSourceId": 266,
+      "teamSourceId": 40,
+      "status": "Active"
+    },
+    {
+      "sourceId": 96,
+      "competitionSourceId": 266,
+      "teamSourceId": 198,
+      "status": "Active"
+    },
+    {
+      "sourceId": 97,
+      "competitionSourceId": 266,
+      "teamSourceId": 199,
+      "status": "Active"
+    },
+    {
+      "sourceId": 98,
+      "competitionSourceId": 266,
+      "teamSourceId": 200,
+      "status": "Active"
+    },
+    {
+      "sourceId": 99,
+      "competitionSourceId": 266,
+      "teamSourceId": 201,
+      "status": "Active"
+    },
+    {
+      "sourceId": 100,
+      "competitionSourceId": 266,
+      "teamSourceId": 202,
+      "status": "Active"
+    },
+    {
+      "sourceId": 101,
+      "competitionSourceId": 266,
+      "teamSourceId": 203,
+      "status": "Active"
+    },
+    {
+      "sourceId": 102,
+      "competitionSourceId": 267,
+      "teamSourceId": 75,
+      "status": "Active"
+    },
+    {
+      "sourceId": 103,
+      "competitionSourceId": 267,
+      "teamSourceId": 76,
+      "status": "Active"
+    },
+    {
+      "sourceId": 104,
+      "competitionSourceId": 267,
+      "teamSourceId": 77,
+      "status": "Active"
+    },
+    {
+      "sourceId": 105,
+      "competitionSourceId": 267,
+      "teamSourceId": 79,
+      "status": "Active"
+    },
+    {
+      "sourceId": 106,
+      "competitionSourceId": 267,
+      "teamSourceId": 80,
+      "status": "Active"
+    },
+    {
+      "sourceId": 107,
+      "competitionSourceId": 267,
+      "teamSourceId": 83,
+      "status": "Active"
+    },
+    {
+      "sourceId": 108,
+      "competitionSourceId": 267,
+      "teamSourceId": 84,
+      "status": "Active"
+    },
+    {
+      "sourceId": 109,
+      "competitionSourceId": 267,
+      "teamSourceId": 88,
+      "status": "Active"
+    },
+    {
+      "sourceId": 110,
+      "competitionSourceId": 267,
+      "teamSourceId": 90,
+      "status": "Active"
+    },
+    {
+      "sourceId": 111,
+      "competitionSourceId": 267,
+      "teamSourceId": 190,
+      "status": "Active"
+    },
+    {
+      "sourceId": 112,
+      "competitionSourceId": 268,
+      "teamSourceId": 78,
+      "status": "Active"
+    },
+    {
+      "sourceId": 113,
+      "competitionSourceId": 268,
+      "teamSourceId": 82,
+      "status": "Active"
+    },
+    {
+      "sourceId": 114,
+      "competitionSourceId": 268,
+      "teamSourceId": 85,
+      "status": "Active"
+    },
+    {
+      "sourceId": 115,
+      "competitionSourceId": 268,
+      "teamSourceId": 86,
+      "status": "Active"
+    },
+    {
+      "sourceId": 116,
+      "competitionSourceId": 268,
+      "teamSourceId": 87,
+      "status": "Active"
+    },
+    {
+      "sourceId": 117,
+      "competitionSourceId": 268,
+      "teamSourceId": 89,
+      "status": "Active"
+    },
+    {
+      "sourceId": 118,
+      "competitionSourceId": 268,
+      "teamSourceId": 91,
+      "status": "Active"
+    },
+    {
+      "sourceId": 119,
+      "competitionSourceId": 268,
+      "teamSourceId": 96,
+      "status": "Active"
+    },
+    {
+      "sourceId": 120,
+      "competitionSourceId": 268,
+      "teamSourceId": 97,
+      "status": "Active"
+    },
+    {
+      "sourceId": 121,
+      "competitionSourceId": 268,
+      "teamSourceId": 156,
+      "status": "Active"
+    },
+    {
+      "sourceId": 122,
+      "competitionSourceId": 269,
+      "teamSourceId": 92,
+      "status": "Active"
+    },
+    {
+      "sourceId": 123,
+      "competitionSourceId": 269,
+      "teamSourceId": 93,
+      "status": "Active"
+    },
+    {
+      "sourceId": 124,
+      "competitionSourceId": 269,
+      "teamSourceId": 94,
+      "status": "Active"
+    },
+    {
+      "sourceId": 125,
+      "competitionSourceId": 269,
+      "teamSourceId": 95,
+      "status": "Active"
+    },
+    {
+      "sourceId": 126,
+      "competitionSourceId": 269,
+      "teamSourceId": 99,
+      "status": "Active"
+    },
+    {
+      "sourceId": 127,
+      "competitionSourceId": 269,
+      "teamSourceId": 100,
+      "status": "Active"
+    },
+    {
+      "sourceId": 128,
+      "competitionSourceId": 269,
+      "teamSourceId": 101,
+      "status": "Active"
+    },
+    {
+      "sourceId": 129,
+      "competitionSourceId": 269,
+      "teamSourceId": 102,
+      "status": "Active"
+    },
+    {
+      "sourceId": 130,
+      "competitionSourceId": 269,
+      "teamSourceId": 104,
+      "status": "Active"
+    },
+    {
+      "sourceId": 131,
+      "competitionSourceId": 269,
+      "teamSourceId": 105,
+      "status": "Active"
+    },
+    {
+      "sourceId": 132,
+      "competitionSourceId": 270,
+      "teamSourceId": 98,
+      "status": "Active"
+    },
+    {
+      "sourceId": 133,
+      "competitionSourceId": 270,
+      "teamSourceId": 106,
+      "status": "Active"
+    },
+    {
+      "sourceId": 134,
+      "competitionSourceId": 270,
+      "teamSourceId": 107,
+      "status": "Active"
+    },
+    {
+      "sourceId": 135,
+      "competitionSourceId": 270,
+      "teamSourceId": 108,
+      "status": "Active"
+    },
+    {
+      "sourceId": 136,
+      "competitionSourceId": 270,
+      "teamSourceId": 109,
+      "status": "Active"
+    },
+    {
+      "sourceId": 137,
+      "competitionSourceId": 270,
+      "teamSourceId": 110,
+      "status": "Active"
+    },
+    {
+      "sourceId": 138,
+      "competitionSourceId": 270,
+      "teamSourceId": 116,
+      "status": "Active"
+    },
+    {
+      "sourceId": 139,
+      "competitionSourceId": 270,
+      "teamSourceId": 117,
+      "status": "Active"
+    },
+    {
+      "sourceId": 140,
+      "competitionSourceId": 270,
+      "teamSourceId": 124,
+      "status": "Active"
+    },
+    {
+      "sourceId": 141,
+      "competitionSourceId": 270,
+      "teamSourceId": 125,
+      "status": "Active"
+    },
+    {
+      "sourceId": 142,
+      "competitionSourceId": 271,
+      "teamSourceId": 103,
+      "status": "Active"
+    },
+    {
+      "sourceId": 143,
+      "competitionSourceId": 271,
+      "teamSourceId": 111,
+      "status": "Active"
+    },
+    {
+      "sourceId": 144,
+      "competitionSourceId": 271,
+      "teamSourceId": 112,
+      "status": "Active"
+    },
+    {
+      "sourceId": 145,
+      "competitionSourceId": 271,
+      "teamSourceId": 113,
+      "status": "Active"
+    },
+    {
+      "sourceId": 146,
+      "competitionSourceId": 271,
+      "teamSourceId": 118,
+      "status": "Active"
+    },
+    {
+      "sourceId": 147,
+      "competitionSourceId": 271,
+      "teamSourceId": 119,
+      "status": "Active"
+    },
+    {
+      "sourceId": 148,
+      "competitionSourceId": 271,
+      "teamSourceId": 132,
+      "status": "Active"
+    },
+    {
+      "sourceId": 149,
+      "competitionSourceId": 271,
+      "teamSourceId": 193,
+      "status": "Active"
+    },
+    {
+      "sourceId": 150,
+      "competitionSourceId": 271,
+      "teamSourceId": 204,
+      "status": "Active"
+    },
+    {
+      "sourceId": 151,
+      "competitionSourceId": 272,
+      "teamSourceId": 114,
+      "status": "Active"
+    },
+    {
+      "sourceId": 152,
+      "competitionSourceId": 272,
+      "teamSourceId": 115,
+      "status": "Active"
+    },
+    {
+      "sourceId": 153,
+      "competitionSourceId": 272,
+      "teamSourceId": 120,
+      "status": "Active"
+    },
+    {
+      "sourceId": 154,
+      "competitionSourceId": 272,
+      "teamSourceId": 121,
+      "status": "Active"
+    },
+    {
+      "sourceId": 155,
+      "competitionSourceId": 272,
+      "teamSourceId": 122,
+      "status": "Active"
+    },
+    {
+      "sourceId": 156,
+      "competitionSourceId": 272,
+      "teamSourceId": 123,
+      "status": "Active"
+    },
+    {
+      "sourceId": 157,
+      "competitionSourceId": 272,
+      "teamSourceId": 126,
+      "status": "Active"
+    },
+    {
+      "sourceId": 158,
+      "competitionSourceId": 272,
+      "teamSourceId": 127,
+      "status": "Active"
+    },
+    {
+      "sourceId": 159,
+      "competitionSourceId": 272,
+      "teamSourceId": 137,
+      "status": "Active"
+    },
+    {
+      "sourceId": 160,
+      "competitionSourceId": 273,
+      "teamSourceId": 128,
+      "status": "Active"
+    },
+    {
+      "sourceId": 161,
+      "competitionSourceId": 273,
+      "teamSourceId": 129,
+      "status": "Active"
+    },
+    {
+      "sourceId": 162,
+      "competitionSourceId": 273,
+      "teamSourceId": 130,
+      "status": "Active"
+    },
+    {
+      "sourceId": 163,
+      "competitionSourceId": 273,
+      "teamSourceId": 133,
+      "status": "Active"
+    },
+    {
+      "sourceId": 164,
+      "competitionSourceId": 273,
+      "teamSourceId": 134,
+      "status": "Active"
+    },
+    {
+      "sourceId": 165,
+      "competitionSourceId": 273,
+      "teamSourceId": 142,
+      "status": "Active"
+    },
+    {
+      "sourceId": 166,
+      "competitionSourceId": 273,
+      "teamSourceId": 144,
+      "status": "Active"
+    },
+    {
+      "sourceId": 167,
+      "competitionSourceId": 273,
+      "teamSourceId": 191,
+      "status": "Active"
+    },
+    {
+      "sourceId": 168,
+      "competitionSourceId": 274,
+      "teamSourceId": 81,
+      "status": "Active"
+    },
+    {
+      "sourceId": 169,
+      "competitionSourceId": 274,
+      "teamSourceId": 131,
+      "status": "Active"
+    },
+    {
+      "sourceId": 170,
+      "competitionSourceId": 274,
+      "teamSourceId": 135,
+      "status": "Active"
+    },
+    {
+      "sourceId": 171,
+      "competitionSourceId": 274,
+      "teamSourceId": 136,
+      "status": "Active"
+    },
+    {
+      "sourceId": 172,
+      "competitionSourceId": 274,
+      "teamSourceId": 138,
+      "status": "Active"
+    },
+    {
+      "sourceId": 173,
+      "competitionSourceId": 274,
+      "teamSourceId": 140,
+      "status": "Active"
+    },
+    {
+      "sourceId": 174,
+      "competitionSourceId": 274,
+      "teamSourceId": 143,
+      "status": "Active"
+    },
+    {
+      "sourceId": 175,
+      "competitionSourceId": 274,
+      "teamSourceId": 160,
+      "status": "Active"
+    },
+    {
+      "sourceId": 176,
+      "competitionSourceId": 275,
+      "teamSourceId": 139,
+      "status": "Active"
+    },
+    {
+      "sourceId": 177,
+      "competitionSourceId": 275,
+      "teamSourceId": 141,
+      "status": "Active"
+    },
+    {
+      "sourceId": 178,
+      "competitionSourceId": 275,
+      "teamSourceId": 145,
+      "status": "Active"
+    },
+    {
+      "sourceId": 179,
+      "competitionSourceId": 275,
+      "teamSourceId": 157,
+      "status": "Active"
+    },
+    {
+      "sourceId": 180,
+      "competitionSourceId": 275,
+      "teamSourceId": 159,
+      "status": "Active"
+    },
+    {
+      "sourceId": 181,
+      "competitionSourceId": 275,
+      "teamSourceId": 165,
+      "status": "Active"
+    },
+    {
+      "sourceId": 182,
+      "competitionSourceId": 275,
+      "teamSourceId": 167,
+      "status": "Active"
+    },
+    {
+      "sourceId": 183,
+      "competitionSourceId": 275,
+      "teamSourceId": 194,
+      "status": "Active"
+    },
+    {
+      "sourceId": 184,
+      "competitionSourceId": 276,
+      "teamSourceId": 146,
+      "status": "Active"
+    },
+    {
+      "sourceId": 185,
+      "competitionSourceId": 276,
+      "teamSourceId": 158,
+      "status": "Active"
+    },
+    {
+      "sourceId": 186,
+      "competitionSourceId": 276,
+      "teamSourceId": 161,
+      "status": "Active"
+    },
+    {
+      "sourceId": 187,
+      "competitionSourceId": 276,
+      "teamSourceId": 162,
+      "status": "Active"
+    },
+    {
+      "sourceId": 188,
+      "competitionSourceId": 276,
+      "teamSourceId": 164,
+      "status": "Active"
+    },
+    {
+      "sourceId": 189,
+      "competitionSourceId": 276,
+      "teamSourceId": 168,
+      "status": "Active"
+    },
+    {
+      "sourceId": 190,
+      "competitionSourceId": 276,
+      "teamSourceId": 170,
+      "status": "Active"
+    },
+    {
+      "sourceId": 191,
+      "competitionSourceId": 276,
+      "teamSourceId": 177,
+      "status": "Active"
+    },
+    {
+      "sourceId": 192,
+      "competitionSourceId": 277,
+      "teamSourceId": 163,
+      "status": "Active"
+    },
+    {
+      "sourceId": 193,
+      "competitionSourceId": 277,
+      "teamSourceId": 166,
+      "status": "Active"
+    },
+    {
+      "sourceId": 194,
+      "competitionSourceId": 277,
+      "teamSourceId": 169,
+      "status": "Active"
+    },
+    {
+      "sourceId": 195,
+      "competitionSourceId": 277,
+      "teamSourceId": 171,
+      "status": "Active"
+    },
+    {
+      "sourceId": 196,
+      "competitionSourceId": 277,
+      "teamSourceId": 172,
+      "status": "Active"
+    },
+    {
+      "sourceId": 197,
+      "competitionSourceId": 277,
+      "teamSourceId": 173,
+      "status": "Active"
+    },
+    {
+      "sourceId": 198,
+      "competitionSourceId": 277,
+      "teamSourceId": 174,
+      "status": "Active"
+    },
+    {
+      "sourceId": 199,
+      "competitionSourceId": 277,
+      "teamSourceId": 192,
+      "status": "Active"
+    },
+    {
+      "sourceId": 200,
+      "competitionSourceId": 277,
+      "teamSourceId": 196,
+      "status": "Active"
+    },
+    {
+      "sourceId": 201,
+      "competitionSourceId": 277,
+      "teamSourceId": 197,
+      "status": "Active"
+    },
+    {
+      "sourceId": 202,
+      "competitionSourceId": 278,
+      "teamSourceId": 175,
+      "status": "Active"
+    },
+    {
+      "sourceId": 203,
+      "competitionSourceId": 278,
+      "teamSourceId": 176,
+      "status": "Active"
+    },
+    {
+      "sourceId": 204,
+      "competitionSourceId": 278,
+      "teamSourceId": 195,
+      "status": "Active"
+    },
+    {
+      "sourceId": 205,
+      "competitionSourceId": 278,
+      "teamSourceId": 205,
+      "status": "Active"
+    },
+    {
+      "sourceId": 206,
+      "competitionSourceId": 278,
+      "teamSourceId": 206,
+      "status": "Active"
+    },
+    {
+      "sourceId": 207,
+      "competitionSourceId": 278,
+      "teamSourceId": 207,
+      "status": "Active"
+    },
+    {
+      "sourceId": 208,
+      "competitionSourceId": 278,
+      "teamSourceId": 208,
+      "status": "Active"
+    },
+    {
+      "sourceId": 209,
+      "competitionSourceId": 278,
+      "teamSourceId": 209,
+      "status": "Active"
+    },
+    {
+      "sourceId": 210,
+      "competitionSourceId": 278,
+      "teamSourceId": 210,
+      "status": "Active"
+    },
+    {
+      "sourceId": 211,
+      "competitionSourceId": 278,
+      "teamSourceId": 211,
+      "status": "Active"
+    }
+  ]
+}

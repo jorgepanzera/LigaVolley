@@ -11,6 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Persistence\Seed\livosur-2026.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\LigaVolley.Application\LigaVolley.Application.csproj" />
     <ProjectReference Include="..\LigaVolley.Domain\LigaVolley.Domain.csproj" />
   </ItemGroup>

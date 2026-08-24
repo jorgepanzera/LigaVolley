@@ -20,7 +20,9 @@ using LigaVolley.Application.Fixtures;
 using LigaVolley.Application.Matches;
 using LigaVolley.Domain.Fixtures;
 using LigaVolley.Infrastructure.Persistence;
+using LigaVolley.Infrastructure.Persistence.Seed;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 namespace LigaVolley.IntegrationTests;
 
@@ -40,6 +42,43 @@ public sealed class AdminCatalogEndpointsTests : IClassFixture<LigaVolleyApiFact
         options.Converters.Add(new JsonStringEnumConverter());
         return options;
     }
+
+    [Fact]
+    public async Task Livosur2026Seeder_LoadsApprovedCountsAndIsIdempotent()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LigaVolleyDbContext>();
+        var roundRobin = new CompetitionFormat("ROUND_ROBIN", "Round robin", null, 6, 8);
+        roundRobin.Phases.Add(new FormatPhase("REGULAR", "Regular", PhaseType.RoundRobin, PhaseRole.Regular, 1, 1, FixtureMode.BalancedRandom));
+        var splitStage = new CompetitionFormat("SPLIT_STAGE", "Split stage", null, 9, 24);
+        var regular = new FormatPhase("REGULAR", "Regular", PhaseType.RoundRobin, PhaseRole.Regular, 1, 1, FixtureMode.BalancedRandom);
+        var second = new FormatPhase("SECOND_STAGE", "Second stage", PhaseType.GroupStage, PhaseRole.Championship, 2, null, null);
+        var championship = new FormatGroup("CHAMPIONSHIP", "Championship", GroupRole.Championship, 1, 1, FixtureMode.BalancedRandom, CarryOverMode.None);
+        var relegation = new FormatGroup("RELEGATION", "Relegation", GroupRole.Relegation, 2, 1, FixtureMode.BalancedRandom, CarryOverMode.None);
+        second.Groups.Add(championship); second.Groups.Add(relegation); splitStage.Phases.Add(regular); splitStage.Phases.Add(second);
+        splitStage.QualificationRules.Add(new FormatQualificationRule(regular, null, QualificationSelectionMode.TopHalf, null, null, QualificationTargetType.Group, second, championship, null, null, 1));
+        splitStage.QualificationRules.Add(new FormatQualificationRule(regular, null, QualificationSelectionMode.BottomHalf, null, null, QualificationTargetType.Group, second, relegation, null, null, 2));
+        db.CompetitionFormats.AddRange(roundRobin, splitStage);
+        await db.SaveChangesAsync();
+
+        var seeder = new Livosur2026Seeder(db);
+        var first = await seeder.SeedAsync();
+        var countsAfterFirst = await SeedCounts(db);
+        var secondRun = await seeder.SeedAsync();
+        var countsAfterSecond = await SeedCounts(db);
+
+        Assert.Equal(new Livosur2026SeedResult(1, 24, 98, 211, 55, 24, 211), first);
+        Assert.Equal(first, secondRun);
+        Assert.Equal(countsAfterFirst, countsAfterSecond);
+        Assert.All(await db.Competitions.Include(x=>x.CompetitionFormat).Where(x => x.Season.Year == 2026 && db.TeamEntries.Count(e => e.CompetitionId == x.CompetitionId) <= 8).ToListAsync(), x => Assert.Equal("ROUND_ROBIN", x.CompetitionFormat.Code));
+        Assert.All(await db.Competitions.Include(x=>x.CompetitionFormat).Where(x => x.Season.Year == 2026 && db.TeamEntries.Count(e => e.CompetitionId == x.CompetitionId) >= 9).ToListAsync(), x => Assert.Equal("SPLIT_STAGE", x.CompetitionFormat.Code));
+        Assert.Single(await db.TeamEntries.Where(x => x.Team.Name == "C.A JUAN E. MILLER").ToListAsync());
+        Assert.Equal("CLAUSURA 2026 - MASCULINO C", (await db.TeamEntries.Include(x => x.Team).Include(x => x.Competition).SingleAsync(x => x.Team.Name == "C.A JUAN E. MILLER")).Competition.Name);
+    }
+
+    private static async Task<(int Seasons, int Divisions, int Clubs, int Teams, int Venues, int Competitions, int Entries)> SeedCounts(LigaVolleyDbContext db) =>
+        (await db.Seasons.CountAsync(), await db.Divisions.CountAsync(), await db.Clubs.CountAsync(), await db.Teams.CountAsync(),
+         await db.Venues.CountAsync(), await db.Competitions.CountAsync(), await db.TeamEntries.CountAsync());
 
     [Fact]
     public async Task FixtureEndpoints_GenerateAndReturnOnlyInitialPersistedMatches()
