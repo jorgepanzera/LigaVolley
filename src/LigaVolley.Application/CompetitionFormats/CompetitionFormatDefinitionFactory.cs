@@ -24,16 +24,16 @@ internal static class CompetitionFormatDefinitionFactory
             var phase = phases[p]; var path = $"definition.phases[{p}]";
             Required(phase.Code, 30, path + ".code", Error); Required(phase.Name, 100, path + ".name", Error);
             if (phase.Sequence <= 0) Error("format.invalid_sequence", path + ".sequence", "Sequence must be positive.");
-            if (phase.PhaseType == PhaseType.RoundRobin && (phase.Rounds is null or <= 0 || phase.FixtureMode is null or FixtureMode.Playoff)) Error("format.invalid_round_robin", path, "Round-robin phases require positive rounds and a non-playoff fixture mode.");
+            if (phase.PhaseType == PhaseType.RoundRobin && !ValidRoundRobin(phase.FixtureMode, phase.Rounds)) Error("format.unsupported_fixture_configuration", path, "V1 supports MIRRORED_HOME_AWAY with Rounds=2 or BALANCED_RANDOM with Rounds=1.");
             if (phase.PhaseType == PhaseType.GroupStage && (phase.Groups?.Count ?? 0) == 0) Error("format.groups_required", path + ".groups", "Group-stage phases require at least one group.");
             if (phase.PhaseType == PhaseType.Playoff && (phase.Series?.Count ?? 0) == 0) Error("format.series_required", path + ".series", "Playoff phases require at least one series.");
+            if (phase.PhaseType == PhaseType.Playoff && (phase.FixtureMode != FixtureMode.Playoff || phase.Rounds is not null)) Error("format.invalid_playoff_fixture", path, "Playoff phases require FixtureMode.Playoff and Rounds=null.");
             if (phase.PhaseType != PhaseType.Playoff && (phase.Series?.Count ?? 0) > 0) Error("format.series_phase_mismatch", path + ".series", "Series can only belong to playoff phases.");
             ValidateCodes((phase.Groups ?? []).Select(x => x.Code), path + ".groups", "group", Error);
             foreach (var (group, g) in (phase.Groups ?? []).Select((x, i) => (x, i)))
             {
                 var gp = $"{path}.groups[{g}]"; Required(group.Code, 30, gp + ".code", Error); Required(group.Name, 100, gp + ".name", Error);
-                if (group.Sequence <= 0 || group.Rounds <= 0) Error("format.invalid_group_values", gp, "Group sequence and rounds must be positive.");
-                if (group.FixtureMode == FixtureMode.Playoff) Error("format.invalid_group_fixture_mode", gp + ".fixtureMode", "Groups cannot use playoff fixture mode.");
+                if (group.Sequence <= 0 || !ValidRoundRobin(group.FixtureMode, group.Rounds)) Error("format.unsupported_group_fixture_configuration", gp, "V1 groups support MIRRORED_HOME_AWAY with Rounds=2 or BALANCED_RANDOM with Rounds=1.");
                 if (group.CarryOverMode != CarryOverMode.None) Error("format.unsupported_carry_over", gp + ".carryOverMode", "Only CarryOverMode.None is supported in v1.");
             }
             foreach (var (series, s) in (phase.Series ?? []).Select((x, i) => (x, i)))
@@ -106,6 +106,7 @@ internal static class CompetitionFormatDefinitionFactory
     }
 
     private static bool GroupExists(FormatPhaseInputDto phase, string? code) => code is null || (phase.Groups ?? []).Any(x => x.Code.Trim() == code.Trim());
+    private static bool ValidRoundRobin(FixtureMode? mode, short? rounds) => (mode, rounds) is (FixtureMode.MirroredHomeAway, 2) or (FixtureMode.BalancedRandom, 1);
     private static FormatGroup? FindGroup(FormatPhase phase, string? code) => code is null ? null : phase.Groups.Single(x => x.Code == code);
     private static void Required(string value, int max, string path, Action<string,string,string> error) { var length = value?.Trim().Length ?? 0; if (length == 0 || length > max) error("format.invalid_text", path, $"Value is required and cannot exceed {max} characters."); }
     private static void ValidateCodes(IEnumerable<string> codes, string path, string kind, Action<string,string,string> error) { var values = codes.Select(x => x?.Trim() ?? "").ToArray(); if (values.Where(x => x.Length > 0).GroupBy(x => x).Any(x => x.Count() > 1)) error($"format.duplicate_{kind}_code", path, $"{kind} codes must be unique."); }

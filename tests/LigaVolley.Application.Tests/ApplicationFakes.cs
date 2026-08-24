@@ -7,6 +7,7 @@ using LigaVolley.Domain.Clubs;
 using LigaVolley.Domain.Teams;
 using LigaVolley.Domain.Venues;
 using LigaVolley.Domain.TeamEntries;
+using LigaVolley.Domain.Fixtures;
 
 namespace LigaVolley.Application.Tests;
 
@@ -50,12 +51,27 @@ internal sealed class FakeDivisionRepository : IDivisionRepository
         => Task.FromResult(divisions.Any(x => x.Key != excludingId && x.Value.LevelOrder == levelOrder && x.Value.Gender == gender));
 }
 
+internal sealed class FakeFixtureRepository : IFixtureRepository
+{
+    public bool GenerationExists {get;set;} public List<FixtureGeneration> Generations {get;}=[]; public List<Match> Matches {get;}=[];
+    public Task<bool> GenerationExistsAsync(int competitionId,int phaseId,int? phaseGroupId,CancellationToken ct)=>Task.FromResult(GenerationExists);
+    public Task<IReadOnlyList<FixtureGeneration>> ListGenerationsAsync(int competitionId,CancellationToken ct)=>Task.FromResult<IReadOnlyList<FixtureGeneration>>(Generations);
+    public Task<IReadOnlyList<Match>> ListMatchesAsync(int competitionId,CancellationToken ct)=>Task.FromResult<IReadOnlyList<Match>>(Matches);
+    public void AddGeneration(FixtureGeneration generation)=>Generations.Add(generation);
+    public void AddMatches(IEnumerable<Match> matches)=>Matches.AddRange(matches);
+}
+
+internal sealed class FailingUnitOfWork : IUnitOfWork
+{
+    public Task SaveChangesAsync(CancellationToken cancellationToken=default)=>throw new InvalidOperationException("Simulated persistence failure.");
+}
+
 internal sealed class FakeTeamEntryRepository : ITeamEntryRepository
 {
     private readonly Dictionary<(int CompetitionId,int EntryId),TeamEntry> values=[];
     public TeamEntry? Added {get;private set;} public bool TeamExists {get;set;} public int ValidCount {get;set;} public bool Removed {get;private set;}
     public void Seed(int competitionId,int entryId,TeamEntry value)=>values[(competitionId,entryId)]=value;
-    public Task<IReadOnlyList<TeamEntry>> ListAsync(int competitionId,CancellationToken ct)=>Task.FromResult<IReadOnlyList<TeamEntry>>(values.Where(x=>x.Key.CompetitionId==competitionId).Select(x=>x.Value).ToArray());
+    public Task<IReadOnlyList<TeamEntry>> ListAsync(int competitionId,bool tracking,CancellationToken ct)=>Task.FromResult<IReadOnlyList<TeamEntry>>(values.Where(x=>x.Key.CompetitionId==competitionId).Select(x=>x.Value).ToArray());
     public Task<TeamEntry?> GetAsync(int competitionId,int entryId,bool tracking,CancellationToken ct)=>Task.FromResult(values.GetValueOrDefault((competitionId,entryId)));
     public Task<bool> TeamExistsAsync(int competitionId,int teamId,CancellationToken ct)=>Task.FromResult(TeamExists);
     public Task<int> CountValidAsync(int competitionId,CancellationToken ct)=>Task.FromResult(ValidCount);

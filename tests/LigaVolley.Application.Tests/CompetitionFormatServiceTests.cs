@@ -29,6 +29,18 @@ public sealed class CompetitionFormatServiceTests
         Assert.Contains(result.Errors, x => x.Code == "format.duplicate_series_code");
     }
 
+    [Theory]
+    [InlineData(FixtureMode.MirroredHomeAway, 1)]
+    [InlineData(FixtureMode.MirroredHomeAway, 3)]
+    [InlineData(FixtureMode.BalancedRandom, 2)]
+    [InlineData(FixtureMode.Playoff, 1)]
+    public async Task Validate_RejectsUnsupportedV1RoundRobinCombinations(FixtureMode mode, short rounds)
+    {
+        var definition = new CompetitionFormatDefinitionDto([new("REG", "Regular", PhaseType.RoundRobin, PhaseRole.Regular, 1, rounds, mode, [], [])], [], [], [], []);
+        var result = await Service().ValidateAsync(new(4, 8, definition));
+        Assert.Contains(result.Errors, x => x.Code == "format.unsupported_fixture_configuration");
+    }
+
     [Fact]
     public async Task Create_AndCloneProduceIndependentAggregates()
     {

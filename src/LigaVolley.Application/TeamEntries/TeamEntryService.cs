@@ -15,7 +15,7 @@ public sealed class TeamEntryService(
     public async Task<IReadOnlyList<TeamEntryDto>> ListAsync(int competitionId, CancellationToken ct)
     {
         await RequiredCompetition(competitionId, false, ct);
-        return (await entries.ListAsync(competitionId, ct)).Select(ToDto).ToArray();
+        return (await entries.ListAsync(competitionId, false, ct)).Select(ToDto).ToArray();
     }
 
     public async Task<TeamEntryDto> AddAsync(int competitionId, AddTeamEntryRequest request, CancellationToken ct)

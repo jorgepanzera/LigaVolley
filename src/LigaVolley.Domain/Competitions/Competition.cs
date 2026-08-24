@@ -60,6 +60,13 @@ public sealed class Competition
         throw new DomainValidationException($"Transition from {Status} to {target} is not available without the fixture/progression use cases.");
     }
 
+    public void MarkScheduledAfterInitialFixture()
+    {
+        if (Status != CompetitionStatus.Draft)
+            throw new DomainValidationException("Only a Draft competition can be scheduled after fixture generation.");
+        Status = CompetitionStatus.Scheduled;
+    }
+
     private void InstantiateStructure(CompetitionFormat format)
     {
         var phaseMap = format.Phases.ToDictionary(x => x, x => new CompetitionPhase(x));

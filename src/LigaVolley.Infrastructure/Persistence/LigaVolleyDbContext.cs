@@ -8,6 +8,7 @@ using LigaVolley.Domain.Clubs;
 using LigaVolley.Domain.Teams;
 using LigaVolley.Domain.Venues;
 using LigaVolley.Domain.TeamEntries;
+using LigaVolley.Domain.Fixtures;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +25,8 @@ public sealed class LigaVolleyDbContext(DbContextOptions<LigaVolleyDbContext> op
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<Venue> Venues => Set<Venue>();
     public DbSet<TeamEntry> TeamEntries => Set<TeamEntry>();
+    public DbSet<FixtureGeneration> FixtureGenerations => Set<FixtureGeneration>();
+    public DbSet<Match> Matches => Set<Match>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         => modelBuilder.ApplyConfigurationsFromAssembly(typeof(LigaVolleyDbContext).Assembly);
