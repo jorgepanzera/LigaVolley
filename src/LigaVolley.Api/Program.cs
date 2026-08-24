@@ -8,6 +8,7 @@ using LigaVolley.Application.Competitions;
 using LigaVolley.Application.Clubs;
 using LigaVolley.Application.Teams;
 using LigaVolley.Application.Venues;
+using LigaVolley.Application.TeamEntries;
 using LigaVolley.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,7 @@ builder.Services.AddScoped<CompetitionService>();
 builder.Services.AddScoped<ClubService>();
 builder.Services.AddScoped<TeamService>();
 builder.Services.AddScoped<VenueService>();
+builder.Services.AddScoped<TeamEntryService>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -35,6 +37,7 @@ app.MapCompetitionEndpoints();
 app.MapClubEndpoints();
 app.MapTeamEndpoints();
 app.MapVenueEndpoints();
+app.MapTeamEntryEndpoints();
 
 app.Run();
 

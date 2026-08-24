@@ -6,6 +6,7 @@ using LigaVolley.Domain.Competitions;
 using LigaVolley.Domain.Clubs;
 using LigaVolley.Domain.Teams;
 using LigaVolley.Domain.Venues;
+using LigaVolley.Domain.TeamEntries;
 
 namespace LigaVolley.Application.Tests;
 
@@ -47,6 +48,19 @@ internal sealed class FakeDivisionRepository : IDivisionRepository
         => Task.FromResult(divisions.Any(x => x.Key != excludingId && x.Value.Name == name && x.Value.Gender == gender));
     public Task<bool> LevelExistsAsync(short levelOrder, Gender gender, int? excludingId, CancellationToken cancellationToken)
         => Task.FromResult(divisions.Any(x => x.Key != excludingId && x.Value.LevelOrder == levelOrder && x.Value.Gender == gender));
+}
+
+internal sealed class FakeTeamEntryRepository : ITeamEntryRepository
+{
+    private readonly Dictionary<(int CompetitionId,int EntryId),TeamEntry> values=[];
+    public TeamEntry? Added {get;private set;} public bool TeamExists {get;set;} public int ValidCount {get;set;} public bool Removed {get;private set;}
+    public void Seed(int competitionId,int entryId,TeamEntry value)=>values[(competitionId,entryId)]=value;
+    public Task<IReadOnlyList<TeamEntry>> ListAsync(int competitionId,CancellationToken ct)=>Task.FromResult<IReadOnlyList<TeamEntry>>(values.Where(x=>x.Key.CompetitionId==competitionId).Select(x=>x.Value).ToArray());
+    public Task<TeamEntry?> GetAsync(int competitionId,int entryId,bool tracking,CancellationToken ct)=>Task.FromResult(values.GetValueOrDefault((competitionId,entryId)));
+    public Task<bool> TeamExistsAsync(int competitionId,int teamId,CancellationToken ct)=>Task.FromResult(TeamExists);
+    public Task<int> CountValidAsync(int competitionId,CancellationToken ct)=>Task.FromResult(ValidCount);
+    public void Add(TeamEntry entry)=>Added=entry;
+    public void Remove(TeamEntry entry)=>Removed=true;
 }
 
 internal sealed class FakeClubRepository : IClubRepository

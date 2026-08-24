@@ -15,6 +15,7 @@ using LigaVolley.Domain.Competitions;
 using LigaVolley.Application.Clubs;
 using LigaVolley.Application.Teams;
 using LigaVolley.Application.Venues;
+using LigaVolley.Application.TeamEntries;
 using LigaVolley.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -35,6 +36,22 @@ public sealed class AdminCatalogEndpointsTests : IClassFixture<LigaVolleyApiFact
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         options.Converters.Add(new JsonStringEnumConverter());
         return options;
+    }
+
+    [Fact]
+    public async Task TeamEntryEndpoints_EnforceUniquenessAndSupportDraftLifecycle()
+    {
+        var suffix=Guid.NewGuid().ToString("N")[..8];
+        var seasonResponse=await factory.Client.PostAsJsonAsync("/api/admin/seasons",new CreateSeasonRequest(2042,$"Entry {suffix}",null,null)); seasonResponse.EnsureSuccessStatusCode(); var season=(await seasonResponse.Content.ReadFromJsonAsync<SeasonDto>(JsonOptions))!;
+        var divisionResponse=await factory.Client.PostAsJsonAsync("/api/admin/divisions",new CreateDivisionRequest($"Entry {suffix}",42,Gender.Female),JsonOptions); divisionResponse.EnsureSuccessStatusCode(); var division=(await divisionResponse.Content.ReadFromJsonAsync<DivisionDto>(JsonOptions))!;
+        var definition=new CompetitionFormatDefinitionDto([new("REGULAR","Regular",PhaseType.RoundRobin,PhaseRole.Regular,1,1,FixtureMode.BalancedRandom,[],[])],[],[],[],[]);
+        var formatResponse=await factory.Client.PostAsJsonAsync("/api/admin/competition-formats",new CreateCompetitionFormatRequest($"ENTRY_{suffix}",$"Entry {suffix}",null,2,2,definition)); formatResponse.EnsureSuccessStatusCode(); var format=(await formatResponse.Content.ReadFromJsonAsync<CompetitionFormatDto>(JsonOptions))!;
+        var competitionResponse=await factory.Client.PostAsJsonAsync("/api/admin/competitions",new CreateCompetitionRequest($"Entry {suffix}",season.SeasonId,division.DivisionId,CompetitionPeriodType.Annual,null,null,new(CompetitionStructureSourceType.Format,format.CompetitionFormatId,null)),JsonOptions); competitionResponse.EnsureSuccessStatusCode(); var competition=(await competitionResponse.Content.ReadFromJsonAsync<CompetitionDto>(JsonOptions))!;
+        var teamResponse=await factory.Client.PostAsJsonAsync("/api/admin/teams",new CreateTeamRequest($"Entry {suffix}",Gender.Female,null),JsonOptions); teamResponse.EnsureSuccessStatusCode(); var team=(await teamResponse.Content.ReadFromJsonAsync<TeamDto>(JsonOptions))!;
+        var add=await factory.Client.PostAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/entries",new AddTeamEntryRequest(team.TeamId,1)); Assert.Equal(HttpStatusCode.Created,add.StatusCode); var entry=(await add.Content.ReadFromJsonAsync<TeamEntryDto>(JsonOptions))!;
+        var duplicate=await factory.Client.PostAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/entries",new AddTeamEntryRequest(team.TeamId,null)); Assert.Equal(HttpStatusCode.Conflict,duplicate.StatusCode);
+        var list=await factory.Client.GetFromJsonAsync<TeamEntryDto[]>($"/api/admin/competitions/{competition.CompetitionId}/entries",JsonOptions); Assert.Single(list!);
+        var delete=await factory.Client.DeleteAsync($"/api/admin/competitions/{competition.CompetitionId}/entries/{entry.TeamEntryId}"); Assert.Equal(HttpStatusCode.NoContent,delete.StatusCode);
     }
 
     [Fact]
