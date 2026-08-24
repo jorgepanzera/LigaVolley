@@ -1,0 +1,176 @@
+# AGENTS.md — LigaVolley
+
+## Objetivo
+
+LigaVolley es una plataforma para administrar competiciones de voleibol, operar el acta electrónica de los partidos y ofrecer consulta pública de la información deportiva.
+
+El sistema tendrá:
+
+- un único backend ASP.NET Core/.NET;
+- una única base SQL Server;
+- tres frontends:
+  - `LigaVolley.Admin`: administración de clubes, equipos, personas, planteles, competiciones, formatos, fixture y configuración;
+  - `LigaVolley.Scorer`: consola operativa del partido y acta electrónica;
+  - `LigaVolley.Public`: aplicación de consulta pública de competiciones, fixture, resultados, tablas de posiciones e información pública de partidos.
+
+## Arquitectura acordada
+
+El backend se implementará como **Modular Monolith**. No introducir microservicios salvo una decisión de arquitectura explícita posterior.
+
+Capas/proyectos de referencia:
+
+- `LigaVolley.Domain`: entidades, value objects, reglas e invariantes del dominio.
+- `LigaVolley.Application`: casos de uso, comandos/queries, DTOs de aplicación, validaciones y puertos.
+- `LigaVolley.Infrastructure`: persistencia SQL Server, integraciones y adaptadores.
+- `LigaVolley.Api`: endpoints HTTP y composición de la aplicación.
+- `LigaVolley.Admin`: frontend administrativo.
+- `LigaVolley.Scorer`: frontend de scoring/acta electrónica.
+- `LigaVolley.Public`: frontend de consulta pública.
+
+## Convenciones de API
+
+Los prefijos por consumidor son una convención **obligatoria** de la API:
+
+- `/api/admin/...`
+- `/api/scorer/...`
+- `/api/public/...`
+
+No reutilizar automáticamente el mismo DTO para Admin, Scorer y Public. Cada superficie puede requerir contratos distintos aunque opere sobre el mismo dominio.
+
+## Módulos funcionales previstos
+
+1. Security (transversal; proveedor de identidad y permisos finos aún no definidos).
+2. Clubs / Teams / Venues.
+3. People / Players / Coaches / Referees.
+4. Competition Rosters.
+5. Competitions.
+6. Competition Formats / Phases / Groups / Qualification / Playoffs.
+7. Fixture / Matches.
+8. Match Officials.
+9. Electronic Scoresheet / Scorer.
+10. Public Query.
+
+## Reglas clave de competición
+
+Una competición puede crearse:
+
+- desde cero;
+- basada en otra competición existente.
+
+Al clonar una competición se copia únicamente su **estructura de competencia/formato**, incluyendo lo que corresponda a:
+
+- fases;
+- orden/secuencia de fases;
+- grupos;
+- reglas de clasificación;
+- series de playoff;
+- fuentes/orígenes de participantes de cada serie;
+- ventajas deportivas o reglas estructurales parametrizadas.
+
+No se deben copiar:
+
+- equipos;
+- `TEAM_ENTRY`;
+- fixture;
+- partidos;
+- resultados;
+- fechas concretas;
+- jugadores;
+- planteles.
+
+## Modelo de personas y planteles
+
+Entidades acordadas para este bloque:
+
+- `PERSON`
+- `PLAYER`
+- `COACH`
+- `REFEREE`
+- `PLAYER_ROLE`
+- `COMPETITION_ROSTER`
+- `COMPETITION_ROSTER_PLAYER`
+- `COMPETITION_ROSTER_STAFF`
+- `MATCH_OFFICIAL`
+
+Una misma `PERSON` puede tener simultáneamente registros en `PLAYER`, `COACH` y `REFEREE`. En esta etapa no se modelan vigencias temporales ni exclusividad entre esos roles salvo que aparezca un requisito explícito. Evitar modelar jugador, técnico y árbitro como personas independientes sin una raíz común `PERSON`.
+
+`PLAYER_ROLE` representa el rol deportivo del jugador dentro del contexto competitivo/plantel, no una clasificación global e inmutable de la persona. Puede incluir, entre otros, la identificación de líbero.
+
+Se reutilizan las entidades ya existentes `TEAM_ENTRY` y `MATCH` donde corresponda.
+
+## Modelo del partido y Scorer
+
+`LigaVolley.Scorer` debe comportarse como una **consola del partido**, no como una pantalla CRUD convencional.
+
+El modelo debe soportar al menos este recorrido completo:
+
+1. seleccionar/cargar y validar los planteles habilitados;
+2. abrir acta;
+3. asignar oficiales;
+4. registrar alineación inicial P1..P6 de cada set;
+5. iniciar set/partido;
+6. registrar puntos;
+7. cambio de saque;
+8. rotación;
+9. sustituciones normales;
+10. entrada/salida/reemplazo de líbero;
+11. timeout;
+12. fin de set;
+13. corrección/anulación de un punto o evento;
+14. cierre del partido.
+
+Debe soportarse un máximo de **dos líberos registrados/habilitados por equipo**. Las validaciones reglamentarias finas que determinen cuándo corresponde uno o dos líberos se definirán de forma explícita antes de implementarlas.
+
+Los seis jugadores físicamente en cancha en cualquier instante se obtienen conceptualmente mediante:
+
+`alineación inicial P1..P6 + sustituciones normales + rotation_offset + reemplazo de líbero activo`
+
+No se adopta event sourcing. El estado operacional actual necesario para responder y operar eficientemente se persiste, y los cambios relevantes se registran además como eventos/auditoría para trazabilidad, correcciones y reconstrucción cuando corresponda. Evitar duplicar estado derivable sin una necesidad operacional clara.
+
+El sistema debe poder responder en cualquier momento:
+
+- marcador actual;
+- set actual;
+- equipo al saque;
+- jugador servidor;
+- rotación vigente;
+- seis jugadores efectivos en cancha por equipo;
+- sustituciones y líberos activos;
+- timeouts utilizados;
+- historial/correcciones relevantes.
+
+## Offline y sincronización
+
+El Scorer debe diseñarse contemplando funcionamiento offline/intermitente y sincronización posterior. No asumir conectividad permanente en decisiones de dominio o UI.
+
+Las decisiones concretas de tecnología y protocolo de sincronización quedan abiertas hasta que se diseñe ese módulo.
+
+## Reglas de implementación para Codex
+
+- Antes de implementar un caso de uso, leer `AGENTS.md` y los documentos de `docs/` relacionados.
+- No inventar reglas de voleibol no documentadas. Si una regla impacta el modelo o la persistencia y no está definida, dejarla explícita como pendiente.
+- Priorizar claridad de dominio sobre abstracciones prematuras.
+- Mantener el backend como Modular Monolith.
+- No introducir mensajería, microservicios, CQRS distribuido o event sourcing como requisito arquitectónico salvo decisión explícita posterior.
+- Escribir tests para reglas de dominio y casos de uso relevantes.
+- Las migraciones/esquemas SQL deben respetar las PK, FK y restricciones del modelo aprobado.
+- Mantener nombres del dominio en inglés en código y base de datos, salvo que se acuerde lo contrario.
+- Evitar que controllers/endpoints contengan reglas de negocio.
+- Evitar dependencias de Infrastructure desde Domain/Application.
+- No modificar documentos de arquitectura para justificar una implementación distinta: si hay contradicción, detener el cambio de código y señalarla.
+
+## Fuente de verdad
+
+En orden de prioridad:
+
+1. decisiones explícitas más recientes del proyecto;
+2. `AGENTS.md`;
+3. documentos de `docs/`;
+4. código y tests existentes.
+
+Si dos documentos contradicen una decisión más reciente, actualizar la documentación antes de continuar implementando.
+
+
+## Publicación pública
+
+`LigaVolley.Public` y `/api/public` solo exponen información explícitamente habilitada para publicación; no equivalen a exponer todo lo almacenado. Como mínimo se contempla: competiciones visibles/publicadas, equipos participantes, fixture, resultados confirmados, tablas de posiciones e información pública de partidos. Planteles, personas, oficiales y otros datos requieren una regla explícita de publicación antes de exponerse.
