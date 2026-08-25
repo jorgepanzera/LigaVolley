@@ -61,6 +61,7 @@ builder.Services.AddScoped<PeopleService>();
 builder.Services.AddScoped<CompetitionRosterService>();
 builder.Services.AddScoped<MatchOfficialService>();
 builder.Services.AddScoped<MatchSheetService>();
+builder.Services.AddScoped<MatchEngineService>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -106,6 +107,7 @@ app.MapCompetitionRosterEndpoints();
 app.MapMatchOfficialEndpoints();
 app.MapScorerMatchOfficialEndpoints();
 app.MapScorerMatchSheetEndpoints();
+app.MapScorerMatchEngineEndpoints();
 
 app.Run();
 

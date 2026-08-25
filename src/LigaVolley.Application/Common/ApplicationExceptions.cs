@@ -15,6 +15,7 @@ public sealed class ResourceNotFoundException(string resource, object id)
         "CompetitionRosterStaff" => "competition_roster_staff_not_found",
         "MatchOfficial" => "match_official_not_found",
         "MatchSheet" => "match_sheet_not_found",
+        "MatchSet" => "match_set_not_found",
         _ => "not_found"
     };
 }

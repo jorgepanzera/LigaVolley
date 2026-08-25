@@ -59,3 +59,11 @@ Separar entidades permanentes (por ejemplo Team o Person) de su participación c
 `MATCH` conserva la identidad del fixture y `MATCH_SHEET` representa su acta operacional única. `MATCH_TEAM` materializa HOME/AWAY desde los TeamEntry del Match; `MATCH_PLAYER` y `MATCH_TEAM_STAFF` congelan la convocatoria seleccionada desde el roster; `MATCH_LIBERO` declara hasta dos líberos sin modelar todavía su presencia en cancha. `MATCH_SHEET_SESSION` identifica la sesión activa y `MATCH_SHEET_AUDIT` registra `MATCH_SHEET_OPENED`.
 
 `COMPETITION_ROSTER` es la participación contextual única de un `TEAM_ENTRY`. Sus jugadores y técnicos conservan historia mediante estados `ACTIVE/INACTIVE`; el roster usa `DRAFT/ACTIVE/CLOSED`. El rol y dorsal del jugador pertenecen a esa inscripción competitiva, no a `PLAYER`.
+
+## Electronic Scoresheet Match Engine v1
+
+`MATCH_SET` se reutiliza como estado operacional y resultado consumido por standings. Un set del Scorer referencia `MATCH_SHEET`, posee UUID, número 1..5, READY/IN_PROGRESS/FINISHED, puntos, ganador, saque, offsets y timestamps. Los resultados históricos previos conservan compatibilidad mediante el vínculo nullable; toda creación del motor nuevo exige MatchSheet.
+
+`MATCH_LINEUP` y `MATCH_LINEUP_POSITION` congelan P1..P6 por lado y set. `MATCH_EVENT` ordena trazabilidad mediante UUID y `SequenceNumber` monotónico. `MATCH_SUBSTITUTION`, `MATCH_LIBERO_REPLACEMENT` y `MATCH_TIMEOUT` conservan el detalle operacional sin convertir el sistema en event sourcing.
+
+La cancha efectiva se deriva centralmente como alineación inicial + sustituciones + `rotation_offset` + reemplazo activo de líbero. El servidor es el jugador efectivo en P1 del lado que posee el saque.

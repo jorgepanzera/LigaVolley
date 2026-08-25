@@ -80,6 +80,21 @@ El límite exacto entre estado canónico persistido, datos derivados y snapshots
 
 Una corrección no debe destruir la trazabilidad necesaria del partido. El mecanismo exacto —anulación, compensación, versionado u otro equivalente— queda abierto hasta diseñar los casos de uso de corrección y sincronización del Scorer, pero debe preservar la consistencia del estado resultante y la historia relevante.
 
+## Motor online v1
+
+- Match best-of-5; primero a tres sets.
+- Sets 1..4: 25 puntos y diferencia 2. Set 5: 15 puntos y diferencia 2. No hay máximo.
+- `PrepareSet` crea solamente el siguiente set. Lineups P1..P6 son reemplazables en READY y definitivas en IN_PROGRESS.
+- P1 es el servidor inicial; un receptor que gana rota `(offset + 1) % 6`. El equipo que conserva saque no rota.
+- Point calcula marcador, saque, rotación, servidor y fin automático.
+- `CorrectLastPoint` cancela únicamente el último evento deportivo efectivo y reconstruye el estado; nunca borra el POINT.
+- Sustituciones conservan pareja titular/suplente y permiten reingreso del titular; deliberadamente no hay máximo global de seis.
+- `TrackSubstitutions` y `TrackLiberoReplacements` pertenecen a MatchSheet. Si están deshabilitados no bloquean puntos.
+- Un líbero declarado puede entrar por P1/P5/P6; sale restaurando la plaza lógica. Se admiten hasta dos declarados.
+- Timeouts siempre se registran y tienen máximo dos por equipo/set.
+- Tres sets ganados sólo marcan `MatchDecided`; `CloseMatch` explícito deja MatchSheet CLOSED y Match FINISHED. CLOSED no se reabre.
+- CloseMatch reutiliza la progresión de playoffs dentro de la misma transacción; los partidos de liga quedan disponibles para standings.
+
 ## Offline
 
 Scorer debe tolerar pérdida temporal de conectividad. El diseño de persistencia local, IDs de eventos, resolución de conflictos y sincronización se definirá antes de implementar esta parte.

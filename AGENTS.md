@@ -201,6 +201,8 @@ Match Officials v1 está cerrado: `MATCH_OFFICIAL` referencia `REFEREE`; los rol
 
 MatchSheet Opening v1 está cerrado: un Match SCHEDULED puede materializar una única acta OPEN. HOME/AWAY se resuelven desde Match; ambos rosters deben estar ACTIVE, con al menos seis jugadores ACTIVE seleccionados por equipo y los tres oficiales presentes. La convocatoria se congela en MATCH_PLAYER, la apertura no inicia Match/Competition, es transaccional e idempotente, crea sesión/auditoría y produce UUID/snapshot para futuro offline.
 
+Electronic Scoresheet Match Engine v1 está cerrado: Match best-of-5, primero a tres sets; sets 1..4 a 25 y set 5 a 15, siempre diferencia mínima de dos. Los sets se preparan secuencialmente, las lineups P1..P6 sólo se editan en READY, el saque/servidor/rotación son derivados y Point finaliza el set automáticamente. CorrectLastPoint sólo cancela el último evento deportivo efectivo y reconstruye el estado. Sustituciones y reemplazos de líbero son seguimientos configurables por MatchSheet; timeouts son obligatorios y máximo dos por equipo/set. El tercer set ganado decide el resultado pero sólo CloseMatch deja MatchSheet CLOSED y Match FINISHED y dispara la progresión existente. CLOSED es definitivo. Offline/sync no pertenece a este slice.
+
 En orden de prioridad:
 
 1. decisiones explícitas más recientes del proyecto;

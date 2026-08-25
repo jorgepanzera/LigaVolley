@@ -48,9 +48,13 @@ internal sealed class MatchSetConfiguration : IEntityTypeConfiguration<MatchSet>
 {
     public void Configure(EntityTypeBuilder<MatchSet> b)
     {
-        b.ToTable("MATCH_SET", "dbo", t => { t.HasCheckConstraint("CK_MATCH_SET_number", "[set_number] BETWEEN 1 AND 5"); t.HasCheckConstraint("CK_MATCH_SET_points", "[home_points] >= 0 AND [away_points] >= 0"); });
+        b.ToTable("MATCH_SET", "dbo", t => { t.HasCheckConstraint("CK_MATCH_SET_number", "[set_number] BETWEEN 1 AND 5"); t.HasCheckConstraint("CK_MATCH_SET_points", "[home_points] >= 0 AND [away_points] >= 0"); t.HasCheckConstraint("CK_MATCH_SET_status", "[status] IN ('READY','IN_PROGRESS','FINISHED')");t.HasCheckConstraint("CK_MATCH_SET_rotation","[home_rotation_offset] BETWEEN 0 AND 5 AND [away_rotation_offset] BETWEEN 0 AND 5");t.HasCheckConstraint("CK_MATCH_SET_sides","([winner_side] IS NULL OR [winner_side] IN ('HOME','AWAY')) AND ([initial_serving_side] IS NULL OR [initial_serving_side] IN ('HOME','AWAY')) AND ([current_serving_side] IS NULL OR [current_serving_side] IN ('HOME','AWAY'))"); });
         b.HasKey(x => x.MatchSetId).HasName("PK_MATCH_SET"); b.Property(x => x.MatchSetId).HasColumnName("match_set_id").UseIdentityColumn();
-        b.Property(x => x.MatchId).HasColumnName("match_id"); b.Property(x => x.SetNumber).HasColumnName("set_number"); b.Property(x => x.HomePoints).HasColumnName("home_points"); b.Property(x => x.AwayPoints).HasColumnName("away_points");
+        b.Property(x => x.MatchId).HasColumnName("match_id"); b.Property(x=>x.MatchSheetId).HasColumnName("match_sheet_id");b.Property(x=>x.SetUuid).HasColumnName("set_uuid"); b.Property(x => x.SetNumber).HasColumnName("set_number");b.Property(x=>x.Status).AsSql("status",20); b.Property(x => x.HomePoints).HasColumnName("home_points"); b.Property(x => x.AwayPoints).HasColumnName("away_points");b.Property(x=>x.WinnerSide).AsNullableSql("winner_side",10);b.Property(x=>x.InitialServingSide).AsNullableSql("initial_serving_side",10);b.Property(x=>x.CurrentServingSide).AsNullableSql("current_serving_side",10);b.Property(x=>x.HomeRotationOffset).HasColumnName("home_rotation_offset");b.Property(x=>x.AwayRotationOffset).HasColumnName("away_rotation_offset");b.Property(x=>x.StartedAt).HasColumnName("started_at");b.Property(x=>x.FinishedAt).HasColumnName("finished_at");
         b.HasIndex(x => new { x.MatchId, x.SetNumber }).IsUnique().HasDatabaseName("UQ_MATCH_SET");
+        b.HasIndex(x=>x.SetUuid).IsUnique().HasFilter("[set_uuid] <> '00000000-0000-0000-0000-000000000000'").HasDatabaseName("UQ_MATCH_SET_uuid");
+        b.HasIndex(x=>new{x.MatchSheetId,x.SetNumber}).IsUnique().HasFilter("[match_sheet_id] IS NOT NULL").HasDatabaseName("UQ_MATCH_SET_sheet_number");
+        b.HasIndex(x=>x.MatchSheetId).IsUnique().HasFilter("[match_sheet_id] IS NOT NULL AND [status] IN ('READY','IN_PROGRESS')").HasDatabaseName("UX_MATCH_SET_active");
+        b.HasOne(x=>x.MatchSheet).WithMany(x=>x.Sets).HasForeignKey(x=>x.MatchSheetId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_MATCH_SET_MATCH_SHEET");
     }
 }

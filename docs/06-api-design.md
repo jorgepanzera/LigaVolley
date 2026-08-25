@@ -1266,6 +1266,21 @@ Admin: `GET/POST /api/admin/matches/{matchId}/officials` y `PUT/DELETE /api/admi
 
 El request sólo contiene `clientRequestId`, `deviceId` y selecciones por IDs de miembros del roster. TeamEntry, equipos, dorsales, roster, sede y oficiales se resuelven server-side. El response incluye UUID de sheet/session/team/player/staff/libero, estado inicial uniforme y Health Card informativa.
 
+# 22. Electronic Scoresheet Match Engine
+
+- `POST /api/scorer/matches/{matchId}/sets/prepare`
+- `PUT /api/scorer/matches/{matchId}/sets/{setNumber}/lineups/{side}`
+- `POST /api/scorer/matches/{matchId}/sets/{setNumber}/start`
+- `POST /api/scorer/matches/{matchId}/sets/{setNumber}/points`
+- `POST /api/scorer/matches/{matchId}/sets/{setNumber}/points/correct-last`
+- `POST /api/scorer/matches/{matchId}/sets/{setNumber}/substitutions`
+- `POST /api/scorer/matches/{matchId}/sets/{setNumber}/libero/enter`
+- `POST /api/scorer/matches/{matchId}/sets/{setNumber}/libero/exit`
+- `POST /api/scorer/matches/{matchId}/sets/{setNumber}/timeouts`
+- `POST /api/scorer/matches/{matchId}/close`
+
+Cada mutación devuelve DTO Scorer con set, puntos, sets ganados, saque, servidor derivado, offsets, timeouts, ganador, MatchDecided y cancha efectiva. Los comandos deportivos usan UUID idempotente; errores usan ProblemDetails y `code` estable con 400/404/409. El cierre es explícito, idempotente y definitivo.
+
 People y documentos se exponen bajo `/api/admin/people`; perfiles y listados bajo
 `/players`, `/coaches` y `/referees`. Los perfiles se crean con
 `POST /people/{personId}/{player|coach|referee}` sin body. No existe DELETE.

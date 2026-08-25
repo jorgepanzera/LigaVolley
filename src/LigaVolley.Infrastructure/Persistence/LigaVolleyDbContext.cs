@@ -41,6 +41,11 @@ public sealed class LigaVolleyDbContext(DbContextOptions<LigaVolleyDbContext> op
     public DbSet<CompetitionRoster> CompetitionRosters => Set<CompetitionRoster>();
     public DbSet<MatchOfficial> MatchOfficials => Set<MatchOfficial>();
     public DbSet<MatchSheet> MatchSheets => Set<MatchSheet>();
+    public DbSet<MatchLineup> MatchLineups => Set<MatchLineup>();
+    public DbSet<MatchEvent> MatchEvents => Set<MatchEvent>();
+    public DbSet<MatchSubstitution> MatchSubstitutions => Set<MatchSubstitution>();
+    public DbSet<MatchLiberoReplacement> MatchLiberoReplacements => Set<MatchLiberoReplacement>();
+    public DbSet<MatchTimeout> MatchTimeouts => Set<MatchTimeout>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         => modelBuilder.ApplyConfigurationsFromAssembly(typeof(LigaVolleyDbContext).Assembly);

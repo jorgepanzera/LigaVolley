@@ -13,6 +13,9 @@ public sealed class PlayoffProgressionService(IPlayoffProgressionRepository repo
     public Task<PlayoffProgressionResult> ProcessFinishedMatchAsync(int matchId, CancellationToken cancellationToken = default) =>
         repository.ExecuteExclusiveAsync(matchId, ct => ProcessLockedAsync(matchId, ct), cancellationToken);
 
+    public Task<PlayoffProgressionResult> ProcessFinishedMatchWithinTransactionAsync(int matchId, CancellationToken cancellationToken = default) =>
+        ProcessLockedAsync(matchId, cancellationToken);
+
     private async Task<PlayoffProgressionResult> ProcessLockedAsync(int matchId, CancellationToken ct)
     {
         var trigger = await repository.GetMatchAsync(matchId, ct)

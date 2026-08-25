@@ -1,7 +1,8 @@
 using LigaVolley.Domain.CompetitionRosters;using LigaVolley.Domain.Fixtures;using LigaVolley.Domain.MatchOfficials;using LigaVolley.Domain.MatchSheets;using LigaVolley.Domain.People;
 namespace LigaVolley.Application.MatchSheets;
 public sealed record OpenMatchTeamRequest(IReadOnlyList<int> CompetitionRosterPlayerIds,int? CaptainCompetitionRosterPlayerId,IReadOnlyList<int> LiberoCompetitionRosterPlayerIds,IReadOnlyList<int> CompetitionRosterStaffIds);
-public sealed record OpenMatchSheetRequest(Guid ClientRequestId,string DeviceId,OpenMatchTeamRequest Home,OpenMatchTeamRequest Away);
+public sealed record OpenMatchSheetRequest(Guid ClientRequestId,string DeviceId,OpenMatchTeamRequest Home,OpenMatchTeamRequest Away)
+{ public bool TrackSubstitutions{get;init;}=true;public bool TrackLiberoReplacements{get;init;}=true; }
 public sealed record OpenMatchSheetResponse(bool AlreadyOpen,MatchSheetSnapshotDto MatchSheet);
 public sealed record OpenMatchContextDto(MatchContextDto Match,CompetitionContextDto Competition,OpenMatchTeamContextDto Home,OpenMatchTeamContextDto Away,IReadOnlyList<MatchSheetOfficialDto> MatchOfficials,IReadOnlyList<string> Warnings,MatchSheetSummaryDto? ExistingMatchSheet);
 public sealed record MatchContextDto(int MatchId,MatchStatus Status,DateTime? MatchDate,short RoundNumber,short MatchNumber,int HomeTeamEntryId,int AwayTeamEntryId,string? VenueName);

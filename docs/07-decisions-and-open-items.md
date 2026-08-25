@@ -103,7 +103,7 @@
 - Futuros lineups, sustituciones y eventos referencian `MATCH_PLAYER`.
 - Se requieren FirstReferee, SecondReferee y Scorer; Health Card nunca bloquea.
 - Apertura atómica/idempotente, sesión ACTIVE única, auditoría `MATCH_SHEET_OPENED` y UUID operativos para futuro offline.
-- Pendientes: edición explícita de convocatoria mientras OPEN, inicio de partido/set, motor deportivo y protocolo de sync.
+- Pendientes: edición explícita de convocatoria mientras OPEN y protocolo de sync.
 
 - Un roster por TeamEntry, con creación explícita y estados `DRAFT`, `ACTIVE`, `CLOSED`.
 - Activación sin mínimos; máximos de 15 jugadores, dos técnicos y dos líberos activos.
@@ -174,6 +174,21 @@
 - `GET /api/admin/competitions/{competitionId}/completion-preview`
 - `POST /api/admin/competitions/{competitionId}/complete`
 
+## Decisiones Electronic Scoresheet Match Engine v1 cerradas
+
+- Best-of-5, primero a tres sets; sets 1..4 a 25 y set 5 a 15, diferencia dos y sin tope.
+- PrepareSet secuencial; no se crean cinco sets anticipadamente.
+- Lineup P1..P6 editable sólo en READY. P1 inicia como servidor del lado solicitado.
+- Rotación por offset módulo seis y servidor siempre derivado de la cancha efectiva.
+- Point finaliza el set automáticamente; el tercer set ganado decide pero no cierra.
+- CorrectLastPoint sólo corrige el último evento deportivo efectivo, cancela sin borrar y reconstruye el set.
+- Sustituciones con pareja titular/suplente y reingreso del titular, sin máximo global de seis.
+- Tracking de sustituciones y líbero configurable por MatchSheet; puntos y sets son independientes de ambos flags.
+- Líbero declarado sólo entra por P1/P5/P6; hasta dos declarados y reemplazo separado de sustitución.
+- Timeouts obligatorios, máximo dos por equipo/set.
+- CloseMatch explícito produce MatchSheet CLOSED y Match FINISHED, persiste resultado y dispara progresión existente; CLOSED es definitivo.
+- UUID únicos, secuencia monotónica y serialización por Match preparan el futuro offline sin implementar `/sync`.
+
 ## Pendientes que NO deben inventarse durante implementación
 
 1. Tecnología exacta de los frontends.
@@ -191,7 +206,7 @@
 13. Reglas funcionales finas de ascensos/descensos entre Apertura/Clausura o temporadas y creación futura de inscripciones.
 14. Estrategia concreta de persistencia local/offline del Scorer.
 15. Protocolo de sincronización y resolución de conflictos.
-16. Mecanismo exacto de corrección/anulación/compensación/versionado de eventos.
+16. Correcciones históricas distintas de `CorrectLastPoint` y correcciones de sustitución, líbero o timeout.
 17. Límite exacto entre estado canónico, estado derivado y snapshots para offline.
 18. Reglas reglamentarias finas sobre uso/habilitación de uno o dos líberos.
 19. Reglas adicionales de publicación para planteles, personas, oficiales u otros datos públicos.
