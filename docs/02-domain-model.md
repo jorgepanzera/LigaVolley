@@ -39,4 +39,13 @@ Los equipos que participan efectivamente en una competición se representan medi
 
 ## Principio de identidad
 
+## People v1
+
+`PERSON` es la única raíz de identidad física. Su documento opcional es único
+por `(document_type, document_number)`. `PLAYER`, `COACH` y `REFEREE` son perfiles
+1:1 opcionales, sin vigencias temporales, que pueden coexistir.
+
+`PERSON_ADDITIONAL_DOCUMENT` conserva múltiples `HEALTH_CARD` y `LEAGUE_CARD`.
+El `HealthCardStatus` se deriva al consultar y nunca se persiste.
+
 Separar entidades permanentes (por ejemplo Team o Person) de su participación contextual (por ejemplo TeamEntry, CompetitionRoster, MatchOfficial).

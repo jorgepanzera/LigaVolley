@@ -190,6 +190,11 @@ Las decisiones concretas de tecnología y protocolo de sincronización quedan ab
 
 ## Fuente de verdad
 
+People v1 está cerrado: Player/Coach/Referee son perfiles 1:1 opcionales, sin
+vigencias y nunca implícitos. Health Card y League Card son documentos históricos;
+Health Card es warning para Player/Referee, no bloqueo, y Coach no la requiere.
+No existe entidad League ni DELETE físico en People v1.
+
 En orden de prioridad:
 
 1. decisiones explícitas más recientes del proyecto;

@@ -75,6 +75,14 @@
 - Regeneración de fixture: se permite sólo mientras ningún partido del ámbito afectado esté `IN_PROGRESS` o `FINISHED`; puede invalidar programación de fecha/sede.
 ## Endpoints Admin cerrados en esta etapa
 
+## Decisiones People v1 cerradas
+
+- `PERSON` es la única raíz de identidad.
+- `PLAYER`, `COACH` y `REFEREE` son perfiles 1:1 opcionales, simultáneos y sin vigencias.
+- Los perfiles no se crean implícitamente y People no tiene DELETE físico.
+- Los documentos adicionales contienen Health Card y League Card; no existe League en v1.
+- Health Card es warning para Player/Referee y nunca bloqueo; Coach no la requiere.
+
 ### Season
 
 - `GET /api/admin/seasons`

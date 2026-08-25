@@ -42,4 +42,14 @@ Representa el rol deportivo del jugador dentro de un contexto competitivo/plante
 
 ## Oficiales del partido
 
+## Alcance implementado: People v1
+
+- Person nace activa y no existe DELETE físico.
+- Health Card y League Card admiten historial; no existe entidad League en v1.
+- Health Card es warning para Player y Referee, nunca bloqueo; Coach no la requiere.
+- El documento relevante activo se elige por `valid_to`, `valid_from` e ID más altos.
+- Crear Person no crea perfiles; crear perfil exige una Person existente.
+
+Roster, PlayerRole y MatchOfficial continúan fuera de este slice.
+
 `MATCH_OFFICIAL` vincula un `MATCH` con las personas que actúan como árbitros/oficiales en ese encuentro y con el rol correspondiente.

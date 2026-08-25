@@ -1,0 +1,17 @@
+using LigaVolley.Domain.Divisions; using LigaVolley.Domain.People;
+namespace LigaVolley.Application.People;
+public sealed record PagedResult<T>(IReadOnlyList<T> Items,int Page,int PageSize,int TotalCount){public int TotalPages => (int)Math.Ceiling(TotalCount/(double)PageSize);}
+public sealed record CreatePersonRequest(string? DocumentType,string? DocumentNumber,string FirstName,string LastName,DateOnly? BirthDate,Gender? Gender,string? Email,string? Phone);
+public sealed record UpdatePersonRequest(string? DocumentType,string? DocumentNumber,string FirstName,string LastName,DateOnly? BirthDate,Gender? Gender,string? Email,string? Phone);
+public sealed record PersonSummaryDto(int PersonId,string FirstName,string LastName,DateOnly? BirthDate,string? DocumentType,string? DocumentNumber,bool Active);
+public sealed record ProfileSummaryDto(int Id,bool Active);
+public sealed record PersonProfilesDto(ProfileSummaryDto? Player,ProfileSummaryDto? Coach,ProfileSummaryDto? Referee);
+public sealed record PersonAdditionalDocumentDto(int PersonAdditionalDocumentId,PersonAdditionalDocumentType DocumentType,string? DocumentNumber,DateOnly? ValidFrom,DateOnly? ValidTo,bool Active,string? Notes);
+public sealed record PersonDto(int PersonId,string? DocumentType,string? DocumentNumber,string FirstName,string LastName,DateOnly? BirthDate,Gender? Gender,string? Email,string? Phone,bool Active,PersonProfilesDto Profiles,IReadOnlyList<PersonAdditionalDocumentDto> AdditionalDocuments);
+public sealed record CreatePersonAdditionalDocumentRequest(PersonAdditionalDocumentType DocumentType,string? DocumentNumber,DateOnly? ValidFrom,DateOnly? ValidTo,string? Notes);
+public sealed record UpdatePersonAdditionalDocumentRequest(PersonAdditionalDocumentType DocumentType,string? DocumentNumber,DateOnly? ValidFrom,DateOnly? ValidTo,string? Notes);
+public sealed record RelevantDocumentDto(int PersonAdditionalDocumentId,string? DocumentNumber,DateOnly? ValidFrom,DateOnly? ValidTo,bool Active);
+public sealed record HealthCardDto(HealthCardStatus Status,RelevantDocumentDto? Document);
+public sealed record PlayerDto(int PlayerId,int PersonId,string FirstName,string LastName,DateOnly? BirthDate,Gender? Gender,bool PersonActive,bool PlayerActive,HealthCardDto HealthCard,RelevantDocumentDto? LeagueCard);
+public sealed record CoachDto(int CoachId,int PersonId,string FirstName,string LastName,DateOnly? BirthDate,Gender? Gender,bool PersonActive,bool CoachActive);
+public sealed record RefereeDto(int RefereeId,int PersonId,string FirstName,string LastName,DateOnly? BirthDate,Gender? Gender,bool PersonActive,bool RefereeActive,HealthCardDto HealthCard,RelevantDocumentDto? LeagueCard);

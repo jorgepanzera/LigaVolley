@@ -14,7 +14,7 @@ internal sealed class GlobalExceptionHandler(IProblemDetailsService problemDetai
             DomainValidationException => (StatusCodes.Status400BadRequest, "Validation failed", "validation_error"),
             BadHttpRequestException => (StatusCodes.Status400BadRequest, "Invalid request", "invalid_request"),
             RequestValidationException validation => (StatusCodes.Status400BadRequest, "Invalid request", validation.Code),
-            ResourceNotFoundException => (StatusCodes.Status404NotFound, "Resource not found", "not_found"),
+            ResourceNotFoundException notFound => (StatusCodes.Status404NotFound, "Resource not found", notFound.Code),
             ResourceConflictException conflict => (StatusCodes.Status409Conflict, "Resource conflict", conflict.Code),
             _ => (StatusCodes.Status500InternalServerError, "Unexpected error", "internal_error")
         };

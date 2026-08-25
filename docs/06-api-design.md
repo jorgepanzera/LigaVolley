@@ -1246,6 +1246,16 @@ FIXTURE
 
 # 18. Flujo deportivo soportado
 
+# 19. People Admin
+
+People y documentos se exponen bajo `/api/admin/people`; perfiles y listados bajo
+`/players`, `/coaches` y `/referees`. Los perfiles se crean con
+`POST /people/{personId}/{player|coach|referee}` sin body. No existe DELETE.
+
+Los listados son paginados (`page`, `pageSize`, máximo 100). Los enums HTTP son
+`HealthCard`, `LeagueCard`, `Valid`, `Missing`, `Expired` y `ValidityUnknown`.
+Request inválido devuelve 400, inexistencia 404 y unicidad 409 con ProblemDetails.
+
 ```text
 Competition DRAFT
         ↓

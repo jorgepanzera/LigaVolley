@@ -9,6 +9,7 @@ using LigaVolley.Domain.Teams;
 using LigaVolley.Domain.Venues;
 using LigaVolley.Domain.TeamEntries;
 using LigaVolley.Domain.Fixtures;
+using LigaVolley.Domain.People;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,6 +30,11 @@ public sealed class LigaVolleyDbContext(DbContextOptions<LigaVolleyDbContext> op
     public DbSet<Match> Matches => Set<Match>();
     public DbSet<MatchSet> MatchSets => Set<MatchSet>();
     public DbSet<PhaseGroupEntry> PhaseGroupEntries => Set<PhaseGroupEntry>();
+    public DbSet<Person> People => Set<Person>();
+    public DbSet<PersonAdditionalDocument> PersonAdditionalDocuments => Set<PersonAdditionalDocument>();
+    public DbSet<Player> Players => Set<Player>();
+    public DbSet<Coach> Coaches => Set<Coach>();
+    public DbSet<Referee> Referees => Set<Referee>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         => modelBuilder.ApplyConfigurationsFromAssembly(typeof(LigaVolleyDbContext).Assembly);
@@ -41,9 +47,18 @@ public sealed class LigaVolleyDbContext(DbContextOptions<LigaVolleyDbContext> op
         }
         catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
         {
+            var message = exception.InnerException?.Message ?? exception.Message;
+            var (code, detail) = message switch
+            {
+                var x when x.Contains("UX_PERSON_document", StringComparison.OrdinalIgnoreCase) => ("person_document_already_exists", "A person with this document already exists."),
+                var x when x.Contains("UQ_PLAYER_person", StringComparison.OrdinalIgnoreCase) => ("player_profile_already_exists", "Player profile already exists."),
+                var x when x.Contains("UQ_COACH_person", StringComparison.OrdinalIgnoreCase) => ("coach_profile_already_exists", "Coach profile already exists."),
+                var x when x.Contains("UQ_REFEREE_person", StringComparison.OrdinalIgnoreCase) => ("referee_profile_already_exists", "Referee profile already exists."),
+                _ => ("unique_constraint_conflict", "The operation conflicts with an existing resource.")
+            };
             throw new ResourceConflictException(
-                "unique_constraint_conflict",
-                "The operation conflicts with an existing resource.");
+                code,
+                detail);
         }
     }
 

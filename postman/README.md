@@ -13,6 +13,9 @@
 
 ## Uso
 
+La carpeta **07 - People** crea una Person y recorre búsqueda, edición,
+activación, Health/League Card y los tres perfiles, conservando IDs en el environment.
+
 La carpeta **01 - Catálogos y competición** debe ejecutarse primero. Los scripts
 de test guardan en el environment los IDs devueltos por la API. Después pueden
 ejecutarse las carpetas restantes o requests individuales.
