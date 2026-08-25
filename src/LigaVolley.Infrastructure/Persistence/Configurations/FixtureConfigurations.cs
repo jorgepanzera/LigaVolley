@@ -39,5 +39,17 @@ internal sealed class MatchConfiguration : IEntityTypeConfiguration<Match>
         b.HasIndex(x=>new{x.CompetitionId,x.PhaseId,x.MatchNumber}).IsUnique().HasFilter("[phase_group_id] IS NULL AND [series_id] IS NULL").HasDatabaseName("UQ_MATCH_phase_scope_number");
         b.HasIndex(x=>new{x.CompetitionId,x.PhaseId,x.PhaseGroupId,x.MatchNumber}).IsUnique().HasFilter("[phase_group_id] IS NOT NULL").HasDatabaseName("UQ_MATCH_group_scope_number");
         b.HasIndex(x=>new{x.CompetitionId,x.MatchDate}).HasDatabaseName("IX_MATCH_competition_date"); b.HasIndex(x=>new{x.PhaseId,x.RoundNumber}).HasDatabaseName("IX_MATCH_phase_round");
+        b.HasMany(x=>x.Sets).WithOne().HasForeignKey(x=>x.MatchId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_MATCH_SET_MATCH");
+    }
+}
+
+internal sealed class MatchSetConfiguration : IEntityTypeConfiguration<MatchSet>
+{
+    public void Configure(EntityTypeBuilder<MatchSet> b)
+    {
+        b.ToTable("MATCH_SET", "dbo", t => { t.HasCheckConstraint("CK_MATCH_SET_number", "[set_number] BETWEEN 1 AND 5"); t.HasCheckConstraint("CK_MATCH_SET_points", "[home_points] >= 0 AND [away_points] >= 0"); });
+        b.HasKey(x => x.MatchSetId).HasName("PK_MATCH_SET"); b.Property(x => x.MatchSetId).HasColumnName("match_set_id").UseIdentityColumn();
+        b.Property(x => x.MatchId).HasColumnName("match_id"); b.Property(x => x.SetNumber).HasColumnName("set_number"); b.Property(x => x.HomePoints).HasColumnName("home_points"); b.Property(x => x.AwayPoints).HasColumnName("away_points");
+        b.HasIndex(x => new { x.MatchId, x.SetNumber }).IsUnique().HasDatabaseName("UQ_MATCH_SET");
     }
 }

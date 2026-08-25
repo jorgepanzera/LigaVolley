@@ -84,7 +84,7 @@
         {
           "name": "Consultar estructura",
           "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/structure" },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Estructura instanciada', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().phases).to.have.lengthOf(1); });"] } }]
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Estructura instanciada', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().phases).to.have.lengthOf(1); });", "if (pm.response.code === 200) pm.environment.set('phaseId', pm.response.json().phases[0].phaseId);"] } }]
         }
       ]
     },
@@ -130,7 +130,28 @@
       ]
     },
     {
-      "name": "04 - Casos de error",
+      "name": "04 - Standings",
+      "description": "La consulta de grupo requiere phaseId y phaseGroupId de una competición con participantes ya materializados en PHASE_GROUP_ENTRY.",
+      "item": [
+        {
+          "name": "Consultar standings de fase regular",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/phases/{{phaseId}}/standings" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 y posiciones', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().positions).to.be.an('array'); });"] } }]
+        },
+        {
+          "name": "Consultar standings de grupo",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/phases/{{phaseId}}/standings?phaseGroupId={{phaseGroupId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 y scope de grupo', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().phaseGroupId.toString()).to.eql(pm.environment.get('phaseGroupId')); });"] } }]
+        },
+        {
+          "name": "Error por grupo inválido",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/phases/{{phaseId}}/standings?phaseGroupId=2147483647" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('400 o 404 ProblemDetails', () => { pm.expect(pm.response.code).to.be.oneOf([400,404]); pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "05 - Casos de error",
       "item": [
         {
           "name": "Temporada duplicada devuelve 409",

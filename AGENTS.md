@@ -177,6 +177,8 @@ Las decisiones concretas de tecnología y protocolo de sincronización quedan ab
 - Mantener el backend como Modular Monolith.
 - No introducir mensajería, microservicios, CQRS distribuido o event sourcing como requisito arquitectónico salvo decisión explícita posterior.
 - Escribir tests para reglas de dominio y casos de uso relevantes.
+- Considerar cada vertical slice terminado únicamente cuando código, tests automatizados, documentación Swagger/OpenAPI y colección Postman estén implementados y sean consistentes entre sí.
+- Al modificar el contrato HTTP de un slice existente, actualizar en el mismo cambio sus tests de integración, metadata/documentación Swagger/OpenAPI y requests/tests de Postman afectados.
 - Las migraciones/esquemas SQL deben respetar las PK, FK y restricciones del modelo aprobado.
 - Mantener nombres del dominio en inglés en código y base de datos, salvo que se acuerde lo contrario.
 - Evitar que controllers/endpoints contengan reglas de negocio.

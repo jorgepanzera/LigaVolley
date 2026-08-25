@@ -56,6 +56,7 @@ public sealed class Match
     public byte? HomeSets { get; private set; }
     public byte? AwaySets { get; private set; }
     public int? WinnerTeamEntryId { get; private set; }
+    public List<MatchSet> Sets { get; private set; } = [];
 
     public void Schedule(DateTime? matchDate, int? venueId)
     {
@@ -66,4 +67,29 @@ public sealed class Match
         VenueId = venueId;
         Status = matchDate.HasValue || venueId.HasValue ? MatchStatus.Scheduled : MatchStatus.Pending;
     }
+
+    public void Finish(byte homeSets, byte awaySets, TeamEntry winner, IEnumerable<MatchSet> sets)
+    {
+        if (!ReferenceEquals(winner, HomeTeamEntry) && !ReferenceEquals(winner, AwayTeamEntry))
+            throw new DomainValidationException("Winner must be one of the match participants.");
+        HomeSets = homeSets; AwaySets = awaySets; WinnerTeamEntryId = winner.TeamEntryId;
+        Sets = sets?.ToList() ?? throw new DomainValidationException("Match sets are required.");
+        Status = MatchStatus.Finished;
+    }
+}
+
+public sealed class MatchSet
+{
+    private MatchSet() { }
+    public MatchSet(byte setNumber, short homePoints, short awayPoints)
+    {
+        if (setNumber is < 1 or > 5) throw new DomainValidationException("SetNumber must be between 1 and 5.");
+        if (homePoints < 0 || awayPoints < 0) throw new DomainValidationException("Set points cannot be negative.");
+        SetNumber = setNumber; HomePoints = homePoints; AwayPoints = awayPoints;
+    }
+    public int MatchSetId { get; private set; }
+    public int MatchId { get; private set; }
+    public byte SetNumber { get; private set; }
+    public short HomePoints { get; private set; }
+    public short AwayPoints { get; private set; }
 }

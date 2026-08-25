@@ -2,6 +2,7 @@ using LigaVolley.Domain.Common;
 using LigaVolley.Domain.CompetitionFormats;
 using LigaVolley.Domain.Divisions;
 using LigaVolley.Domain.Seasons;
+using LigaVolley.Domain.TeamEntries;
 
 namespace LigaVolley.Domain.Competitions;
 
@@ -120,6 +121,28 @@ public sealed class CompetitionPhaseGroup
     public short Rounds { get; private set; }
     public FixtureMode FixtureMode { get; private set; }
     public CarryOverMode CarryOverMode { get; private set; }
+    public List<PhaseGroupEntry> Entries { get; private set; } = [];
+}
+
+public sealed class PhaseGroupEntry
+{
+    private PhaseGroupEntry() { }
+    public PhaseGroupEntry(CompetitionPhaseGroup group, TeamEntry teamEntry, short? sourcePosition, short? seed)
+    {
+        if (sourcePosition <= 0) throw new DomainValidationException("SourcePosition must be positive when provided.");
+        if (seed <= 0) throw new DomainValidationException("Seed must be positive when provided.");
+        PhaseGroup = group ?? throw new DomainValidationException("PhaseGroup is required.");
+        TeamEntry = teamEntry ?? throw new DomainValidationException("TeamEntry is required.");
+        CompetitionId = teamEntry.CompetitionId; SourcePosition = sourcePosition; Seed = seed;
+    }
+    public int PhaseGroupEntryId { get; private set; }
+    public int CompetitionId { get; private set; }
+    public int PhaseGroupId { get; private set; }
+    public CompetitionPhaseGroup PhaseGroup { get; private set; } = null!;
+    public int TeamEntryId { get; private set; }
+    public TeamEntry TeamEntry { get; private set; } = null!;
+    public short? SourcePosition { get; private set; }
+    public short? Seed { get; private set; }
 }
 
 public sealed class CompetitionPlayoffSeries

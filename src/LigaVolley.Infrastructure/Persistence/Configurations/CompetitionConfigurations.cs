@@ -34,7 +34,19 @@ internal sealed class CompetitionPhaseGroupConfiguration : IEntityTypeConfigurat
 {
     public void Configure(EntityTypeBuilder<CompetitionPhaseGroup> b)
     {
-        b.ToTable("PHASE_GROUP", "dbo"); b.HasKey(x => x.PhaseGroupId); b.Property(x => x.PhaseGroupId).HasColumnName("phase_group_id").UseIdentityColumn(); b.Property(x => x.CompetitionPhaseId).HasColumnName("competition_phase_id"); b.Property(x => x.FormatGroupId).HasColumnName("format_group_id"); b.Property(x => x.Code).HasColumnName("code").HasColumnType("varchar(30)"); b.Property(x => x.Name).HasColumnName("name").HasMaxLength(100); b.Property(x => x.GroupRole).AsSql("group_role",20); b.Property(x => x.Sequence).HasColumnName("sequence"); b.Property(x => x.Rounds).HasColumnName("rounds"); b.Property(x => x.FixtureMode).AsSql("fixture_mode",30); b.Property(x => x.CarryOverMode).AsSql("carry_over_mode",20); b.HasAlternateKey(x => new { x.PhaseGroupId, x.CompetitionPhaseId }).HasName("UQ_PHASE_GROUP_id_phase"); b.HasOne(x => x.FormatGroup).WithMany().HasForeignKey(x => x.FormatGroupId).OnDelete(DeleteBehavior.Restrict); b.HasIndex(x => new { x.CompetitionPhaseId, x.Code }).IsUnique();
+        b.ToTable("PHASE_GROUP", "dbo"); b.HasKey(x => x.PhaseGroupId); b.Property(x => x.PhaseGroupId).HasColumnName("phase_group_id").UseIdentityColumn(); b.Property(x => x.CompetitionPhaseId).HasColumnName("competition_phase_id"); b.Property(x => x.FormatGroupId).HasColumnName("format_group_id"); b.Property(x => x.Code).HasColumnName("code").HasColumnType("varchar(30)"); b.Property(x => x.Name).HasColumnName("name").HasMaxLength(100); b.Property(x => x.GroupRole).AsSql("group_role",20); b.Property(x => x.Sequence).HasColumnName("sequence"); b.Property(x => x.Rounds).HasColumnName("rounds"); b.Property(x => x.FixtureMode).AsSql("fixture_mode",30); b.Property(x => x.CarryOverMode).AsSql("carry_over_mode",20); b.HasAlternateKey(x => new { x.PhaseGroupId, x.CompetitionPhaseId }).HasName("UQ_PHASE_GROUP_id_phase"); b.HasOne(x => x.FormatGroup).WithMany().HasForeignKey(x => x.FormatGroupId).OnDelete(DeleteBehavior.Restrict); b.HasIndex(x => new { x.CompetitionPhaseId, x.Code }).IsUnique(); b.HasMany(x => x.Entries).WithOne(x => x.PhaseGroup).HasForeignKey(x => x.PhaseGroupId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+internal sealed class PhaseGroupEntryConfiguration : IEntityTypeConfiguration<PhaseGroupEntry>
+{
+    public void Configure(EntityTypeBuilder<PhaseGroupEntry> b)
+    {
+        b.ToTable("PHASE_GROUP_ENTRY", "dbo", t => { t.HasCheckConstraint("CK_PHASE_GROUP_ENTRY_source_position", "[source_position] IS NULL OR [source_position] > 0"); t.HasCheckConstraint("CK_PHASE_GROUP_ENTRY_seed", "[seed] IS NULL OR [seed] > 0"); });
+        b.HasKey(x => x.PhaseGroupEntryId).HasName("PK_PHASE_GROUP_ENTRY"); b.Property(x => x.PhaseGroupEntryId).HasColumnName("phase_group_entry_id").UseIdentityColumn();
+        b.Property(x => x.CompetitionId).HasColumnName("competition_id"); b.Property(x => x.PhaseGroupId).HasColumnName("phase_group_id"); b.Property(x => x.TeamEntryId).HasColumnName("team_entry_id"); b.Property(x => x.SourcePosition).HasColumnName("source_position"); b.Property(x => x.Seed).HasColumnName("seed");
+        b.HasOne(x => x.TeamEntry).WithMany().HasForeignKey(x => new { x.TeamEntryId, x.CompetitionId }).HasPrincipalKey(x => new { x.TeamEntryId, x.CompetitionId }).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_PHASE_GROUP_ENTRY_TEAM");
+        b.HasIndex(x => new { x.PhaseGroupId, x.TeamEntryId }).IsUnique().HasDatabaseName("UQ_PHASE_GROUP_ENTRY");
     }
 }
 

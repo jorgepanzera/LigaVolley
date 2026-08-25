@@ -753,6 +753,24 @@ Competition → SCHEDULED
 
 La progresión entre fases, clasificación automática, generación incremental de segunda fase/playoffs y cierre deportivo de Competition queda definida en las secciones siguientes.
 
+## Standings administrativo
+
+`GET /api/admin/competitions/{competitionId}/phases/{phaseId}/standings`
+
+Para fases con grupos:
+
+`GET /api/admin/competitions/{competitionId}/phases/{phaseId}/standings?phaseGroupId=12`
+
+Standings se calcula bajo demanda desde partidos `FINISHED`, `MATCH_SET`,
+`FORMAT_SCORING_RULE` y `FORMAT_TIEBREAK_RULE`; no se persiste una tabla derivada.
+Incluye todos los participantes del ámbito aunque tengan cero partidos jugados.
+En fases con grupos `phaseGroupId` es obligatorio y los participantes proceden
+exclusivamente de `PHASE_GROUP_ENTRY`. No se admite para fases playoff.
+
+El resultado informa estadísticas de partidos, sets y puntos, puntos de tabla,
+posición compartida, empate deportivo irresuelto e `IsFinal`. Las inconsistencias
+de resultados o configuración persistida se devuelven como `409 ProblemDetails`.
+
 # 11. Progresión de fases
 
 ## Principio

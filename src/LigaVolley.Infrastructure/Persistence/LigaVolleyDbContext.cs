@@ -27,6 +27,8 @@ public sealed class LigaVolleyDbContext(DbContextOptions<LigaVolleyDbContext> op
     public DbSet<TeamEntry> TeamEntries => Set<TeamEntry>();
     public DbSet<FixtureGeneration> FixtureGenerations => Set<FixtureGeneration>();
     public DbSet<Match> Matches => Set<Match>();
+    public DbSet<MatchSet> MatchSets => Set<MatchSet>();
+    public DbSet<PhaseGroupEntry> PhaseGroupEntries => Set<PhaseGroupEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         => modelBuilder.ApplyConfigurationsFromAssembly(typeof(LigaVolleyDbContext).Assembly);

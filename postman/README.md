@@ -17,6 +17,11 @@ La carpeta **01 - Catálogos y competición** debe ejecutarse primero. Los scrip
 de test guardan en el environment los IDs devueltos por la API. Después pueden
 ejecutarse las carpetas restantes o requests individuales.
 
+La carpeta **04 - Standings** contiene la consulta de fase regular, la consulta
+por grupo y un caso de grupo inválido. Para la consulta exitosa por grupo deben
+definirse `competitionId`, `phaseId` y `phaseGroupId` con datos ya materializados
+por la futura progresión deportiva o preparados para pruebas.
+
 Para una corrida completamente nueva, borrar la variable de colección
 `runSuffix` o volver a importar la colección. La temporada de prueba usa el año
 2090; si ese año ya existe en la base, eliminar los datos de prueba o cambiar el

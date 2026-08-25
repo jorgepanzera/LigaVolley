@@ -11,6 +11,8 @@ using LigaVolley.Application.Venues;
 using LigaVolley.Application.TeamEntries;
 using LigaVolley.Application.Fixtures;
 using LigaVolley.Application.Matches;
+using LigaVolley.Application.Standings;
+using LigaVolley.Domain.Standings;
 using LigaVolley.Infrastructure;
 using LigaVolley.Infrastructure.Persistence.Seed;
 
@@ -42,6 +44,8 @@ builder.Services.AddScoped<VenueService>();
 builder.Services.AddScoped<TeamEntryService>();
 builder.Services.AddScoped<FixtureService>();
 builder.Services.AddScoped<MatchAdminService>();
+builder.Services.AddScoped<StandingsService>();
+builder.Services.AddSingleton<StandingsCalculator>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -79,6 +83,7 @@ app.MapVenueEndpoints();
 app.MapTeamEntryEndpoints();
 app.MapFixtureEndpoints();
 app.MapMatchEndpoints();
+app.MapStandingsEndpoints();
 
 app.Run();
 

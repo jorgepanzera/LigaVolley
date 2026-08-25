@@ -107,11 +107,14 @@ Ejemplo:
 
 El formato puede parametrizar la puntuación de tabla mediante `FORMAT_SCORING_RULE`.
 
-La configuración estándar actualmente contemplada es:
+La configuración vigente para los formatos principales de la liga se representa mediante reglas y contempla:
 
-- 3-0 → 3 puntos ganador / 0 perdedor;
-- 3-1 → 3 puntos ganador / 0 perdedor;
+- 3-0 → 2 puntos ganador / 1 perdedor;
+- 3-1 → 2 puntos ganador / 1 perdedor;
 - 3-2 → 2 puntos ganador / 1 perdedor.
+
+Otros formatos pueden definir repartos diferentes, incluido 3/0 para 3-0 y 3-1
+y 2/1 para 3-2. Ningún cálculo de standings debe asumir un reparto fijo.
 
 Los criterios de desempate se parametrizan mediante `FORMAT_TIEBREAK_RULE`. El modelo contempla criterios como:
 
