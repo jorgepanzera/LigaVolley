@@ -85,6 +85,16 @@
 
 ## Decisiones Competition Rosters v1 cerradas
 
+## Decisiones Match Officials v1 cerradas
+
+- `MATCH_OFFICIAL` referencia `REFEREE`; roles v1: `FIRST_REFEREE`, `SECOND_REFEREE`, `SCORER`.
+- Hay un oficial por rol y un Referee no ocupa dos roles del mismo Match.
+- Admin designa inicialmente y edita sólo antes del inicio; Scorer reemplaza durante `IN_PROGRESS` sin dejar el rol vacío.
+- La asignación vigente vive en `MATCH_OFFICIAL`; el reemplazo deberá auditarse en el futuro MatchSheet.
+- Health Card es warning; no se validan conflictos de agenda.
+- OpenMatchSheet deberá exigir los tres roles.
+- Pendientes: auditoría definitiva `OFFICIAL_REPLACEMENT`, conflictos horarios, roles adicionales, ausencias excepcionales y permisos exactos de Scorer.
+
 - Un roster por TeamEntry, con creación explícita y estados `DRAFT`, `ACTIVE`, `CLOSED`.
 - Activación sin mínimos; máximos de 15 jugadores, dos técnicos y dos líberos activos.
 - Miembros inactivos permanecen históricos y no existe DELETE físico.

@@ -11,6 +11,7 @@ using LigaVolley.Domain.TeamEntries;
 using LigaVolley.Domain.Fixtures;
 using LigaVolley.Domain.People;
 using LigaVolley.Domain.CompetitionRosters;
+using LigaVolley.Domain.MatchOfficials;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,6 +38,7 @@ public sealed class LigaVolleyDbContext(DbContextOptions<LigaVolleyDbContext> op
     public DbSet<Coach> Coaches => Set<Coach>();
     public DbSet<Referee> Referees => Set<Referee>();
     public DbSet<CompetitionRoster> CompetitionRosters => Set<CompetitionRoster>();
+    public DbSet<MatchOfficial> MatchOfficials => Set<MatchOfficial>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         => modelBuilder.ApplyConfigurationsFromAssembly(typeof(LigaVolleyDbContext).Assembly);
@@ -60,6 +62,8 @@ public sealed class LigaVolleyDbContext(DbContextOptions<LigaVolleyDbContext> op
                 var x when x.Contains("UQ_COMPETITION_ROSTER_PLAYER_player", StringComparison.OrdinalIgnoreCase) => ("competition_roster_player_already_exists", "Player already belongs to this roster."),
                 var x when x.Contains("UQ_COMPETITION_ROSTER_STAFF_coach", StringComparison.OrdinalIgnoreCase) => ("competition_roster_staff_already_exists", "Coach already belongs to this roster."),
                 var x when x.Contains("UX_COMPETITION_ROSTER_PLAYER_active_jersey", StringComparison.OrdinalIgnoreCase) => ("competition_roster_duplicate_jersey_number", "Jersey number must be unique among active players."),
+                var x when x.Contains("UQ_MATCH_OFFICIAL_role",StringComparison.OrdinalIgnoreCase)=>("match_official_role_already_assigned","Role is already assigned."),
+                var x when x.Contains("UQ_MATCH_OFFICIAL_referee",StringComparison.OrdinalIgnoreCase)=>("match_official_referee_already_assigned","Referee is already assigned."),
                 _ => ("unique_constraint_conflict", "The operation conflicts with an existing resource.")
             };
             throw new ResourceConflictException(

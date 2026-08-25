@@ -50,4 +50,8 @@ El `HealthCardStatus` se deriva al consultar y nunca se persiste.
 
 Separar entidades permanentes (por ejemplo Team o Person) de su participación contextual (por ejemplo TeamEntry, CompetitionRoster, MatchOfficial).
 
+## Match Officials v1
+
+`MATCH_OFFICIAL` representa la asignación vigente de un perfil `REFEREE` a un `MATCH`. No duplica `competition_id` ni datos de `PERSON`. Los roles cerrados son `FIRST_REFEREE`, `SECOND_REFEREE` y `SCORER`; cada rol y cada Referee son únicos dentro del Match.
+
 `COMPETITION_ROSTER` es la participación contextual única de un `TEAM_ENTRY`. Sus jugadores y técnicos conservan historia mediante estados `ACTIVE/INACTIVE`; el roster usa `DRAFT/ACTIVE/CLOSED`. El rol y dorsal del jugador pertenecen a esa inscripción competitiva, no a `PLAYER`.

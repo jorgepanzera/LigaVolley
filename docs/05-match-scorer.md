@@ -62,6 +62,10 @@ Para cualquier instante relevante del partido:
 
 ## Persistencia de estado y eventos
 
+### Reemplazo de oficiales
+
+Los tres oficiales se designan inicialmente desde Admin. Durante `IN_PROGRESS`, Scorer puede reemplazar el Referee vigente de un rol mediante un caso de uso específico, sin convertir Scorer en CRUD administrativo. `MATCH_OFFICIAL` conserva el estado canónico actual. El futuro MatchSheet deberá auditar un evento `OFFICIAL_REPLACEMENT` con rol, Referee anterior, Referee nuevo y fecha. Antes de `OpenMatchSheet` deberán existir los tres roles; esa precondición no forma parte de este slice.
+
 No se adopta event sourcing como arquitectura. El estado operacional actual necesario para operar y consultar eficientemente el partido se persiste. Los cambios relevantes se registran además como eventos/auditoría para mantener trazabilidad y permitir correcciones o reconstrucción cuando corresponda.
 
 El límite exacto entre estado canónico persistido, datos derivados y snapshots para operación offline se cerrará al diseñar la sincronización.

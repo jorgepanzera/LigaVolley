@@ -197,6 +197,8 @@ No existe entidad League ni DELETE físico en People v1.
 
 Competition Rosters v1 está cerrado: existe un roster explícito por TeamEntry con estados DRAFT/ACTIVE/CLOSED, sin mínimos de activación; máximos de 15 jugadores, 2 técnicos y 2 líberos ACTIVE. Los miembros INACTIVE permanecen históricos, ACTIVE sigue editable durante la Competition operativa, PLAYER_ROLE/dorsal son contextuales, Health Card nunca bloquea y no existe DELETE físico. Un roster CLOSED no es editable.
 
+Match Officials v1 está cerrado: `MATCH_OFFICIAL` referencia `REFEREE`; los roles son FIRST_REFEREE, SECOND_REFEREE y SCORER, únicos por Match, y un Referee no puede ocupar dos roles. Admin edita en PENDING/SCHEDULED; Scorer reemplaza sin vaciar roles en IN_PROGRESS. Health Card nunca bloquea y los reemplazos deberán auditarse en el futuro MatchSheet.
+
 En orden de prioridad:
 
 1. decisiones explícitas más recientes del proyecto;

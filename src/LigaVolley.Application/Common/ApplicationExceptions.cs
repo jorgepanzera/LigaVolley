@@ -13,6 +13,7 @@ public sealed class ResourceNotFoundException(string resource, object id)
         "CompetitionRoster" => "competition_roster_not_found",
         "CompetitionRosterPlayer" => "competition_roster_player_not_found",
         "CompetitionRosterStaff" => "competition_roster_staff_not_found",
+        "MatchOfficial" => "match_official_not_found",
         _ => "not_found"
     };
 }

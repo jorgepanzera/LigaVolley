@@ -60,6 +60,8 @@ Se admiten hasta 15 jugadores `ACTIVE`, dos técnicos `ACTIVE` y dos jugadores `
 
 Las mutaciones se serializan mediante bloqueo de `TEAM_ENTRY`; las unicidades naturales también están respaldadas por índices SQL.
 
-`MATCH_OFFICIAL` continúa fuera de este slice.
+## Alcance implementado: Match Officials v1
 
-`MATCH_OFFICIAL` vincula un `MATCH` con las personas que actúan como árbitros/oficiales en ese encuentro y con el rol correspondiente.
+`MATCH_OFFICIAL` vincula un `MATCH` exclusivamente con un perfil `REFEREE`. Admite `FIRST_REFEREE`, `SECOND_REFEREE` y `SCORER`, con máximo uno por rol y sin repetir el mismo Referee en otro rol del partido. Health Card se deriva desde People, se muestra como warning y nunca bloquea.
+
+Admin puede crear, modificar y eliminar designaciones en `PENDING` o `SCHEDULED`. Desde `IN_PROGRESS` Admin queda bloqueado; Scorer puede reemplazar una asignación existente, pero no vaciarla. `FINISHED`, `CANCELLED` y `SUSPENDED` son de consulta para este slice.

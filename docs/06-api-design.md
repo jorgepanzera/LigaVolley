@@ -1254,6 +1254,10 @@ FIXTURE
 
 # 19. People Admin
 
+# 20. Match Officials
+
+Admin: `GET/POST /api/admin/matches/{matchId}/officials` y `PUT/DELETE /api/admin/matches/{matchId}/officials/{matchOfficialId}`. Scorer: `PUT /api/scorer/matches/{matchId}/officials/{role}` para reemplazo durante `IN_PROGRESS`. Requests usan `refereeId` y roles expresivos; responses incluyen identidad proyectada de Person y `HealthCardStatus`. Se documentan respuestas 400, 404 y 409 mediante ProblemDetails con `code` estable.
+
 People y documentos se exponen bajo `/api/admin/people`; perfiles y listados bajo
 `/players`, `/coaches` y `/referees`. Los perfiles se crean con
 `POST /people/{personId}/{player|coach|referee}` sin body. No existe DELETE.

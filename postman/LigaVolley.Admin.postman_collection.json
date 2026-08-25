@@ -16,6 +16,20 @@
   "variable": [{ "key": "runSuffix", "value": "" }],
   "item": [
     {
+      "name": "09 - Match Officials",
+      "description": "Designación Admin y reemplazo Scorer. Repetir requests permite verificar roles/referees duplicados, warnings Health Card y bloqueos por estado.",
+      "item": [
+        {"name":"Listar sin designaciones","request":{"method":"GET","url":"{{baseUrl}}/api/admin/matches/{{matchId}}/officials"}},
+        {"name":"Agregar FirstReferee","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"refereeId\": {{refereeId}}, \"role\": \"FirstReferee\" }"},"url":"{{baseUrl}}/api/admin/matches/{{matchId}}/officials"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["if (pm.response.code === 201) pm.environment.set('matchOfficialId', pm.response.json().matchOfficialId);"]}}]},
+        {"name":"Agregar SecondReferee","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"refereeId\": {{secondRefereeId}}, \"role\": \"SecondReferee\" }"},"url":"{{baseUrl}}/api/admin/matches/{{matchId}}/officials"}},
+        {"name":"Agregar Scorer","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"refereeId\": {{scorerRefereeId}}, \"role\": \"Scorer\" }"},"url":"{{baseUrl}}/api/admin/matches/{{matchId}}/officials"}},
+        {"name":"Modificar árbitro o rol antes del inicio","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"refereeId\": {{refereeId}}, \"role\": \"FirstReferee\" }"},"url":"{{baseUrl}}/api/admin/matches/{{matchId}}/officials/{{matchOfficialId}}"}},
+        {"name":"Eliminar antes del inicio","request":{"method":"DELETE","url":"{{baseUrl}}/api/admin/matches/{{matchId}}/officials/{{matchOfficialId}}"}},
+        {"name":"Reemplazar desde Scorer en IN_PROGRESS","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"refereeId\": {{replacementRefereeId}} }"},"url":"{{baseUrl}}/api/scorer/matches/{{matchId}}/officials/FirstReferee"}},
+        {"name":"Comprobar duplicado de rol/referee","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"refereeId\": {{refereeId}}, \"role\": \"FirstReferee\" }"},"url":"{{baseUrl}}/api/admin/matches/{{matchId}}/officials"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Conflict when assignment duplicates existing data', () => pm.expect(pm.response.code).to.eql(409));"]}}]}
+      ]
+    },
+    {
       "name": "08 - Competition Rosters",
       "description": "Flujo v1: crear/activar/cargar/modificar/inactivar/cerrar. Repetir altas permite verificar límites 15/2/2, duplicados y Health Card warning.",
       "item": [
