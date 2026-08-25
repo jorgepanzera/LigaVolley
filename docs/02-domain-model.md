@@ -49,3 +49,5 @@ por `(document_type, document_number)`. `PLAYER`, `COACH` y `REFEREE` son perfil
 El `HealthCardStatus` se deriva al consultar y nunca se persiste.
 
 Separar entidades permanentes (por ejemplo Team o Person) de su participación contextual (por ejemplo TeamEntry, CompetitionRoster, MatchOfficial).
+
+`COMPETITION_ROSTER` es la participación contextual única de un `TEAM_ENTRY`. Sus jugadores y técnicos conservan historia mediante estados `ACTIVE/INACTIVE`; el roster usa `DRAFT/ACTIVE/CLOSED`. El rol y dorsal del jugador pertenecen a esa inscripción competitiva, no a `PLAYER`.

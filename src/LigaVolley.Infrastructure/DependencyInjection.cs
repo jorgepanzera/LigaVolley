@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IPlayoffProgressionRepository, PlayoffProgressionRepository>();
         services.AddScoped<ICompetitionProgressionRepository, CompetitionProgressionRepository>();
         services.AddScoped<IPeopleRepository, PeopleRepository>();
+        services.AddScoped<ICompetitionRosterRepository, CompetitionRosterRepository>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<LigaVolleyDbContext>());
         services.AddScoped<Livosur2026Seeder>();
         return services;

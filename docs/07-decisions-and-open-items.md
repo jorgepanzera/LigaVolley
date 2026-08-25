@@ -83,6 +83,15 @@
 - Los documentos adicionales contienen Health Card y League Card; no existe League en v1.
 - Health Card es warning para Player/Referee y nunca bloqueo; Coach no la requiere.
 
+## Decisiones Competition Rosters v1 cerradas
+
+- Un roster por TeamEntry, con creación explícita y estados `DRAFT`, `ACTIVE`, `CLOSED`.
+- Activación sin mínimos; máximos de 15 jugadores, dos técnicos y dos líberos activos.
+- Miembros inactivos permanecen históricos y no existe DELETE físico.
+- Un roster activo sigue editable durante una Competition operativa; uno cerrado no es editable.
+- `PLAYER_ROLE` y dorsal son contextuales; Health Card es warning y nunca bloqueo.
+- Competition `FINISHED` o `CANCELLED` y TeamEntry no operativo rechazan mutaciones.
+
 ### Season
 
 - `GET /api/admin/seasons`

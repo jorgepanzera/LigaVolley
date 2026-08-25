@@ -1,0 +1,11 @@
+using LigaVolley.Domain.CompetitionRosters;
+using LigaVolley.Domain.People;
+namespace LigaVolley.Application.CompetitionRosters;
+public sealed record CompetitionRosterDto(int CompetitionRosterId,int CompetitionId,int TeamEntryId,int TeamId,string TeamName,CompetitionRosterStatus Status,int ActivePlayerCount,int ActiveStaffCount,int ActiveLiberoCount,IReadOnlyList<CompetitionRosterPlayerDto> Players,IReadOnlyList<CompetitionRosterStaffDto> Staff);
+public sealed record AddCompetitionRosterPlayerRequest(int PlayerId,short? JerseyNumber,PlayerRole Role);
+public sealed record UpdateCompetitionRosterPlayerRequest(short? JerseyNumber,PlayerRole Role);
+public sealed record CompetitionRosterPlayerDto(int CompetitionRosterPlayerId,int PlayerId,int PersonId,string FirstName,string LastName,short? JerseyNumber,PlayerRole Role,CompetitionRosterMemberStatus Status,HealthCardStatus HealthCardStatus);
+public sealed record AddCompetitionRosterStaffRequest(int CoachId);
+public sealed record CompetitionRosterStaffDto(int CompetitionRosterStaffId,int CoachId,int PersonId,string FirstName,string LastName,CompetitionRosterMemberStatus Status);
+public sealed record ChangeCompetitionRosterStatusRequest(CompetitionRosterStatus Status);
+public sealed record ChangeRosterMemberStatusRequest(CompetitionRosterMemberStatus Status);

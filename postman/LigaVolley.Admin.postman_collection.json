@@ -16,6 +16,21 @@
   "variable": [{ "key": "runSuffix", "value": "" }],
   "item": [
     {
+      "name": "08 - Competition Rosters",
+      "description": "Flujo v1: crear/activar/cargar/modificar/inactivar/cerrar. Repetir altas permite verificar límites 15/2/2, duplicados y Health Card warning.",
+      "item": [
+        { "name": "Crear roster DRAFT", "request": { "method": "POST", "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries/{{teamEntryId}}/roster" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));"] } }] },
+        { "name": "Activar roster sin mínimos", "request": { "method": "PATCH", "header": [{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\n  \"status\": \"Active\"\n}"}, "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries/{{teamEntryId}}/roster/status" } },
+        { "name": "Agregar jugador", "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\n  \"playerId\": {{playerId}},\n  \"jerseyNumber\": 7,\n  \"role\": \"Setter\"\n}"}, "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries/{{teamEntryId}}/roster/players" } },
+        { "name": "Cambiar rol y dorsal", "request": { "method": "PUT", "header": [{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\n  \"jerseyNumber\": 8,\n  \"role\": \"Libero\"\n}"}, "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries/{{teamEntryId}}/roster/players/{{rosterPlayerId}}" } },
+        { "name": "Inactivar/reactivar jugador", "request": { "method": "PATCH", "header": [{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\n  \"status\": \"Inactive\"\n}"}, "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries/{{teamEntryId}}/roster/players/{{rosterPlayerId}}/status" } },
+        { "name": "Agregar técnico", "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\n  \"coachId\": {{coachId}}\n}"}, "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries/{{teamEntryId}}/roster/staff" } },
+        { "name": "Inactivar/reactivar técnico", "request": { "method": "PATCH", "header": [{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\n  \"status\": \"Inactive\"\n}"}, "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries/{{teamEntryId}}/roster/staff/{{rosterStaffId}}/status" } },
+        { "name": "Consultar activos e inactivos", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries/{{teamEntryId}}/roster" } },
+        { "name": "Cerrar roster", "request": { "method": "PATCH", "header": [{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\n  \"status\": \"Closed\"\n}"}, "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries/{{teamEntryId}}/roster/status" } }
+      ]
+    },
+    {
       "name": "01 - Catálogos y competición",
       "description": "Ejecutar en orden con Collection Runner. Construye datos independientes para una corrida.",
       "item": [

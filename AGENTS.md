@@ -195,6 +195,8 @@ vigencias y nunca implícitos. Health Card y League Card son documentos históri
 Health Card es warning para Player/Referee, no bloqueo, y Coach no la requiere.
 No existe entidad League ni DELETE físico en People v1.
 
+Competition Rosters v1 está cerrado: existe un roster explícito por TeamEntry con estados DRAFT/ACTIVE/CLOSED, sin mínimos de activación; máximos de 15 jugadores, 2 técnicos y 2 líberos ACTIVE. Los miembros INACTIVE permanecen históricos, ACTIVE sigue editable durante la Competition operativa, PLAYER_ROLE/dorsal son contextuales, Health Card nunca bloquea y no existe DELETE físico. Un roster CLOSED no es editable.
+
 En orden de prioridad:
 
 1. decisiones explícitas más recientes del proyecto;

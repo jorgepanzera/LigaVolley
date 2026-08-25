@@ -21,6 +21,12 @@ Este documento incorpora el contrato inicial detallado para:
 
 ## Superficies
 
+## Competition Rosters Admin
+
+El agregado se expone bajo `/api/admin/competitions/{competitionId}/entries/{teamEntryId}/roster`: `GET`, `POST`, `PATCH /status`, `POST /players`, `PUT /players/{rosterPlayerId}`, `PATCH /players/{rosterPlayerId}/status`, `POST /staff` y `PATCH /staff/{rosterStaffId}/status`. Las respuestas usan los DTOs específicos de Admin, enums JSON expresivos y `ProblemDetails` con `code`; creación devuelve 201, mutaciones 200, faltantes 404 y conflictos 409.
+
+Los códigos estables incluyen `competition_roster_not_found`, `competition_roster_already_exists`, `competition_roster_closed`, `competition_roster_invalid_transition`, límites/duplicados de player/staff/libero/dorsal, mismatch de TeamEntry y Competition no editable.
+
 ### Admin
 
 Prefijo obligatorio:
