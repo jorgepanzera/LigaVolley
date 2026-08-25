@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyCommand, serverPlayer } from './matchEngine';
+import { applyCommand, effectivePlayers, serverPlayer, validateLiberoPlan } from './matchEngine';
 import { initialState, type MatchState, type Side } from './types';
 const ready = () => {
   let s = applyCommand(initialState(), { type: 'PREPARE_SET', payload: {} });
@@ -105,5 +105,64 @@ describe('local MatchEngine', () => {
     expect(s.matchDecided).toBe(true);
     expect(s.closed).toBe(false);
     expect(applyCommand(s, { type: 'MATCH_CLOSE', payload: {} }).closed).toBe(true);
+  });
+  it('rejects a libero plan that could cover two positions simultaneously', () => {
+    expect(() =>
+      validateLiberoPlan(
+        { enabled: true, liberoMatchPlayerId: 88, logicalPositions: [0, 1] },
+        [10, 11, 12, 13, 14, 15],
+      ),
+    ).toThrow('ambiguous_libero_plan');
+  });
+  it('derives pre-serve libero state but keeps the regular player as server at P1', () => {
+    let s = applyCommand(initialState(), { type: 'PREPARE_SET', payload: {} });
+    s = applyCommand(s, {
+      type: 'SET_LINEUP',
+      payload: {
+        side: 'HOME',
+        p1MatchPlayerId: 10,
+        p2MatchPlayerId: 11,
+        p3MatchPlayerId: 12,
+        p4MatchPlayerId: 13,
+        p5MatchPlayerId: 14,
+        p6MatchPlayerId: 15,
+        liberoMatchPlayerId: 88,
+        liberoLogicalPositions: [0, 3],
+      },
+    });
+    s = applyCommand(s, {
+      type: 'SET_LINEUP',
+      payload: {
+        side: 'AWAY',
+        p1MatchPlayerId: 20,
+        p2MatchPlayerId: 21,
+        p3MatchPlayerId: 22,
+        p4MatchPlayerId: 23,
+        p5MatchPlayerId: 24,
+        p6MatchPlayerId: 25,
+      },
+    });
+    s = applyCommand(s, { type: 'START_SET', payload: { initialServingSide: 'AWAY' } });
+    expect(effectivePlayers(s.sets[0], 'HOME')[0]).toBe(88);
+    expect(serverPlayer(s.sets[0], 'AWAY')).toBe(20);
+    s = applyCommand(s, { type: 'POINT', payload: { winningSide: 'HOME' } });
+    expect(serverPlayer(s.sets[0], 'HOME')).not.toBe(88);
+  });
+  it('restores the current substituted regular when the libero leaves', () => {
+    let s = ready();
+    s = applyCommand(s, {
+      type: 'SUBSTITUTION',
+      payload: { side: 'HOME', playerOutMatchPlayerId: 10, playerInMatchPlayerId: 99 },
+    });
+    s = applyCommand(s, {
+      type: 'LIBERO_ENTER',
+      payload: { side: 'HOME', liberoMatchPlayerId: 88, replacedMatchPlayerId: 99 },
+    });
+    expect(effectivePlayers(s.sets[0], 'HOME')[0]).toBe(88);
+    s = applyCommand(s, {
+      type: 'LIBERO_EXIT',
+      payload: { side: 'HOME', liberoMatchPlayerId: 88 },
+    });
+    expect(effectivePlayers(s.sets[0], 'HOME')[0]).toBe(99);
   });
 });

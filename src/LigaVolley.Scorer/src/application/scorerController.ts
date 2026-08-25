@@ -3,19 +3,33 @@ import { deviceId } from '../persistence/database';
 import { MatchRepository } from '../persistence/matchRepository';
 import { scorerApi } from '../api/scorerApi';
 import { SyncService } from '../sync/syncService';
-import type { MatchCommand, MatchState, RuntimeState } from '../domain/types';
+import type {
+  LiberoPlan,
+  LocalEvent,
+  MatchCommand,
+  MatchState,
+  RuntimeState,
+  ServerSheetSnapshot,
+  Side,
+} from '../domain/types';
 export interface ViewState {
   runtime: RuntimeState;
   pendingEventCount: number;
   state?: MatchState;
+  bootstrap?: ServerSheetSnapshot;
+  events: LocalEvent[];
   matchId?: number;
-  sessionUuid?: string;
-  deviceId?: string;
   lastAcceptedSequence: number;
   error?: string;
+  storagePersisted?: boolean;
 }
 export class ScorerController {
-  view: ViewState = { runtime: 'BOOTSTRAPPING', pendingEventCount: 0, lastAcceptedSequence: 0 };
+  view: ViewState = {
+    runtime: 'BOOTSTRAPPING',
+    pendingEventCount: 0,
+    lastAcceptedSequence: 0,
+    events: [],
+  };
   private repo: MatchRepository;
   readonly syncService: SyncService;
   private listeners = new Set<() => void>();
@@ -38,6 +52,7 @@ export class ScorerController {
       runtime: 'BOOTSTRAPPING',
       pendingEventCount: 0,
       lastAcceptedSequence: 0,
+      events: [],
       matchId,
     };
     this.emit();
@@ -48,12 +63,13 @@ export class ScorerController {
         const server = await this.api.sheet(matchId);
         await this.repo.bootstrap(matchId, server, await deviceId(this.database));
         local = await this.repo.active(matchId);
-      } catch (e) {
+      } catch {
         this.view = { ...this.view, runtime: 'OFFLINE', error: 'offline_no_local_match' };
         this.emit();
         return;
       }
     }
+    this.view.storagePersisted = await requestPersistentStorage();
     await this.refresh();
     if (local) void this.syncService.sync(matchId);
   }
@@ -62,9 +78,13 @@ export class ScorerController {
     const local = await this.repo.active(this.view.matchId);
     if (!local) return;
     const pending = await this.database.events
-      .where('[sessionUuid+syncStatus]')
-      .equals([local.session.sessionUuid, 'PENDING'])
-      .count();
+        .where('[sessionUuid+syncStatus]')
+        .equals([local.session.sessionUuid, 'PENDING'])
+        .count(),
+      events = await this.database.events
+        .where('[sessionUuid+sequence]')
+        .between([local.session.sessionUuid, DexieMin], [local.session.sessionUuid, DexieMax])
+        .toArray();
     const runtime: RuntimeState =
       local.session.status === 'CLOSED' || local.snapshot.state.closeConfirmed
         ? 'CLOSED'
@@ -76,49 +96,73 @@ export class ScorerController {
               ? 'READY'
               : 'OFFLINE';
     this.view = {
+      ...this.view,
       runtime,
       pendingEventCount: pending,
       state: local.snapshot.state,
-      matchId: this.view.matchId,
-      sessionUuid: local.session.sessionUuid,
-      deviceId: local.session.deviceId,
+      bootstrap: local.sheet.bootstrap,
+      events: events.sort((a, b) => b.sequence - a.sequence),
       lastAcceptedSequence: local.session.lastAcceptedSequence,
       error: this.syncService.lastError,
     };
     this.emit();
   }
   async command(command: MatchCommand) {
-    if (!this.view.matchId || ['BLOCKED', 'CLOSED'].includes(this.view.runtime))
-      throw new Error(this.view.runtime === 'CLOSED' ? 'match_closed' : 'session_lost');
+    if (!this.view.matchId || this.view.runtime === 'BLOCKED' || this.view.state?.closed)
+      throw new Error(this.view.state?.closed ? 'match_closed' : 'session_lost');
     await this.repo.mutate(this.view.matchId, command);
     await this.refresh();
     void this.syncService.sync(this.view.matchId);
   }
-  async prepareAndStart() {
-    if (!this.view.matchId) return;
-    const local = await this.repo.active(this.view.matchId);
-    if (!local) return;
-    const setNumber = local.snapshot.state.sets.length + 1,
-      home = local.sheet.bootstrap.home.players.slice(0, 6).map((x) => x.matchPlayerId),
-      away = local.sheet.bootstrap.away.players.slice(0, 6).map((x) => x.matchPlayerId);
-    await this.command({ type: 'PREPARE_SET', payload: {} });
-    await this.command({
-      type: 'SET_LINEUP',
+  prepareSet() {
+    return this.command({ type: 'PREPARE_SET', payload: {} });
+  }
+  saveLineup(side: Side, players: number[], plan: LiberoPlan) {
+    const payload: Record<string, unknown> = {
+      side,
+      liberoMatchPlayerId: plan.enabled ? plan.liberoMatchPlayerId : null,
+      liberoLogicalPositions: plan.enabled ? plan.logicalPositions : [],
+    };
+    players.forEach((id, index) => (payload[`p${index + 1}MatchPlayerId`] = id));
+    return this.command({ type: 'SET_LINEUP', payload });
+  }
+  startSet(initialServingSide: Side) {
+    return this.command({
+      type: 'START_SET',
+      payload: { setNumber: this.view.state?.currentSetNumber, initialServingSide },
+    });
+  }
+  point(winningSide: Side) {
+    return this.command({
+      type: 'POINT',
+      payload: { setNumber: this.view.state?.currentSetNumber, winningSide },
+    });
+  }
+  timeout(side: Side) {
+    return this.command({
+      type: 'TIMEOUT',
+      payload: { setNumber: this.view.state?.currentSetNumber, side },
+    });
+  }
+  correctLastPoint() {
+    return this.command({
+      type: 'CORRECT_LAST_POINT',
+      payload: { setNumber: this.view.state?.currentSetNumber },
+    });
+  }
+  substitute(side: Side, playerOutMatchPlayerId: number, playerInMatchPlayerId: number) {
+    return this.command({
+      type: 'SUBSTITUTION',
       payload: {
-        setNumber,
-        side: 'HOME',
-        ...Object.fromEntries(home.map((x, i) => [`p${i + 1}MatchPlayerId`, x])),
+        setNumber: this.view.state?.currentSetNumber,
+        side,
+        playerOutMatchPlayerId,
+        playerInMatchPlayerId,
       },
     });
-    await this.command({
-      type: 'SET_LINEUP',
-      payload: {
-        setNumber,
-        side: 'AWAY',
-        ...Object.fromEntries(away.map((x, i) => [`p${i + 1}MatchPlayerId`, x])),
-      },
-    });
-    await this.command({ type: 'START_SET', payload: { setNumber, initialServingSide: 'HOME' } });
+  }
+  closeMatch() {
+    return this.command({ type: 'MATCH_CLOSE', payload: {} });
   }
   async sync() {
     if (this.view.matchId) await this.syncService.sync(this.view.matchId);
@@ -148,5 +192,14 @@ export class ScorerController {
       },
     );
     await this.refresh();
+  }
+}
+const DexieMin = -Number.MAX_SAFE_INTEGER,
+  DexieMax = Number.MAX_SAFE_INTEGER;
+export async function requestPersistentStorage() {
+  try {
+    return Boolean(await navigator.storage?.persist?.());
+  } catch {
+    return false;
   }
 }

@@ -42,6 +42,7 @@ public sealed class LigaVolleyDbContext(DbContextOptions<LigaVolleyDbContext> op
     public DbSet<MatchOfficial> MatchOfficials => Set<MatchOfficial>();
     public DbSet<MatchSheet> MatchSheets => Set<MatchSheet>();
     public DbSet<MatchLineup> MatchLineups => Set<MatchLineup>();
+    public DbSet<MatchSetLiberoPlan> MatchSetLiberoPlans => Set<MatchSetLiberoPlan>();
     public DbSet<MatchEvent> MatchEvents => Set<MatchEvent>();
     public DbSet<MatchSubstitution> MatchSubstitutions => Set<MatchSubstitution>();
     public DbSet<MatchLiberoReplacement> MatchLiberoReplacements => Set<MatchLiberoReplacement>();

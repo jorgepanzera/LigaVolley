@@ -74,6 +74,22 @@ public sealed class MatchEngineEndpointsTests(LigaVolleyApiFactory factory):ICla
     }
 
     [Fact]
+    public async Task Libero_plan_is_by_logical_position_and_transitions_automatically()
+    {
+        var x=await Open();await Prepare(x.MatchId);
+        var home=new SetLineupRequest(x.Home[0],x.Home[1],x.Home[2],x.Home[3],x.Home[4],x.Home[5],x.Home[7],[0,3]);
+        await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/lineups/{MatchSide.Home}",home,HttpMethod.Put);
+        await Lineup(x.MatchId,1,MatchSide.Away,x.Away.Take(6).ToArray());
+        var started=await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/start",new StartSetRequest(MatchSide.Away));
+        Assert.Contains(started.State.HomeCourtState,p=>p.LogicalLineupPosition==LineupPosition.P1&&p.EffectiveMatchPlayerId==x.Home[7]);
+        var regained=await Point(x.MatchId,1,MatchSide.Home);
+        Assert.NotEqual(x.Home[7],regained.State.ServerMatchPlayerId);
+        Assert.Single(regained.State.HomeCourtState.Where(p=>p.IsLiberoReplacement));
+        var invalid=await factory.Client.PutAsJsonAsync($"/api/scorer/matches/{x.MatchId}/sets/1/lineups/{MatchSide.Away}",new SetLineupRequest(x.Away[0],x.Away[1],x.Away[2],x.Away[3],x.Away[4],x.Away[5],x.Away[7],[0,1]),Json);
+        Assert.Equal(HttpStatusCode.Conflict,invalid.StatusCode);
+    }
+
+    [Fact]
     public async Task Offline_sync_overlap_concurrency_takeover_and_abandoned_session_are_consistent()
     {
         var x=await Open();var sheet=(await factory.Client.GetFromJsonAsync<MatchSheetSnapshotDto>($"/api/scorer/matches/{x.MatchId}/sheet",Json))!;var prepare=Guid.NewGuid();var first=Sync(sheet,[(prepare,1L,ScorerSyncEventType.PrepareSet,new{})]);var accepted=await Post<SyncMatchSheetResponse>($"/api/scorer/matches/{x.MatchId}/sync",first);Assert.Equal(1,accepted.LastAcceptedSequence);Assert.Equal(ScorerSyncResultStatus.Applied,accepted.Results[0].Status);

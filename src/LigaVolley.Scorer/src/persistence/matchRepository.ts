@@ -10,7 +10,7 @@ import { applyCommand } from '../domain/matchEngine';
 export class MatchRepository {
   constructor(private database: ScorerDatabase) {}
   async bootstrap(matchId: number, server: ServerSheetSnapshot, device: string) {
-    const state = server.operationalState ?? fromServer(server);
+    const state = normalizeState(server.operationalState ?? fromServer(server));
     const session: SessionRecord = {
       ...server.session,
       status: String(server.session.status).toUpperCase() as SessionRecord['status'],
@@ -53,6 +53,7 @@ export class MatchRepository {
       sessions.find((x) => x.status === 'ACTIVE') ??
       sessions.sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
     const snapshot = await this.database.snapshots.get(matchId);
+    if (snapshot) snapshot.state = normalizeState(snapshot.state);
     return sheet && session && snapshot ? { sheet, session, snapshot } : undefined;
   }
   async mutate(matchId: number, command: MatchCommand) {
@@ -127,9 +128,25 @@ export function fromServer(s: ServerSheetSnapshot): MatchState {
       homeTimeouts: s.currentState.homeTimeouts,
       awayTimeouts: s.currentState.awayTimeouts,
       lineups: { HOME: [], AWAY: [] },
+      liberoPlans: {
+        HOME: { enabled: false, logicalPositions: [] },
+        AWAY: { enabled: false, logicalPositions: [] },
+      },
       substitutions: [],
       liberoReplacements: [],
       points: [],
+      lastConsequences: [],
     });
+  return state;
+}
+
+export function normalizeState(state: MatchState): MatchState {
+  for (const set of state.sets) {
+    set.liberoPlans ??= {
+      HOME: { enabled: false, logicalPositions: [] },
+      AWAY: { enabled: false, logicalPositions: [] },
+    };
+    set.lastConsequences ??= [];
+  }
   return state;
 }

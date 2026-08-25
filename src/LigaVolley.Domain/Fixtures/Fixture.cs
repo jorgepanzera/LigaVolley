@@ -126,6 +126,7 @@ public sealed class MatchSet
     public List<MatchSheets.MatchLineup> Lineups { get; private set; } = [];
     public List<MatchSheets.MatchSubstitution> Substitutions { get; private set; } = [];
     public List<MatchSheets.MatchLiberoReplacement> LiberoReplacements { get; private set; } = [];
+    public List<MatchSheets.MatchSetLiberoPlan> LiberoPlans { get; private set; } = [];
     public List<MatchSheets.MatchTimeout> Timeouts { get; private set; } = [];
 
     public void Start(MatchSheets.MatchSide servingSide, DateTimeOffset now)

@@ -1287,7 +1287,9 @@ Cada mutación devuelve DTO Scorer con set, puntos, sets ganados, saque, servido
 
 `POST /api/scorer/matches/{matchId}/take-over` recibe además `expectedSessionUuid` y `clientRequestId`. El primero garantiza conflicto estable entre takeovers concurrentes y el segundo hace idempotente el retry. Los códigos estables incluyen `sync_sequence_gap`, `sync_event_uuid_conflict`, `sync_duplicate_sequence`, `sync_invalid_event_type`, `match_sheet_session_not_found`, `match_sheet_session_not_active`, `match_sheet_session_mismatch`, `match_sheet_closed` y `match_sheet_takeover_request_conflict`.
 
-`GET /sheet` y las respuestas de sync/takeover incluyen `operationalState`, una proyección compatible agregada sin retirar campos existentes. Contiene todos los sets, lineups, puntos activos, offsets, sustituciones, reemplazos de líbero, timeouts, decisión y cierre. Es la base canónica requerida para takeover y replay offline; el frontend no inventa información ausente.
+`GET /sheet` y las respuestas de sync/takeover incluyen `operationalState`, una proyección compatible agregada sin retirar campos existentes. Contiene todos los sets, lineups, planes y reemplazos de líbero, puntos activos, offsets, sustituciones, timeouts, decisión y cierre. Es la base canónica requerida para takeover y replay offline; el frontend no inventa información ausente.
+
+`PUT .../lineups/{side}` acepta además, de forma compatible, `liberoMatchPlayerId` y `liberoLogicalPositions` (índices 0..5 correspondientes a P1..P6). Ambos se omiten o envían vacíos cuando el lado no utiliza líbero en ese set. El backend valida la declaración, la pertenencia al lado y la ausencia de ambigüedad simultánea antes de iniciar.
 
 People y documentos se exponen bajo `/api/admin/people`; perfiles y listados bajo
 `/players`, `/coaches` y `/referees`. Los perfiles se crean con

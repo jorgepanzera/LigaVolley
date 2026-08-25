@@ -13,7 +13,7 @@ internal static class ScorerMatchEngineEndpoints
         group.MapPost("/sets/prepare",async(int matchId,MatchEngineService service,CancellationToken ct)=>{var x=await service.PrepareSetAsync(matchId,ct);return x.AlreadyApplied?Results.Ok(x):Results.Created($"/api/scorer/matches/{matchId}/sets/{x.State.SetNumber}",x);}).Produces<MatchEngineCommandResult>(201).Produces<MatchEngineCommandResult>(200).ProducesProblem(404).ProducesProblem(409);
 
         // Example: PUT /api/scorer/matches/123/sets/1/lineups/HOME
-        // Body: { "p1MatchPlayerId": 101, "p2MatchPlayerId": 105, "p3MatchPlayerId": 103, "p4MatchPlayerId": 108, "p5MatchPlayerId": 102, "p6MatchPlayerId": 106 }
+        // Body: { "p1MatchPlayerId": 101, "p2MatchPlayerId": 105, "p3MatchPlayerId": 103, "p4MatchPlayerId": 108, "p5MatchPlayerId": 102, "p6MatchPlayerId": 106, "liberoMatchPlayerId": 112, "liberoLogicalPositions": [0, 3] }
         group.MapPut("/sets/{setNumber:int}/lineups/{side}",async(int matchId,byte setNumber,MatchSide side,SetLineupRequest request,MatchEngineService service,CancellationToken ct)=>Results.Ok(await service.SaveLineupAsync(matchId,setNumber,side,request,ct))).Produces<MatchEngineCommandResult>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
 
         // Example: POST /api/scorer/matches/123/sets/1/start

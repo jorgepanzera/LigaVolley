@@ -167,7 +167,9 @@ El sistema debe poder responder en cualquier momento:
 
 El Scorer debe diseñarse contemplando funcionamiento offline/intermitente y sincronización posterior. No asumir conectividad permanente en decisiones de dominio o UI.
 
-Las decisiones concretas de tecnología y protocolo de sincronización quedan abiertas hasta que se diseñe ese módulo.
+Scorer Console UI v1 está cerrada: la consola mantiene HOME a la izquierda y AWAY a la derecha, muestra marcador/cancha P1..P6 y usa los puntos como acción primaria. PrepareSet permite carga rápida, copiar y rotar la alineación inicial. Los flags de tracking son estables por partido. El uso de líbero se decide por equipo y set mediante un líbero activo y plazas lógicas; sus entradas/salidas naturales y el estado pre-saque se derivan automáticamente. P1 es elegible al recibir, pero el líbero nunca sirve. Un plan que pudiera requerir dos reemplazos simultáneos se rechaza en READY. Timeout, corrección del último punto, revisión, cierre offline y recuperación IndexedDB forman parte del recorrido cerrado.
+
+La tecnología y el protocolo del Scorer quedaron cerrados con PWA Core v1 y Offline Sync: React/TypeScript/Vite, Dexie/IndexedDB, cola local secuenciada, snapshot canónico + replay y takeover.
 
 ## Reglas de implementación para Codex
 

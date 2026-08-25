@@ -1,6 +1,6 @@
 import type { ScorerDatabase } from '../persistence/database';
 import type { ServerSheetSnapshot } from '../domain/types';
-import { fromServer } from '../persistence/matchRepository';
+import { fromServer, normalizeState } from '../persistence/matchRepository';
 import { replay } from '../domain/matchEngine';
 export async function reconcile(
   database: ScorerDatabase,
@@ -23,7 +23,7 @@ export async function reconcile(
           (x) => x.status === 'ACTIVE',
         );
       if (!session) throw new Error('session_lost');
-      const base = server.operationalState ?? fromServer(server);
+      const base = normalizeState(server.operationalState ?? fromServer(server));
       const pending = await database.events
         .where('[sessionUuid+syncStatus]')
         .between([session.sessionUuid, 'PENDING'], [session.sessionUuid, 'SYNCING'], true, true)

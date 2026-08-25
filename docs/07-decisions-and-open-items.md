@@ -242,4 +242,6 @@ Para implementación incremental con Codex:
 9. resolución de `PLAYOFF_SERIES`;
 10. `CompetitionProgression` + `CompleteCompetition`.
 
-Antes de implementar Scorer, diseñar en detalle su contrato `open → estado/eventos locales → sync → close`.
+El contrato Scorer `open → estado/eventos locales → sync → close`, Offline Sync y Scorer Console UI v1 están cerrados. La tecnología es React 18 + TypeScript + Vite PWA, Dexie/IndexedDB con cinco stores y Service Worker sólo para App Shell. La sincronización usa sesión, UUID idempotente, secuencia local contigua, cola PENDING/SYNCING/ACCEPTED, snapshot canónico + replay y takeover con bloqueo de la sesión abandonada.
+
+También quedan cerrados el layout de consola, la interacción P1..P6, PrepareSet rápido con copia/rotación, puntos como acción primaria, doble toque protegido, tracking opcional estable, líbero configurable independientemente por lado/set y por plaza lógica, transición pre-saque, automatismo de entrada/salida, timeout, CorrectLastPoint, historial de consulta, revisión, cierre offline y recuperación desde IndexedDB.

@@ -30,6 +30,27 @@ export interface LiberoReplacement {
   replacedMatchPlayerId: number;
   active: boolean;
 }
+export interface LiberoPlan {
+  enabled: boolean;
+  liberoMatchPlayerId?: number;
+  logicalPositions: number[];
+}
+export interface SportingConsequence {
+  kind:
+    | 'POINT'
+    | 'SERVICE_CHANGE'
+    | 'ROTATION'
+    | 'LIBERO_ENTER'
+    | 'LIBERO_EXIT'
+    | 'TIMEOUT'
+    | 'SUBSTITUTION'
+    | 'CORRECTION'
+    | 'SET_FINISHED';
+  side?: Side;
+  playerMatchPlayerId?: number;
+  replacedMatchPlayerId?: number;
+  text: string;
+}
 export interface SetState {
   setNumber: number;
   status: 'READY' | 'IN_PROGRESS' | 'FINISHED';
@@ -43,10 +64,12 @@ export interface SetState {
   awayTimeouts: number;
   winnerSide?: Side;
   lineups: { HOME: number[]; AWAY: number[] };
+  liberoPlans: { HOME: LiberoPlan; AWAY: LiberoPlan };
   substitutions: Substitution[];
   liberoReplacements: LiberoReplacement[];
   points: Side[];
   lastSportingEvent?: EventType;
+  lastConsequences: SportingConsequence[];
 }
 export interface MatchState {
   status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
@@ -99,14 +122,31 @@ export interface SnapshotRecord {
 export interface ServerSheetSnapshot {
   sheet: { matchSheetId: number; sheetUuid: string; status: string; openedAt: string };
   match: { matchId: number; status: string; homeTeamEntryId: number; awayTeamEntryId: number };
+  competition?: {
+    competitionId: number;
+    competitionName: string;
+    season: string;
+    division: string;
+    phase: string;
+  };
   home: {
     teamName: string;
-    players: Array<{ matchPlayerId: number; jerseyNumber?: number; displayName: string }>;
+    players: Array<{
+      matchPlayerId: number;
+      jerseyNumber?: number;
+      displayName: string;
+      role?: string;
+    }>;
     liberos: Array<{ matchPlayerId: number }>;
   };
   away: {
     teamName: string;
-    players: Array<{ matchPlayerId: number; jerseyNumber?: number; displayName: string }>;
+    players: Array<{
+      matchPlayerId: number;
+      jerseyNumber?: number;
+      displayName: string;
+      role?: string;
+    }>;
     liberos: Array<{ matchPlayerId: number }>;
   };
   session: {
@@ -130,6 +170,8 @@ export interface ServerSheetSnapshot {
     awayTimeouts: number;
   };
   operationalState?: MatchState;
+  trackSubstitutions?: boolean;
+  trackLiberoReplacements?: boolean;
 }
 export type MatchCommand = { type: EventType; payload: Record<string, unknown> };
 export const initialState = (): MatchState => ({

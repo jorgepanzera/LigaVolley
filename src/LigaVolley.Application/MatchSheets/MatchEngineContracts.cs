@@ -3,7 +3,7 @@ using LigaVolley.Domain.MatchSheets;
 
 namespace LigaVolley.Application.MatchSheets;
 
-public sealed record SetLineupRequest(int P1MatchPlayerId,int P2MatchPlayerId,int P3MatchPlayerId,int P4MatchPlayerId,int P5MatchPlayerId,int P6MatchPlayerId)
+public sealed record SetLineupRequest(int P1MatchPlayerId,int P2MatchPlayerId,int P3MatchPlayerId,int P4MatchPlayerId,int P5MatchPlayerId,int P6MatchPlayerId,int? LiberoMatchPlayerId=null,IReadOnlyList<byte>? LiberoLogicalPositions=null)
 { public int[] Players()=>[P1MatchPlayerId,P2MatchPlayerId,P3MatchPlayerId,P4MatchPlayerId,P5MatchPlayerId,P6MatchPlayerId]; }
 public sealed record StartSetRequest(MatchSide InitialServingSide);
 public sealed record AddPointRequest(Guid PointUuid,MatchSide WinningSide);

@@ -108,3 +108,13 @@ El frontend usa React, TypeScript, Vite, Dexie e IndexedDB. Los cinco stores son
 Los eventos pasan por PENDING → SYNCING → ACCEPTED. Un cierre/reinicio devuelve SYNCING a PENDING. Ante timeout, red o 5xx se preserva operación offline; pérdida de sesión o conflictos de secuencia/UUID dejan BLOCKED sin borrar eventos. La reconciliación toma el snapshot canónico completo —incluidas alineaciones, sustituciones, líberos y puntos activos— y reaplica pendientes posteriores, por lo que eventos creados durante un request no desaparecen.
 
 El Service Worker precachea exclusivamente App Shell y assets. No cachea `/api/scorer` como fuente deportiva. La reentrada busca primero IndexedDB y sólo después intenta reconciliar en segundo plano.
+
+## Scorer Console UI v1
+
+La interfaz es una consola horizontal: marcador dominante, HOME fijo a la izquierda, AWAY fijo a la derecha, cancha enfrentada P1..P6, saque/servidor, puntos y sets. Los únicos controles deportivos primarios son `+ PUNTO HOME` y `+ PUNTO AWAY`; existe una protección breve contra doble toque.
+
+PrepareSet permite completar P1→P6 con avance automático, reemplazar una selección con dos toques, copiar la alineación inicial del set anterior y rotarla sólo mientras está READY. El saque inicial se selecciona por lado y el servidor se deriva de P1.
+
+El tracking de sustituciones y líbero es opcional y estable por MatchSheet. Cada equipo decide por set si usa líbero, cuál y qué plazas lógicas cubre. El motor deriva el estado pre-saque y las entradas/salidas naturales; no hay botones primarios de entrada/salida. Una sustitución cambia al regular vigente de la plaza, por lo que el líbero lo cubre y posteriormente lo restaura.
+
+Timeout, CorrectLastPoint con reconstrucción, historial de consulta, revisión y CloseMatch explícito completan el recorrido. El cierre puede persistirse offline y la reentrada recupera primero los cinco stores IndexedDB; `navigator.storage.persist()` es una mejora progresiva, nunca un bloqueo.
