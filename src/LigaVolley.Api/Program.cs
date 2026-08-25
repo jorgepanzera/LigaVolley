@@ -27,6 +27,11 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+}
 builder.Services.AddScoped<SeasonService>();
 builder.Services.AddScoped<DivisionService>();
 builder.Services.AddScoped<CompetitionFormatService>();
@@ -55,6 +60,15 @@ if (runLivosurSeed)
 }
 
 app.UseExceptionHandler();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.MapGet("/", () => Results.Redirect("/swagger"))
+        .ExcludeFromDescription();
+}
+
 app.MapSeasonEndpoints();
 app.MapDivisionEndpoints();
 app.MapCompetitionFormatEndpoints();

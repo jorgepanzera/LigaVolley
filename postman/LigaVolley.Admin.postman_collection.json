@@ -1,0 +1,148 @@
+{
+  "info": {
+    "_postman_id": "03863c81-e0d8-4749-aaf0-6b9e90450001",
+    "name": "LigaVolley - Admin API",
+    "description": "Colección ejecutable para probar los vertical slices administrativos. Los requests de creación guardan automáticamente los IDs en el environment activo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [{
+    "listen": "prerequest",
+    "script": { "type": "text/javascript", "exec": [
+      "if (!pm.collectionVariables.get('runSuffix')) {",
+      "  pm.collectionVariables.set('runSuffix', Date.now().toString());",
+      "}"
+    ] }
+  }],
+  "variable": [{ "key": "runSuffix", "value": "" }],
+  "item": [
+    {
+      "name": "01 - Catálogos y competición",
+      "description": "Ejecutar en orden con Collection Runner. Construye datos independientes para una corrida.",
+      "item": [
+        {
+          "name": "Crear temporada",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"year\": 2090,\n  \"name\": \"Postman {{runSuffix}}\",\n  \"startDate\": \"2090-01-01\",\n  \"endDate\": \"2090-12-31\"\n}" },
+            "url": "{{baseUrl}}/api/admin/seasons"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 Created', () => pm.response.to.have.status(201));",
+            "if (pm.response.code === 201) pm.environment.set('seasonId', pm.response.json().seasonId);"
+          ] } }]
+        },
+        {
+          "name": "Crear divisional",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman {{runSuffix}}\",\n  \"levelOrder\": 90,\n  \"gender\": \"Female\"\n}" },
+            "url": "{{baseUrl}}/api/admin/divisions"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 Created', () => pm.response.to.have.status(201));",
+            "if (pm.response.code === 201) pm.environment.set('divisionId', pm.response.json().divisionId);"
+          ] } }]
+        },
+        {
+          "name": "Validar formato",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [{ \"code\": \"REGULAR\", \"name\": \"Regular\", \"phaseType\": \"RoundRobin\", \"phaseRole\": \"Regular\", \"sequence\": 1, \"rounds\": 1, \"fixtureMode\": \"BalancedRandom\", \"groups\": [], \"series\": [] }],\n    \"qualificationRules\": [], \"scoringRules\": [], \"tiebreakRules\": [], \"movementRules\": []\n  }\n}" },
+            "url": "{{baseUrl}}/api/admin/competition-formats/validate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Formato válido', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().isValid).to.be.true; });"] } }]
+        },
+        {
+          "name": "Crear formato",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"PM_{{runSuffix}}\",\n  \"name\": \"Postman {{runSuffix}}\",\n  \"description\": \"Formato de prueba\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [{ \"code\": \"REGULAR\", \"name\": \"Regular\", \"phaseType\": \"RoundRobin\", \"phaseRole\": \"Regular\", \"sequence\": 1, \"rounds\": 1, \"fixtureMode\": \"BalancedRandom\", \"groups\": [], \"series\": [] }],\n    \"qualificationRules\": [], \"scoringRules\": [], \"tiebreakRules\": [], \"movementRules\": []\n  }\n}" },
+            "url": "{{baseUrl}}/api/admin/competition-formats"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 Created', () => pm.response.to.have.status(201));",
+            "if (pm.response.code === 201) pm.environment.set('formatId', pm.response.json().competitionFormatId);"
+          ] } }]
+        },
+        {
+          "name": "Crear competición",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman {{runSuffix}}\",\n  \"seasonId\": {{seasonId}},\n  \"divisionId\": {{divisionId}},\n  \"periodType\": \"Annual\",\n  \"startDate\": null,\n  \"endDate\": null,\n  \"structureSource\": { \"type\": \"Format\", \"competitionFormatId\": {{formatId}}, \"sourceCompetitionId\": null }\n}" },
+            "url": "{{baseUrl}}/api/admin/competitions"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 Created', () => pm.response.to.have.status(201));",
+            "if (pm.response.code === 201) pm.environment.set('competitionId', pm.response.json().competitionId);"
+          ] } }]
+        },
+        {
+          "name": "Consultar estructura",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/structure" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Estructura instanciada', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().phases).to.have.lengthOf(1); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "02 - Club, equipo e inscripción",
+      "item": [
+        {
+          "name": "Crear club",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"Club Postman {{runSuffix}}\", \"shortName\": \"PM\" }" }, "url": "{{baseUrl}}/api/admin/clubs" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));", "if (pm.response.code === 201) pm.environment.set('clubId', pm.response.json().clubId);"] } }]
+        },
+        {
+          "name": "Crear equipo",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"Equipo Postman {{runSuffix}}\", \"gender\": \"Female\", \"clubId\": {{clubId}} }" }, "url": "{{baseUrl}}/api/admin/teams" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));", "if (pm.response.code === 201) pm.environment.set('teamId', pm.response.json().teamId);"] } }]
+        },
+        {
+          "name": "Inscribir equipo",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"teamId\": {{teamId}}, \"seed\": 1 }" }, "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));", "if (pm.response.code === 201) pm.environment.set('entryId', pm.response.json().teamEntryId);"] } }]
+        },
+        {
+          "name": "Listar inscripciones",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Incluye la inscripción', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().some(x => x.teamEntryId == pm.environment.get('entryId'))).to.be.true; });"] } }]
+        },
+        {
+          "name": "Cambiar estado de inscripción",
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"status\": \"Active\" }" }, "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries/{{entryId}}/status" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "03 - Consultas rápidas",
+      "item": [
+        { "name": "Temporadas activas", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/seasons?active=true" } },
+        { "name": "Divisionales femeninas", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/divisions?gender=Female&active=true" } },
+        { "name": "Clubes activos", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/clubs?active=true" } },
+        { "name": "Equipos del club", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/teams?clubId={{clubId}}&gender=Female&active=true" } },
+        { "name": "Formatos para 2 equipos", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competition-formats?active=true&teamCount=2" } },
+        { "name": "Obtener competición", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}" } }
+      ]
+    },
+    {
+      "name": "04 - Casos de error",
+      "item": [
+        {
+          "name": "Temporada duplicada devuelve 409",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"year\": 2090, \"name\": \"Duplicada\", \"startDate\": null, \"endDate\": null }" }, "url": "{{baseUrl}}/api/admin/seasons" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('409 ProblemDetails', () => { pm.response.to.have.status(409); pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'); });"] } }]
+        },
+        {
+          "name": "Recurso inexistente devuelve 404",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/divisions/2147483647" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('404 ProblemDetails', () => { pm.response.to.have.status(404); pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'); });"] } }]
+        }
+      ]
+    }
+  ]
+}
