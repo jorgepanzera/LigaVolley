@@ -69,3 +69,5 @@ SQL Server es la base de datos única de la aplicación. Se preservan restriccio
 # Scorer offline
 
 La sincronización offline conserva el monolito modular: el batch entra por Application y reutiliza el mismo MatchEngine de los endpoints online dentro de una transacción serializable y el bloqueo existente por Match. `MATCH_EVENT.SequenceNumber` continúa siendo global/canónico; `LocalSequence` pertenece a una sesión. No se adopta event sourcing ni un motor deportivo alternativo.
+
+`LigaVolley.Scorer` es una PWA React/TypeScript/Vite. Cache Storage contiene solamente el App Shell; Dexie sobre IndexedDB contiene partido, sesión, snapshot y cola durable. React consume un controlador de aplicación, sin reglas deportivas ni acceso directo a fetch/Dexie. El MatchEngine TypeScript es puro y no conoce React, persistencia ni red.

@@ -191,7 +191,7 @@
 
 ## Pendientes que NO deben inventarse durante implementación
 
-1. Tecnología exacta de los frontends.
+1. Tecnología exacta de `LigaVolley.Admin` y `LigaVolley.Public`; para `LigaVolley.Scorer` ya están cerrados React + TypeScript + Vite, PWA y Dexie/IndexedDB.
 2. Proveedor y esquema de autenticación/autorización.
 3. Reglas finas de permisos.
 4. Catálogo completo de endpoints de módulos aún no diseñados.
@@ -204,14 +204,26 @@
 11. Consecuencia deportiva exacta de `MATCH`/serie `CANCELLED`, suspendida o no disputada.
 12. Semántica deportiva futura de `CarryOverMode.ALL` y `CarryOverMode.QUALIFIED_ONLY`; v1 sólo implementa `NONE`.
 13. Reglas funcionales finas de ascensos/descensos entre Apertura/Clausura o temporadas y creación futura de inscripciones.
-14. Persistencia IndexedDB/PWA concreta del cliente Scorer (el contrato backend de sincronización ya está cerrado).
-15. Protocolo de sincronización y resolución de conflictos.
-16. Correcciones históricas distintas de `CorrectLastPoint` y correcciones de sustitución, líbero o timeout.
-17. Límite exacto entre estado canónico, estado derivado y snapshots para offline.
-18. Reglas reglamentarias finas sobre uso/habilitación de uno o dos líberos.
-19. Reglas adicionales de publicación para planteles, personas, oficiales u otros datos públicos.
-20. Reglas reglamentarias adicionales que aún no se hayan validado explícitamente.
-21. Observabilidad, logging, tracing y despliegue.
+14. Evolución visual y ergonomía avanzada del Scorer; IndexedDB/PWA Core y el contrato backend de sincronización ya están cerrados.
+15. Correcciones históricas distintas de `CorrectLastPoint` y correcciones de sustitución, líbero o timeout.
+16. Reglas reglamentarias finas sobre uso/habilitación de uno o dos líberos.
+17. Reglas adicionales de publicación para planteles, personas, oficiales u otros datos públicos.
+18. Reglas reglamentarias adicionales que aún no se hayan validado explícitamente.
+19. Observabilidad, logging, tracing y despliegue.
+
+### PWA Core y sincronización cerrados
+
+- `LigaVolley.Scorer` usa React + TypeScript + Vite y PWA offline-first.
+- Dexie/IndexedDB, exactamente cinco stores v1 y cola durable.
+- Evento + snapshot + secuencia en una transacción local antes del sync.
+- PENDING/SYNCING/ACCEPTED y recuperación de SYNCING al arrancar.
+- Reentry offline inmediata y reconciliation = snapshot canónico del servidor + replay Pending.
+- El snapshot canónico expone el estado operacional completo necesario para reconstrucción.
+- Service Worker sólo para App Shell.
+- UUID idempotente, secuencia local contigua por sesión y batch nuevo atómico.
+- Conflictos temporales vuelven a PENDING; conflictos de sesión, gap o UUID dejan BLOCKED preservando eventos.
+- Takeover reemplaza sesión local sin alterar deporte; pérdida de sesión pasa a BLOCKED.
+- No existe merge automático de eventos inéditos de una sesión abandonada.
 
 ## Próximo paso recomendado
 
