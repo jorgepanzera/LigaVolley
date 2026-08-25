@@ -65,3 +65,5 @@ Las mutaciones se serializan mediante bloqueo de `TEAM_ENTRY`; las unicidades na
 `MATCH_OFFICIAL` vincula un `MATCH` exclusivamente con un perfil `REFEREE`. Admite `FIRST_REFEREE`, `SECOND_REFEREE` y `SCORER`, con máximo uno por rol y sin repetir el mismo Referee en otro rol del partido. Health Card se deriva desde People, se muestra como warning y nunca bloquea.
 
 Admin puede crear, modificar y eliminar designaciones en `PENDING` o `SCHEDULED`. Desde `IN_PROGRESS` Admin queda bloqueado; Scorer puede reemplazar una asignación existente, pero no vaciarla. `FINISHED`, `CANCELLED` y `SUSPENDED` son de consulta para este slice.
+
+Al abrir el acta, el Scorer selecciona únicamente miembros ACTIVE de cada roster ACTIVE. Esa selección se copia a `MATCH_PLAYER`/`MATCH_TEAM_STAFF`; cambios posteriores del roster no alteran el acta ya materializada. Health Card continúa siendo warning.

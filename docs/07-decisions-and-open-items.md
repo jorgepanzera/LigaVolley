@@ -95,6 +95,16 @@
 - OpenMatchSheet deberá exigir los tres roles.
 - Pendientes: auditoría definitiva `OFFICIAL_REPLACEMENT`, conflictos horarios, roles adicionales, ausencias excepcionales y permisos exactos de Scorer.
 
+## Decisiones MatchSheet Opening v1 cerradas
+
+- Un `MATCH_SHEET` por Match; abrir requiere Match SCHEDULED y no inicia Match/Competition.
+- HOME/AWAY se resuelven desde Match. Ambos rosters deben estar ACTIVE y se seleccionan al menos seis jugadores ACTIVE por lado.
+- Convocatoria, dorsal, staff y líberos se materializan y no siguen dinámicamente cambios del roster.
+- Futuros lineups, sustituciones y eventos referencian `MATCH_PLAYER`.
+- Se requieren FirstReferee, SecondReferee y Scorer; Health Card nunca bloquea.
+- Apertura atómica/idempotente, sesión ACTIVE única, auditoría `MATCH_SHEET_OPENED` y UUID operativos para futuro offline.
+- Pendientes: edición explícita de convocatoria mientras OPEN, inicio de partido/set, motor deportivo y protocolo de sync.
+
 - Un roster por TeamEntry, con creación explícita y estados `DRAFT`, `ACTIVE`, `CLOSED`.
 - Activación sin mínimos; máximos de 15 jugadores, dos técnicos y dos líberos activos.
 - Miembros inactivos permanecen históricos y no existe DELETE físico.

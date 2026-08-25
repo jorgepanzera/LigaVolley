@@ -1,0 +1,8 @@
+using LigaVolley.Application.Abstractions.Persistence;using LigaVolley.Domain.MatchSheets;using Microsoft.EntityFrameworkCore;
+namespace LigaVolley.Infrastructure.Persistence.Repositories;
+internal sealed class MatchSheetRepository(LigaVolleyDbContext db):IMatchSheetRepository
+{
+ public async Task AcquireMatchLockAsync(int id,CancellationToken ct)=>_=await db.Database.SqlQuery<int>($"SELECT match_id AS [Value] FROM dbo.MATCH WITH (UPDLOCK,HOLDLOCK) WHERE match_id={id}").SingleOrDefaultAsync(ct);
+ public Task<MatchSheet?> GetAsync(int id,bool tracking,CancellationToken ct){IQueryable<MatchSheet>q=db.MatchSheets.Include(x=>x.Match).ThenInclude(x=>x.Competition).ThenInclude(x=>x.Season).Include(x=>x.Match).ThenInclude(x=>x.Competition).ThenInclude(x=>x.Division).Include(x=>x.Match).ThenInclude(x=>x.Phase).Include(x=>x.Match).ThenInclude(x=>x.PhaseGroup).Include(x=>x.Match).ThenInclude(x=>x.Series).Include(x=>x.Match).ThenInclude(x=>x.Venue).Include(x=>x.Teams).ThenInclude(x=>x.TeamEntry).ThenInclude(x=>x.Team).Include(x=>x.Teams).ThenInclude(x=>x.Players).ThenInclude(x=>x.CompetitionRosterPlayer).ThenInclude(x=>x.Player).ThenInclude(x=>x.Person).ThenInclude(x=>x.AdditionalDocuments).Include(x=>x.Teams).ThenInclude(x=>x.Staff).ThenInclude(x=>x.CompetitionRosterStaff).ThenInclude(x=>x.Coach).ThenInclude(x=>x.Person).Include(x=>x.Teams).ThenInclude(x=>x.Liberos).ThenInclude(x=>x.MatchPlayer).Include(x=>x.Sessions).ThenInclude(x=>x.MatchOfficial).AsSplitQuery();if(!tracking)q=q.AsNoTracking();return q.SingleOrDefaultAsync(x=>x.MatchId==id,ct);}
+ public void Add(MatchSheet x)=>db.MatchSheets.Add(x);
+}

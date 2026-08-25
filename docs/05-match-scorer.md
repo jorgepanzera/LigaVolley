@@ -4,6 +4,12 @@
 
 Modelar un partido completo desde la apertura del acta hasta el cierre, preservando suficiente información para reconstruir el estado reglamentario y permitir correcciones.
 
+## Apertura implementada
+
+`GET /api/scorer/matches/{matchId}/open-context` prepara sin persistencia Match, Competition, rosters activos, miembros activos, oficiales, warnings y acta existente. `POST /open` exige Match SCHEDULED, ambos rosters ACTIVE, tres oficiales y al menos seis jugadores por lado; materializa el universo del partido en una transacción y deja `MATCH_SHEET=OPEN` sin iniciar Match ni Competition. `GET /sheet` recupera el mismo snapshot para reentrada.
+
+La apertura es idempotente por Match, respaldada por `UNIQUE(match_id)` y bloqueo serializable. La convocatoria, dorsales y UUID quedan congelados; no existen todavía set, alineación, saque, servidor ni líbero activo.
+
 ## Flujo mínimo validado conceptualmente
 
 1. Cargar/seleccionar los planteles habilitados.

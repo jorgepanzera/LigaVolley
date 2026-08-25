@@ -4,6 +4,7 @@ using LigaVolley.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LigaVolley.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(LigaVolleyDbContext))]
-    partial class LigaVolleyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260825182715_AddMatchSheetOpening")]
+    partial class AddMatchSheetOpening
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1560,12 +1563,7 @@ namespace LigaVolley.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("UQ_MATCH_SHEET_uuid");
 
-                    b.ToTable("MATCH_SHEET", "dbo", t =>
-                        {
-                            t.HasCheckConstraint("CK_MATCH_SHEET_sets", "[home_sets] BETWEEN 0 AND 3 AND [away_sets] BETWEEN 0 AND 3");
-
-                            t.HasCheckConstraint("CK_MATCH_SHEET_status", "[status] IN ('OPEN','IN_PROGRESS','SUSPENDED','CLOSED','CANCELLED')");
-                        });
+                    b.ToTable("MATCH_SHEET", "dbo");
                 });
 
             modelBuilder.Entity("LigaVolley.Domain.MatchSheets.MatchSheetAudit", b =>

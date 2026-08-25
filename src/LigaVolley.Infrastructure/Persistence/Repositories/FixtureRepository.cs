@@ -8,7 +8,7 @@ internal sealed class FixtureRepository(LigaVolleyDbContext db) : IFixtureReposi
 {
     public Task<Match?> GetMatchAsync(int matchId,bool tracking,CancellationToken ct)
     {
-        var query=db.Matches.Include(x=>x.Competition).Include(x=>x.Phase).Include(x=>x.PhaseGroup)
+        var query=db.Matches.Include(x=>x.Competition).ThenInclude(x=>x.Season).Include(x=>x.Competition).ThenInclude(x=>x.Division).Include(x=>x.Phase).Include(x=>x.PhaseGroup).Include(x=>x.Series)
             .Include(x=>x.HomeTeamEntry).ThenInclude(x=>x!.Team)
             .Include(x=>x.AwayTeamEntry).ThenInclude(x=>x!.Team)
             .Include(x=>x.Venue).AsQueryable();

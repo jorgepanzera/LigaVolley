@@ -54,4 +54,8 @@ Separar entidades permanentes (por ejemplo Team o Person) de su participación c
 
 `MATCH_OFFICIAL` representa la asignación vigente de un perfil `REFEREE` a un `MATCH`. No duplica `competition_id` ni datos de `PERSON`. Los roles cerrados son `FIRST_REFEREE`, `SECOND_REFEREE` y `SCORER`; cada rol y cada Referee son únicos dentro del Match.
 
+## MatchSheet Opening v1
+
+`MATCH` conserva la identidad del fixture y `MATCH_SHEET` representa su acta operacional única. `MATCH_TEAM` materializa HOME/AWAY desde los TeamEntry del Match; `MATCH_PLAYER` y `MATCH_TEAM_STAFF` congelan la convocatoria seleccionada desde el roster; `MATCH_LIBERO` declara hasta dos líberos sin modelar todavía su presencia en cancha. `MATCH_SHEET_SESSION` identifica la sesión activa y `MATCH_SHEET_AUDIT` registra `MATCH_SHEET_OPENED`.
+
 `COMPETITION_ROSTER` es la participación contextual única de un `TEAM_ENTRY`. Sus jugadores y técnicos conservan historia mediante estados `ACTIVE/INACTIVE`; el roster usa `DRAFT/ACTIVE/CLOSED`. El rol y dorsal del jugador pertenecen a esa inscripción competitiva, no a `PLAYER`.

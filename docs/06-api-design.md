@@ -1258,6 +1258,14 @@ FIXTURE
 
 Admin: `GET/POST /api/admin/matches/{matchId}/officials` y `PUT/DELETE /api/admin/matches/{matchId}/officials/{matchOfficialId}`. Scorer: `PUT /api/scorer/matches/{matchId}/officials/{role}` para reemplazo durante `IN_PROGRESS`. Requests usan `refereeId` y roles expresivos; responses incluyen identidad proyectada de Person y `HealthCardStatus`. Se documentan respuestas 400, 404 y 409 mediante ProblemDetails con `code` estable.
 
+# 21. MatchSheet Opening
+
+- `GET /api/scorer/matches/{matchId}/open-context`: 200, 404 y contexto con warnings/acta existente.
+- `POST /api/scorer/matches/{matchId}/open`: 201 al crear; 200 idempotente; 400 para selección inválida; 404 para Match; 409 para estado persistido incompatible.
+- `GET /api/scorer/matches/{matchId}/sheet`: recupera el bootstrap persistido para reentrada.
+
+El request sólo contiene `clientRequestId`, `deviceId` y selecciones por IDs de miembros del roster. TeamEntry, equipos, dorsales, roster, sede y oficiales se resuelven server-side. El response incluye UUID de sheet/session/team/player/staff/libero, estado inicial uniforme y Health Card informativa.
+
 People y documentos se exponen bajo `/api/admin/people`; perfiles y listados bajo
 `/players`, `/coaches` y `/referees`. Los perfiles se crean con
 `POST /people/{personId}/{player|coach|referee}` sin body. No existe DELETE.

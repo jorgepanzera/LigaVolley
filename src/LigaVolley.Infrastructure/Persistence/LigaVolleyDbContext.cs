@@ -12,6 +12,7 @@ using LigaVolley.Domain.Fixtures;
 using LigaVolley.Domain.People;
 using LigaVolley.Domain.CompetitionRosters;
 using LigaVolley.Domain.MatchOfficials;
+using LigaVolley.Domain.MatchSheets;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,6 +40,7 @@ public sealed class LigaVolleyDbContext(DbContextOptions<LigaVolleyDbContext> op
     public DbSet<Referee> Referees => Set<Referee>();
     public DbSet<CompetitionRoster> CompetitionRosters => Set<CompetitionRoster>();
     public DbSet<MatchOfficial> MatchOfficials => Set<MatchOfficial>();
+    public DbSet<MatchSheet> MatchSheets => Set<MatchSheet>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         => modelBuilder.ApplyConfigurationsFromAssembly(typeof(LigaVolleyDbContext).Assembly);

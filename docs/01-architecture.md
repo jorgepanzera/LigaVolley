@@ -35,6 +35,8 @@ Aplicación orientada a mantenimiento y administración de:
 
 ### Scorer
 
+La apertura del acta requiere conectividad y materializa un snapshot operacional autosuficiente (`MATCH_SHEET`, equipos, convocatoria, staff, líberos y sesión). A partir de ese bootstrap la futura PWA podrá persistir el estado en IndexedDB; este slice no implementa todavía el protocolo de sincronización.
+
 Aplicación especializada en el partido en vivo. Debe concebirse como una consola operacional con flujos rápidos, estado visible y tolerancia a conectividad intermitente.
 
 ### Public

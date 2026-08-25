@@ -9,6 +9,7 @@ internal static class FormatEnum
     public static string ToSql<T>(T value) where T : Enum => value.ToString() switch
     {
         "RoundRobin" => "ROUND_ROBIN", "GroupStage" => "GROUP_STAGE", "Playoff" => "PLAYOFF",
+        "FirstReferee" => "FIRST_REFEREE", "SecondReferee" => "SECOND_REFEREE", "MatchSheetOpened" => "MATCH_SHEET_OPENED",
         "InProgress" => "IN_PROGRESS",
         "ThirdPlace" => "THIRD_PLACE", "MirroredHomeAway" => "MIRRORED_HOME_AWAY", "BalancedRandom" => "BALANCED_RANDOM",
         "QualifiedOnly" => "QUALIFIED_ONLY", "PositionRange" => "POSITION_RANGE", "TopHalf" => "TOP_HALF", "BottomHalf" => "BOTTOM_HALF",

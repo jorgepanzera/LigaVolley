@@ -199,6 +199,8 @@ Competition Rosters v1 está cerrado: existe un roster explícito por TeamEntry 
 
 Match Officials v1 está cerrado: `MATCH_OFFICIAL` referencia `REFEREE`; los roles son FIRST_REFEREE, SECOND_REFEREE y SCORER, únicos por Match, y un Referee no puede ocupar dos roles. Admin edita en PENDING/SCHEDULED; Scorer reemplaza sin vaciar roles en IN_PROGRESS. Health Card nunca bloquea y los reemplazos deberán auditarse en el futuro MatchSheet.
 
+MatchSheet Opening v1 está cerrado: un Match SCHEDULED puede materializar una única acta OPEN. HOME/AWAY se resuelven desde Match; ambos rosters deben estar ACTIVE, con al menos seis jugadores ACTIVE seleccionados por equipo y los tres oficiales presentes. La convocatoria se congela en MATCH_PLAYER, la apertura no inicia Match/Competition, es transaccional e idempotente, crea sesión/auditoría y produce UUID/snapshot para futuro offline.
+
 En orden de prioridad:
 
 1. decisiones explícitas más recientes del proyecto;
