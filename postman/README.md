@@ -27,6 +27,15 @@ Para una corrida completamente nueva, borrar la variable de colección
 2090; si ese año ya existe en la base, eliminar los datos de prueba o cambiar el
 valor antes de ejecutar la carpeta.
 
+La carpeta **05 - Phase Completion** contiene los cinco recorridos del slice.
+Configurar `completionCompetitionId`/`completionPhaseId` con una fase
+`IN_PROGRESS` cuyos partidos estén `FINISHED`, y
+`blockedCompetitionId`/`blockedPhaseId` con una fase que tenga partidos no
+resueltos o `CANCELLED`. Ejecutar el cierre exitoso antes del cierre repetido;
+este último verifica `AlreadyCompleted = true`. El preview bloqueado permanece
+informativo (`200`, `CanComplete = false`) y el POST bloqueado espera `409` con
+`phase_cannot_complete`.
+
 Los requests incluyen aserciones básicas de código HTTP, contratos de error y
 resultados relevantes. Las colecciones son una ayuda de exploración y smoke
 testing; los tests automatizados de integración siguen siendo la prueba de

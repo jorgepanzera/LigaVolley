@@ -151,7 +151,38 @@
       ]
     },
     {
-      "name": "05 - Casos de error",
+      "name": "05 - Phase Completion",
+      "description": "Use completionCompetitionId/completionPhaseId para una fase IN_PROGRESS con todos sus partidos FINISHED. Use blockedCompetitionId/blockedPhaseId para una fase con partidos pendientes o cancelados.",
+      "item": [
+        {
+          "name": "Preview exitoso",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{completionCompetitionId}}/phases/{{completionPhaseId}}/completion-preview" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 y CanComplete true', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().canComplete).to.be.true; });"] } }]
+        },
+        {
+          "name": "Preview con blockers",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{blockedCompetitionId}}/phases/{{blockedPhaseId}}/completion-preview" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200, CanComplete false y blockers', () => { pm.response.to.have.status(200); const body = pm.response.json(); pm.expect(body.canComplete).to.be.false; pm.expect(body.blockers).to.be.an('array').that.is.not.empty; });"] } }]
+        },
+        {
+          "name": "CompletePhase exitoso",
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/admin/competitions/{{completionCompetitionId}}/phases/{{completionPhaseId}}/complete" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200, Finished y primera ejecución', () => { pm.response.to.have.status(200); const body = pm.response.json(); pm.expect(body.status).to.eql('Finished'); pm.expect(body.alreadyCompleted).to.be.false; });"] } }]
+        },
+        {
+          "name": "CompletePhase repetido e idempotente",
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/admin/competitions/{{completionCompetitionId}}/phases/{{completionPhaseId}}/complete" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200, Finished y AlreadyCompleted', () => { pm.response.to.have.status(200); const body = pm.response.json(); pm.expect(body.status).to.eql('Finished'); pm.expect(body.alreadyCompleted).to.be.true; });"] } }]
+        },
+        {
+          "name": "CompletePhase bloqueado",
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/admin/competitions/{{blockedCompetitionId}}/phases/{{blockedPhaseId}}/complete" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('409 phase_cannot_complete', () => { pm.response.to.have.status(409); pm.expect(pm.response.json().code).to.eql('phase_cannot_complete'); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "06 - Casos de error",
       "item": [
         {
           "name": "Temporada duplicada devuelve 409",

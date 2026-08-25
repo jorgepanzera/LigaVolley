@@ -20,6 +20,13 @@ internal sealed class CompetitionRepository(LigaVolleyDbContext db) : ICompetiti
     private static IQueryable<Competition> Complete(IQueryable<Competition> query) => query.AsSplitQuery().Include(x => x.Season).Include(x => x.Division)
         .Include(x => x.CompetitionFormat).ThenInclude(x => x.ScoringRules)
         .Include(x => x.CompetitionFormat).ThenInclude(x => x.TiebreakRules)
+        .Include(x => x.CompetitionFormat).ThenInclude(x => x.QualificationRules).ThenInclude(x => x.SourcePhase)
+        .Include(x => x.CompetitionFormat).ThenInclude(x => x.QualificationRules).ThenInclude(x => x.SourceGroup)
+        .Include(x => x.CompetitionFormat).ThenInclude(x => x.QualificationRules).ThenInclude(x => x.TargetPhase)
+        .Include(x => x.CompetitionFormat).ThenInclude(x => x.QualificationRules).ThenInclude(x => x.TargetGroup)
+        .Include(x => x.CompetitionFormat).ThenInclude(x => x.QualificationRules).ThenInclude(x => x.TargetSeries)
         .Include(x => x.Phases).ThenInclude(x => x.Groups)
+        .Include(x => x.Phases).ThenInclude(x => x.Series).ThenInclude(x => x.Team1Entry).ThenInclude(x=>x!.Team)
+        .Include(x => x.Phases).ThenInclude(x => x.Series).ThenInclude(x => x.Team2Entry).ThenInclude(x=>x!.Team)
         .Include(x => x.Phases).ThenInclude(x => x.Series).ThenInclude(x => x.ParticipantSources).ThenInclude(x => x.SourceSeries);
 }

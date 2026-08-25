@@ -829,10 +829,13 @@ Los valores `ALL` y `QUALIFIED_ONLY` pueden permanecer en el modelo pero deben r
 public sealed record PhaseCompletionBlockerDto(
     string Code,
     string Message,
-    IReadOnlyList<int>? MatchIds
+    IReadOnlyList<int>? MatchIds,
+    IReadOnlyList<int>? TeamEntryIds,
+    int? QualificationRuleId
 );
 
 public sealed record QualificationPreviewDto(
+    int QualificationRuleId,
     int TeamEntryId,
     string TeamName,
     int SourcePosition,
@@ -845,14 +848,18 @@ public sealed record QualificationPreviewDto(
 public sealed record PhaseCompletionPreviewDto(
     int CompetitionId,
     int PhaseId,
+    string PhaseCode,
     string PhaseName,
     bool CanComplete,
     IReadOnlyList<PhaseCompletionBlockerDto> Blockers,
-    IReadOnlyList<StandingPositionDto> FinalStandings,
-    IReadOnlyList<QualificationPreviewDto> Qualifications
+    IReadOnlyList<StandingsDto> Standings,
+    IReadOnlyList<QualificationPreviewDto> Qualifications,
+    IReadOnlyList<GeneratedFixtureSummaryDto> GeneratedFixtures,
+    IReadOnlyList<ResolvedSeriesDto> ResolvedSeries
 );
 
 public sealed record QualifiedTeamDto(
+    int QualificationRuleId,
     int TeamEntryId,
     string TeamName,
     int SourcePosition,
@@ -865,6 +872,7 @@ public sealed record QualifiedTeamDto(
 public sealed record GeneratedFixtureSummaryDto(
     int PhaseId,
     int? PhaseGroupId,
+    int? SeriesId,
     int MatchesCreated
 );
 
@@ -881,7 +889,7 @@ public sealed record PhaseCompletionResultDto(
     int PhaseId,
     CompetitionPhaseStatus Status,
     bool AlreadyCompleted,
-    IReadOnlyList<StandingPositionDto> FinalStandings,
+    IReadOnlyList<StandingsDto> Standings,
     IReadOnlyList<QualifiedTeamDto> Qualifications,
     IReadOnlyList<GeneratedFixtureSummaryDto> GeneratedFixtures,
     IReadOnlyList<ResolvedSeriesDto> ResolvedSeries
@@ -889,6 +897,35 @@ public sealed record PhaseCompletionResultDto(
 ```
 
 `CompletePhase` debe ser idempotente en sus efectos. Si la fase ya fue completada correctamente, un reintento puede devolver `200 OK` con `AlreadyCompleted = true`; nunca debe duplicar `PHASE_GROUP_ENTRY` ni `MATCH`.
+
+`Standings` contiene una tabla independiente por cada grupo; nunca se combinan
+grupos para producir una clasificación implícita. Una regla de una fase con
+grupos debe indicar `sourceGroup`. El preview devuelve `200 OK` y
+`CanComplete = false` para blockers operativos (partidos no resueltos,
+cancelados o un empate que cruza una frontera de clasificación) y no proyecta
+efectos persistibles mientras exista alguno.
+
+Un empate compartido sólo bloquea cuando la selección `POSITION_RANGE`,
+`TOP_HALF` o `BOTTOM_HALF` tendría que separar equipos empatados. La posición
+deportiva original se conserva en `source_position`; `seed` permanece `null`.
+
+El POST recalcula el mismo plan dentro de una transacción serializable protegida
+contra ejecuciones concurrentes. Materializa `PHASE_GROUP_ENTRY`, participantes
+de series y fixture incremental antes de marcar la fase `FINISHED`; cualquier
+error revierte toda la operación. En v1 únicamente se admite
+`CarryOverMode.NONE`.
+
+Para grupos resueltos se reutiliza el generador round-robin existente. Para una
+serie que pasa a `READY` se crea sólo su primer partido real, sin fecha ni sede
+obligatorias. `GeneratedFixtureSummaryDto` distingue ambos scopes mediante
+`PhaseGroupId` y `SeriesId`.
+
+Respuestas principales:
+
+- `200`: preview, cierre exitoso o repetición idempotente;
+- `404`: Competition/Phase inexistente o fuera del scope;
+- `409`: fase/tipo inválido, configuración inconsistente, carry-over no
+  soportado, conflicto de efectos o POST con blockers (`phase_cannot_complete`).
 
 # 12. Generación incremental de fixture
 

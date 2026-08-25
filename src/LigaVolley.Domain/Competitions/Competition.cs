@@ -104,6 +104,16 @@ public sealed class CompetitionPhase
     public CompetitionPhaseStatus Status { get; private set; } = CompetitionPhaseStatus.Pending;
     public List<CompetitionPhaseGroup> Groups { get; private set; } = [];
     public List<CompetitionPlayoffSeries> Series { get; private set; } = [];
+    public void MarkInProgress()
+    {
+        if (Status != CompetitionPhaseStatus.Pending) throw new DomainValidationException("Only a pending phase can start.");
+        Status = CompetitionPhaseStatus.InProgress;
+    }
+    public void Complete()
+    {
+        if (Status != CompetitionPhaseStatus.InProgress) throw new DomainValidationException("Only an in-progress phase can be completed.");
+        Status = CompetitionPhaseStatus.Finished;
+    }
 }
 
 public sealed class CompetitionPhaseGroup
@@ -150,6 +160,7 @@ public sealed class CompetitionPlayoffSeries
     private CompetitionPlayoffSeries() { }
     internal CompetitionPlayoffSeries(FormatPlayoffSeries source) { FormatSeries = source; Code = source.Code; Name = source.Name; Sequence = source.Sequence; WinsRequired = source.WinsRequired; Team1InitialWins = source.Team1InitialWins; Team2InitialWins = source.Team2InitialWins; }
     public int PlayoffSeriesId { get; private set; }
+    public int CompetitionId { get; private set; }
     public int CompetitionPhaseId { get; private set; }
     public int FormatSeriesId { get; private set; }
     public FormatPlayoffSeries FormatSeries { get; private set; } = null!;
@@ -159,8 +170,23 @@ public sealed class CompetitionPlayoffSeries
     public short WinsRequired { get; private set; }
     public short Team1InitialWins { get; private set; }
     public short Team2InitialWins { get; private set; }
+    public int? Team1EntryId { get; private set; }
+    public TeamEntry? Team1Entry { get; private set; }
+    public int? Team2EntryId { get; private set; }
+    public TeamEntry? Team2Entry { get; private set; }
     public PlayoffSeriesStatus Status { get; private set; } = PlayoffSeriesStatus.Pending;
     public List<CompetitionSeriesParticipantSource> ParticipantSources { get; private set; } = [];
+    public void AssignParticipant(byte side, TeamEntry entry)
+    {
+        if (side is not 1 and not 2) throw new DomainValidationException("Series participant side must be 1 or 2.");
+        var current = side == 1 ? Team1EntryId : Team2EntryId;
+        if (current.HasValue && current != entry.TeamEntryId) throw new DomainValidationException("Series participant side is already occupied.");
+        var other = side == 1 ? Team2EntryId : Team1EntryId;
+        if (other == entry.TeamEntryId) throw new DomainValidationException("A series cannot contain the same team on both sides.");
+        if (side == 1) { Team1Entry = entry; Team1EntryId = entry.TeamEntryId; }
+        else { Team2Entry = entry; Team2EntryId = entry.TeamEntryId; }
+        if (Team1EntryId.HasValue && Team2EntryId.HasValue && Status == PlayoffSeriesStatus.Pending) Status = PlayoffSeriesStatus.Ready;
+    }
 }
 
 public sealed class CompetitionSeriesParticipantSource

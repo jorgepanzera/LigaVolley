@@ -34,6 +34,10 @@ public sealed class Match
         Competition = competition; Phase = phase; PhaseGroup = group; HomeTeamEntry = home; AwayTeamEntry = away;
         RoundNumber = roundNumber; MatchNumber = matchNumber; Status = MatchStatus.Pending;
     }
+    public Match(Competition competition, CompetitionPhase phase, CompetitionPlayoffSeries series,
+        TeamEntry home, TeamEntry away, short matchNumber)
+        : this(competition, phase, null, home, away, 1, matchNumber)
+    { Series = series ?? throw new DomainValidationException("Series is required."); }
     public int MatchId { get; private set; }
     public int CompetitionId { get; private set; }
     public Competition Competition { get; private set; } = null!;

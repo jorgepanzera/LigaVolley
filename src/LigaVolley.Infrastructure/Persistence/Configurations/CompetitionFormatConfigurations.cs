@@ -16,7 +16,16 @@ internal static class FormatEnum
         "GroupPosition" => "GROUP_POSITION", "SeriesResult" => "SERIES_RESULT", "PhaseLastN" => "PHASE_LAST_N", "GroupLastN" => "GROUP_LAST_N",
         _ => value.ToString().ToUpperInvariant()
     };
-    public static T FromSql<T>(string value) where T : struct, Enum => Enum.Parse<T>(string.Concat(value.ToLowerInvariant().Split('_').Select(x => char.ToUpperInvariant(x[0]) + x[1..])));
+    public static T FromSql<T>(string value) where T : struct, Enum
+    {
+        var normalized = value.Replace("_", string.Empty, StringComparison.Ordinal);
+        var name = Enum.GetNames<T>().SingleOrDefault(candidate =>
+            string.Equals(candidate, normalized, StringComparison.OrdinalIgnoreCase));
+
+        return name is null
+            ? throw new ArgumentException($"Requested value '{value}' was not found in {typeof(T).Name}.", nameof(value))
+            : Enum.Parse<T>(name);
+    }
     public static PropertyBuilder<T> AsSql<T>(this PropertyBuilder<T> property, string column, int length) where T : struct, Enum
         => property.HasColumnName(column).HasColumnType($"varchar({length})").HasConversion(v => ToSql(v), v => FromSql<T>(v));
     public static PropertyBuilder<T?> AsNullableSql<T>(this PropertyBuilder<T?> property, string column, int length) where T : struct, Enum
