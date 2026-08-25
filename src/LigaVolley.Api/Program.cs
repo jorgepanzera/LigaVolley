@@ -62,6 +62,7 @@ builder.Services.AddScoped<CompetitionRosterService>();
 builder.Services.AddScoped<MatchOfficialService>();
 builder.Services.AddScoped<MatchSheetService>();
 builder.Services.AddScoped<MatchEngineService>();
+builder.Services.AddScoped<OfflineSyncService>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -108,6 +109,7 @@ app.MapMatchOfficialEndpoints();
 app.MapScorerMatchOfficialEndpoints();
 app.MapScorerMatchSheetEndpoints();
 app.MapScorerMatchEngineEndpoints();
+app.MapScorerOfflineSyncEndpoints();
 
 app.Run();
 

@@ -4,7 +4,7 @@ using LigaVolley.Domain.Fixtures;
 namespace LigaVolley.Domain.MatchSheets;
 
 public enum LineupPosition { P1 = 1, P2, P3, P4, P5, P6 }
-public enum MatchEventType { Point, PointCorrection, Substitution, LiberoEnter, LiberoExit, Timeout, MatchClosed }
+public enum MatchEventType { PrepareSet, SetLineup, StartSet, Point, PointCorrection, Substitution, LiberoEnter, LiberoExit, Timeout, MatchClosed }
 public enum MatchEventStatus { Active, Cancelled }
 
 public sealed class MatchLineup
@@ -44,7 +44,9 @@ public sealed class MatchEvent
     public int MatchEventId{get;private set;}public Guid EventUuid{get;private set;}public int MatchSheetId{get;private set;}public MatchSheet MatchSheet{get;private set;}=null!;
     public int? MatchSetId{get;private set;}public MatchSet? MatchSet{get;private set;}public MatchEventType EventType{get;private set;}public long SequenceNumber{get;private set;}
     public MatchSide? Side{get;private set;}public int? MatchPlayerId{get;private set;}public DateTimeOffset OccurredAt{get;private set;}public MatchEventStatus Status{get;private set;}
+    public int? MatchSheetSessionId{get;private set;}public MatchSheetSession? MatchSheetSession{get;private set;}public long? LocalSequence{get;private set;}public string? SyncPayloadHash{get;private set;}
     public int? RelatedEventId{get;private set;}public MatchEvent? RelatedEvent{get;private set;}public void Cancel(){if(Status!=MatchEventStatus.Active)throw new DomainValidationException("Event is already cancelled.");Status=MatchEventStatus.Cancelled;}
+    public void BindSynchronization(MatchSheetSession session,long localSequence,string payloadHash,DateTimeOffset occurredAt){if(MatchSheetSession is not null)throw new DomainValidationException("Event synchronization metadata already exists.");MatchSheetSession=session;LocalSequence=localSequence;SyncPayloadHash=payloadHash;OccurredAt=occurredAt;}
 }
 
 public sealed class MatchSubstitution

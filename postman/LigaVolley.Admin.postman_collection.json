@@ -299,6 +299,23 @@
       ]
     },
     {
+      "name": "12 - Scorer Offline Sync",
+      "description": "Requiere matchId, sheetUuid, sessionUuid y deviceId obtenidos al abrir el acta. Los UUID de eventos deben conservarse al reintentar.",
+      "item": [
+        { "name": "01 - Get Sheet for Reconciliation", "request": { "method": "GET", "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sheet" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 snapshot',()=>pm.response.to.have.status(200));", "if(pm.response.code===200){const j=pm.response.json();pm.environment.set('sheetUuid',j.sheet.sheetUuid);pm.environment.set('sessionUuid',j.session.sessionUuid);pm.environment.set('deviceId',j.session.deviceId);}"] } }] },
+        { "name": "02 - Sync New Events", "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"sheetUuid\":\"{{sheetUuid}}\",\"sessionUuid\":\"{{sessionUuid}}\",\"deviceId\":\"{{deviceId}}\",\"events\":[{\"eventUuid\":\"{{$guid}}\",\"sequence\":1,\"type\":\"PREPARE_SET\",\"occurredAt\":\"{{$isoTimestamp}}\",\"payload\":{}}]}" }, "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync" }, "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('Applied',()=>{pm.response.to.have.status(200);pm.expect(pm.response.json().results[0].status).to.eql('APPLIED');});"]}}] },
+        { "name": "03 - Retry Same Batch", "request": { "method": "POST", "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync" } },
+        { "name": "04 - Sync Overlapping Batch", "request": { "method": "POST", "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync" } },
+        { "name": "05 - Sequence Gap Conflict", "request": { "method": "POST", "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync" }, "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('409 gap',()=>{pm.response.to.have.status(409);pm.expect(pm.response.json().code).to.eql('sync_sequence_gap');});"]}}] },
+        { "name": "06 - UUID Conflict", "request": { "method": "POST", "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync" }, "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('409 UUID conflict',()=>{pm.response.to.have.status(409);pm.expect(pm.response.json().code).to.eql('sync_event_uuid_conflict');});"]}}] },
+        { "name": "07 - Take Over Match Sheet", "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode":"raw", "raw":"{\"sheetUuid\":\"{{sheetUuid}}\",\"expectedSessionUuid\":\"{{sessionUuid}}\",\"deviceId\":\"tablet-cancha-02\",\"clientRequestId\":\"{{takeOverRequestId}}\"}" }, "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/take-over" }, "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('new active session',()=>pm.response.to.have.status(200));","if(pm.response.code===200)pm.environment.set('newSessionUuid',pm.response.json().sessionUuid);"]}}] },
+        { "name": "08 - Retry Same TakeOver", "request": { "method": "POST", "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/take-over" } },
+        { "name": "09 - Old Session Duplicate Retry", "request": { "method": "POST", "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync" } },
+        { "name": "10 - Old Session New Event Rejected", "request": { "method": "POST", "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync" }, "event": [{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('old session rejected',()=>{pm.response.to.have.status(409);pm.expect(pm.response.json().code).to.eql('match_sheet_session_not_active');});"]}}] },
+        { "name": "11 - Sync From New Session", "request": { "method": "POST", "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync" } }
+      ]
+    },
+    {
       "name": "08 - Casos de error",
       "item": [
         {

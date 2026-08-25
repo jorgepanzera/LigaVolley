@@ -1281,6 +1281,12 @@ El request sólo contiene `clientRequestId`, `deviceId` y selecciones por IDs de
 
 Cada mutación devuelve DTO Scorer con set, puntos, sets ganados, saque, servidor derivado, offsets, timeouts, ganador, MatchDecided y cancha efectiva. Los comandos deportivos usan UUID idempotente; errores usan ProblemDetails y `code` estable con 400/404/409. El cierre es explícito, idempotente y definitivo.
 
+### Scorer Offline Sync y TakeOver
+
+`POST /api/scorer/matches/{matchId}/sync` recibe `sheetUuid`, `sessionUuid`, `deviceId` y eventos ordenados con `eventUuid`, `sequence`, `type`, `occurredAt` y `payload`. Los UUID conocidos idénticos devuelven `AlreadyAccepted`; los nuevos deben comenzar en `LastAcceptedSequence + 1`, se aplican atómicamente mediante el mismo MatchEngine y devuelven `Applied` más el snapshot canónico. Los UUID duplicados dentro del body se rechazan con 400.
+
+`POST /api/scorer/matches/{matchId}/take-over` recibe además `expectedSessionUuid` y `clientRequestId`. El primero garantiza conflicto estable entre takeovers concurrentes y el segundo hace idempotente el retry. Los códigos estables incluyen `sync_sequence_gap`, `sync_event_uuid_conflict`, `sync_duplicate_sequence`, `sync_invalid_event_type`, `match_sheet_session_not_found`, `match_sheet_session_not_active`, `match_sheet_session_mismatch`, `match_sheet_closed` y `match_sheet_takeover_request_conflict`.
+
 People y documentos se exponen bajo `/api/admin/people`; perfiles y listados bajo
 `/players`, `/coaches` y `/referees`. Los perfiles se crean con
 `POST /people/{personId}/{player|coach|referee}` sin body. No existe DELETE.

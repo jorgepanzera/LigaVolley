@@ -80,10 +80,11 @@ public sealed class LigaVolleyDbContext(DbContextOptions<LigaVolleyDbContext> op
     }
 
     async Task<IApplicationTransaction> IUnitOfWork.BeginSerializableTransactionAsync(CancellationToken cancellationToken)
-        => new EfApplicationTransaction(await Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable,cancellationToken));
+        => Database.CurrentTransaction is not null?NestedApplicationTransaction.Instance:new EfApplicationTransaction(await Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable,cancellationToken));
 
     private sealed class EfApplicationTransaction(Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction):IApplicationTransaction
     { public Task CommitAsync(CancellationToken cancellationToken=default)=>transaction.CommitAsync(cancellationToken); public ValueTask DisposeAsync()=>transaction.DisposeAsync(); }
+    private sealed class NestedApplicationTransaction:IApplicationTransaction{public static NestedApplicationTransaction Instance{get;}=new();public Task CommitAsync(CancellationToken cancellationToken=default)=>Task.CompletedTask;public ValueTask DisposeAsync()=>ValueTask.CompletedTask;}
 
     private static bool IsUniqueConstraintViolation(DbUpdateException exception)
         => exception.InnerException is SqlException { Number: 2601 or 2627 };

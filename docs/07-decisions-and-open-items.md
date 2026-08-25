@@ -187,7 +187,7 @@
 - Líbero declarado sólo entra por P1/P5/P6; hasta dos declarados y reemplazo separado de sustitución.
 - Timeouts obligatorios, máximo dos por equipo/set.
 - CloseMatch explícito produce MatchSheet CLOSED y Match FINISHED, persiste resultado y dispara progresión existente; CLOSED es definitivo.
-- UUID únicos, secuencia monotónica y serialización por Match preparan el futuro offline sin implementar `/sync`.
+- UUID únicos identifican retries; la secuencia es local y contigua por sesión. `/sync` tolera solapamientos aceptados y aplica atómicamente eventos nuevos bajo la serialización existente por Match.
 
 ## Pendientes que NO deben inventarse durante implementación
 
@@ -204,7 +204,7 @@
 11. Consecuencia deportiva exacta de `MATCH`/serie `CANCELLED`, suspendida o no disputada.
 12. Semántica deportiva futura de `CarryOverMode.ALL` y `CarryOverMode.QUALIFIED_ONLY`; v1 sólo implementa `NONE`.
 13. Reglas funcionales finas de ascensos/descensos entre Apertura/Clausura o temporadas y creación futura de inscripciones.
-14. Estrategia concreta de persistencia local/offline del Scorer.
+14. Persistencia IndexedDB/PWA concreta del cliente Scorer (el contrato backend de sincronización ya está cerrado).
 15. Protocolo de sincronización y resolución de conflictos.
 16. Correcciones históricas distintas de `CorrectLastPoint` y correcciones de sustitución, líbero o timeout.
 17. Límite exacto entre estado canónico, estado derivado y snapshots para offline.

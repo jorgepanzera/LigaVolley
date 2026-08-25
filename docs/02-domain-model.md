@@ -67,3 +67,6 @@ Separar entidades permanentes (por ejemplo Team o Person) de su participación c
 `MATCH_LINEUP` y `MATCH_LINEUP_POSITION` congelan P1..P6 por lado y set. `MATCH_EVENT` ordena trazabilidad mediante UUID y `SequenceNumber` monotónico. `MATCH_SUBSTITUTION`, `MATCH_LIBERO_REPLACEMENT` y `MATCH_TIMEOUT` conservan el detalle operacional sin convertir el sistema en event sourcing.
 
 La cancha efectiva se deriva centralmente como alineación inicial + sustituciones + `rotation_offset` + reemplazo activo de líbero. El servidor es el jugador efectivo en P1 del lado que posee el saque.
+# Sesiones de Scorer y sincronización
+
+`MATCH_SHEET_SESSION` admite ACTIVE, ABANDONED y CLOSED, conserva `LastAcceptedSequence` y tiene como máximo una fila ACTIVE por MatchSheet. `MATCH_EVENT` mantiene su secuencia global y puede vincularse a la sesión con una secuencia local y hash del payload sincronizado. `MATCH_SHEET_AUDIT` registra `MATCH_SHEET_TAKEN_OVER` con sesión/dispositivo anterior y nuevo.

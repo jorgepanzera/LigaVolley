@@ -66,3 +66,6 @@ No acoplar el dominio a una tecnología concreta de autenticación hasta tomar e
 ## Persistencia
 
 SQL Server es la base de datos única de la aplicación. Se preservan restricciones relacionales importantes mediante PK, FK, UNIQUE y CHECK cuando resulte apropiado.
+# Scorer offline
+
+La sincronización offline conserva el monolito modular: el batch entra por Application y reutiliza el mismo MatchEngine de los endpoints online dentro de una transacción serializable y el bloqueo existente por Match. `MATCH_EVENT.SequenceNumber` continúa siendo global/canónico; `LocalSequence` pertenece a una sesión. No se adopta event sourcing ni un motor deportivo alternativo.

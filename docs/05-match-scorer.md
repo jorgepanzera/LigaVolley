@@ -74,7 +74,7 @@ Los tres oficiales se designan inicialmente desde Admin. Durante `IN_PROGRESS`, 
 
 No se adopta event sourcing como arquitectura. El estado operacional actual necesario para operar y consultar eficientemente el partido se persiste. Los cambios relevantes se registran además como eventos/auditoría para mantener trazabilidad y permitir correcciones o reconstrucción cuando corresponda.
 
-El límite exacto entre estado canónico persistido, datos derivados y snapshots para operación offline se cerrará al diseñar la sincronización.
+El servidor persiste estado operacional canónico y eventos de trazabilidad; no usa event sourcing. `GET /sheet` devuelve el snapshot para reconciliación, la sesión vigente o última, el dispositivo y `LastAcceptedSequence`.
 
 ## Correcciones
 
@@ -97,4 +97,6 @@ Una corrección no debe destruir la trazabilidad necesaria del partido. El mecan
 
 ## Offline
 
-Scorer debe tolerar pérdida temporal de conectividad. El diseño de persistencia local, IDs de eventos, resolución de conflictos y sincronización se definirá antes de implementar esta parte.
+Scorer tolera pérdida temporal de conectividad mediante eventos locales con UUID y secuencia por sesión. Al reentrar, el cliente obtiene `GET /sheet`, confirma hasta `LastAcceptedSequence`, reconstruye desde el snapshot, reaplica sus eventos Pending y llama `/sync`. El batch tolera UUID ya aceptados y aplica atómicamente sólo una continuación contigua. IndexedDB, Service Worker y background sync quedan fuera del backend v1.
+
+`TakeOverMatchSheet` requiere la sesión activa esperada para resolver concurrencia: la anterior pasa a ABANDONED y la nueva queda ACTIVE con secuencia cero. No reinicia marcador, set, saque, rotación, cancha, sustituciones, líbero ni timeouts. Una sesión abandonada puede reintentar eventos conocidos, pero sus eventos inéditos son rechazados; la recuperación manual futura no forma parte de v1.

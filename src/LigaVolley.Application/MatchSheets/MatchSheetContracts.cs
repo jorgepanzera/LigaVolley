@@ -18,5 +18,5 @@ public sealed record MatchSheetStaffDto(int MatchTeamStaffId,Guid MatchTeamStaff
 public sealed record MatchSheetLiberoDto(int MatchLiberoId,Guid MatchLiberoUuid,int MatchPlayerId,byte LiberoOrder);
 public sealed record MatchSheetOfficialDto(int MatchOfficialId,MatchOfficialRole Role,int RefereeId,int PersonId,string DisplayName,HealthCardStatus HealthCardStatus);
 public sealed record MatchSheetCurrentStateDto(byte? CurrentSetNumber,byte HomeSets,byte AwaySets,short HomePoints,short AwayPoints,MatchSide? ServingSide,int? ServerMatchPlayerId,short HomeRotationOffset,short AwayRotationOffset,byte HomeTimeouts,byte AwayTimeouts);
-public sealed record MatchSheetSessionDto(int MatchSheetSessionId,Guid SessionUuid,int MatchOfficialId,string DeviceId,MatchSheetSessionStatus Status,DateTimeOffset StartedAt,DateTimeOffset? EndedAt);
+public sealed record MatchSheetSessionDto(int MatchSheetSessionId,Guid SessionUuid,int MatchOfficialId,string DeviceId,MatchSheetSessionStatus Status,long LastAcceptedSequence,DateTimeOffset StartedAt,DateTimeOffset? EndedAt);
 public sealed record MatchSheetSyncDto(Guid SheetUuid,Guid SessionUuid,long ServerVersion);
