@@ -4,6 +4,7 @@ using LigaVolley.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LigaVolley.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(LigaVolleyDbContext))]
-    partial class LigaVolleyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260825153358_AddPlayoffSeriesProgression")]
+    partial class AddPlayoffSeriesProgression
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -618,10 +621,6 @@ namespace LigaVolley.Infrastructure.Persistence.Migrations
                     b.Property<int>("CompetitionFormatId")
                         .HasColumnType("int")
                         .HasColumnName("competition_format_id");
-
-                    b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("datetimeoffset")
-                        .HasColumnName("completed_at");
 
                     b.Property<int>("DivisionId")
                         .HasColumnType("int")

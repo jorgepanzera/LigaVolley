@@ -20,17 +20,24 @@ internal sealed class GlobalExceptionHandler(IProblemDetailsService problemDetai
         };
 
         httpContext.Response.StatusCode = status;
+        var extensions = exception is ResourceConflictException conflictException
+            ? conflictException.Extensions
+            : new Dictionary<string, object?>();
+        var details = new ProblemDetails
+        {
+            Status = status,
+            Title = title,
+            Detail = status == StatusCodes.Status500InternalServerError ? null : exception.Message,
+            Extensions = { ["code"] = code }
+        };
+        foreach (var extension in extensions)
+            details.Extensions[extension.Key] = extension.Value;
+
         return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = httpContext,
             Exception = exception,
-            ProblemDetails = new ProblemDetails
-            {
-                Status = status,
-                Title = title,
-                Detail = status == StatusCodes.Status500InternalServerError ? null : exception.Message,
-                Extensions = { ["code"] = code }
-            }
+            ProblemDetails = details
         });
     }
 }

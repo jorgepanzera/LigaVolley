@@ -394,6 +394,17 @@ Si ninguno alcanzó `wins_required`, se crea el siguiente `MATCH` de la serie.
 
 Por tanto, una semifinal con ventaja 1-0 y `wins_required = 2` puede requerir uno o dos partidos reales; no se crean ambos obligatoriamente desde el comienzo.
 
+Los partidos reales se numeran correlativamente dentro de la serie y la base
+garantiza unicidad por `(series_id, match_number)`. En v1, Team1 es local en
+partidos impares y Team2 en partidos pares. Cada partido incremental nace
+`PENDING`, sin fecha ni sede.
+
+El motor recalcula las victorias desde resultados persistidos y no mantiene un
+contador mutable. Su ejecución es transaccional e idempotente, incluso ante el
+reintento concurrente del mismo resultado o la finalización concurrente de dos
+semifinales. Será llamado por el futuro caso de uso que cierre un partido; no
+existe deliberadamente un endpoint `CompletePlayoffSeries`.
+
 ## Estados de PLAYOFF_SERIES
 
 Semántica v1:
@@ -427,6 +438,11 @@ Regla v1:
 - `SCHEDULED → IN_PROGRESS`: automáticamente cuando comienza el primer partido oficial;
 - `IN_PROGRESS → FINISHED`: mediante un caso de uso administrativo explícito `CompleteCompetition`;
 - `DRAFT / SCHEDULED → CANCELLED`: cancelación administrativa inicial.
+
+El cierre persiste `Competition.completed_at` independientemente de `end_date`.
+Los movimientos de promoción/relegación se derivan al previsualizar o cerrar,
+pero no se almacenan ni crean inscripciones futuras. La Division destino se
+resuelve por nivel exacto y mismo género; un nivel faltante nunca se salta.
 
 `CompleteCompetition` sólo puede ejecutarse cuando todas las fases obligatorias y series requeridas estén resueltas.
 

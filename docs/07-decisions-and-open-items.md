@@ -69,6 +69,9 @@
 - `IN_PROGRESS → FINISHED` requiere `CompleteCompetition`; no se cierra automáticamente al terminar la Final.
 - Existe `completion-preview` de Competition antes del cierre.
 - `FORMAT_MOVEMENT_RULE` puede calcular movimientos resultantes, pero v1 no crea automáticamente inscripciones en competiciones futuras.
+- `CompetitionProgression` informa contadores de partidos actualmente materializados y victorias de serie derivadas; no mezcla blockers ni movimientos.
+- `CompleteCompetition` es el único camino a `Competition.FINISHED`, persiste `completed_at`, es transaccional/idempotente y no modifica fases, series, partidos ni TeamEntry.
+- Los movimientos usan posiciones de fase/grupo, resultado de serie o LAST_N y resuelven la Division destino por nivel exacto más mismo género, sin saltar niveles.
 - Regeneración de fixture: se permite sólo mientras ningún partido del ámbito afectado esté `IN_PROGRESS` o `FINISHED`; puede invalidar programación de fecha/sede.
 ## Endpoints Admin cerrados en esta etapa
 

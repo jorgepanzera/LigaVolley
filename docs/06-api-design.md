@@ -963,6 +963,47 @@ Si un participante alcanza `winsRequired`, la serie termina. En caso contrario s
 
 Esto permite que una semifinal con ventaja 1-0 y `winsRequired = 2` genere un segundo partido sólo si realmente es necesario.
 
+### Motor automático PlayoffSeries Progression
+
+La progresión de una serie no expone `CompletePlayoffSeries` ni un endpoint
+administrativo de avance. El caso de uso de Application
+`ProcessFinishedPlayoffMatch` será invocado por el futuro flujo que cierre
+definitivamente un partido, especialmente el cierre del Scorer.
+
+Después de cada `MATCH` `FINISHED` perteneciente a una serie se recalcula:
+
+```text
+seriesWins = initialWins + realMatchWins
+```
+
+No se persiste un contador mutable de victorias. Sólo cuentan partidos
+`FINISHED` con un ganador válido perteneciente a la serie. Si nadie alcanzó
+`winsRequired`, la serie queda `IN_PROGRESS` y se garantiza únicamente el
+siguiente partido real.
+
+La numeración es `1, 2, 3, ...` y está protegida por la restricción única
+`(series_id, match_number)`. La localía v1 alterna determinísticamente:
+
+- partido impar: Team1 local, Team2 visitante;
+- partido par: Team2 local, Team1 visitante.
+
+Los partidos incrementales nacen `PENDING`, sin fecha ni sede. Al alcanzar
+`winsRequired`, se persiste `winner_team_entry_id`, el perdedor se deriva del
+otro participante y se propagan todas las fuentes `SERIES_WINNER` y
+`SERIES_LOSER`. Un destino con un solo lado permanece `PENDING`; con ambos pasa
+a `READY` y recibe exactamente su primer partido.
+
+El procesamiento es transaccional, idempotente y serializado por Competition.
+Esto protege tanto dos reintentos del mismo partido como semifinales concurrentes
+que escriben lados diferentes de Final/Tercer Puesto. No se sobrescriben lados
+ocupados y los conflictos de participantes o partidos se reportan mediante
+códigos de Application estables `playoff_series_*`.
+
+Cuando todas las series obligatorias de una fase playoff están `FINISHED`, la
+fase pasa automáticamente a `FINISHED`. La Competition no se finaliza: continúa
+requiriendo el futuro `CompleteCompetition`. Series o partidos `CANCELLED` no
+producen ganador ni progresión automática.
+
 # 13. Final y tercer puesto
 
 Semifinal, Final y Tercer Puesto se modelan siempre como `PLAYOFF_SERIES`.
@@ -1039,33 +1080,135 @@ Las `FORMAT_MOVEMENT_RULE` pueden producir un resultado calculado de promoción/
 DTOs conceptuales:
 
 ```csharp
+public sealed record MatchProgressDto(
+    int Total,
+    int Pending,
+    int InProgress,
+    int Finished,
+    int Cancelled
+);
+
 public sealed record CompetitionPhaseProgressDto(
     int PhaseId,
+    string Code,
     string PhaseName,
+    short Sequence,
+    PhaseType PhaseType,
     CompetitionPhaseStatus Status,
-    int FinishedMatches,
-    int TotalMatches
+    MatchProgressDto Matches,
+    IReadOnlyList<CompetitionGroupProgressDto> Groups,
+    IReadOnlyList<PlayoffSeriesProgressDto> Series
+);
+
+public sealed record CompetitionGroupProgressDto(
+    int PhaseGroupId,
+    string Code,
+    string Name,
+    MatchProgressDto Matches
+);
+
+public sealed record PlayoffSeriesProgressDto(
+    int SeriesId,
+    string Code,
+    string Name,
+    PlayoffSeriesStatus Status,
+    TeamEntrySummaryDto? Team1,
+    TeamEntrySummaryDto? Team2,
+    short Team1InitialWins,
+    short Team2InitialWins,
+    int Team1RealWins,
+    int Team2RealWins,
+    int Team1Wins,
+    int Team2Wins,
+    short WinsRequired,
+    int? WinnerTeamEntryId,
+    MatchProgressDto Matches
 );
 
 public sealed record CompetitionProgressionDto(
     int CompetitionId,
+    string CompetitionName,
     CompetitionStatus Status,
+    MatchProgressDto Matches,
     IReadOnlyList<CompetitionPhaseProgressDto> Phases
 );
 
 public sealed record CompetitionCompletionPreviewDto(
     int CompetitionId,
+    string CompetitionName,
+    CompetitionStatus Status,
+    bool AlreadyCompleted,
     bool CanComplete,
-    IReadOnlyList<string> Blockers,
+    IReadOnlyList<CompetitionCompletionBlockerDto> Blockers,
     IReadOnlyList<MovementResultDto> Movements
+);
+
+public sealed record CompetitionCompletionBlockerDto(
+    string Code,
+    string Message,
+    int? PhaseId = null,
+    int? SeriesId = null,
+    int? MatchId = null,
+    int? MovementRuleId = null
+);
+
+public sealed record MovementResultDto(
+    int MovementRuleId,
+    MovementType MovementType,
+    MovementSourceDto Source,
+    int TeamEntryId,
+    int TeamId,
+    string TeamName,
+    int SourcePosition,
+    int? StandingPosition,
+    int SourceDivisionId,
+    string SourceDivisionName,
+    short SourceDivisionLevelOrder,
+    MovementResultStatus Status,
+    int? TargetDivisionId,
+    string? TargetDivisionName,
+    short? TargetDivisionLevelOrder,
+    short TargetLevelDelta,
+    MovementNotAppliedReason? NotAppliedReason
 );
 
 public sealed record CompetitionCompletionResultDto(
     int CompetitionId,
     CompetitionStatus Status,
+    bool AlreadyCompleted,
+    DateTimeOffset? CompletedAt,
     IReadOnlyList<MovementResultDto> Movements
 );
 ```
+
+`GET /progression` informa únicamente estado deportivo y contadores derivados.
+`Total` representa partidos materializados actualmente; `PENDING` incluye
+`PENDING/SCHEDULED` e `IN_PROGRESS` incluye `IN_PROGRESS/SUSPENDED`, de modo que
+siempre se cumple `Total = Pending + InProgress + Finished + Cancelled`.
+
+El preview devuelve blockers operativos con `200 OK`. Estados o configuraciones
+persistidas imposibles producen `409` con códigos `competition_completion_*`.
+El POST devuelve `409 competition_cannot_complete` y los blockers estructurados
+si el estado cambió o sigue incompleto.
+
+Los movimientos se calculan por equipo desde `FORMAT_MOVEMENT_RULE`:
+
+- `PHASE_POSITION` y `GROUP_POSITION`: posición absoluta de standings;
+- `SERIES_RESULT`: `1 = winner`, `2 = loser`;
+- `PHASE_LAST_N` y `GROUP_LAST_N`: posición relativa desde el final, conservando
+  además `StandingPosition` real.
+
+La Division destino debe tener exactamente
+`SourceDivision.LevelOrder + TargetLevelDelta` y el mismo género; no se saltan
+niveles. Si falta y `AppliesIfTargetExists=true`, el resultado queda
+`NOT_APPLICABLE`; en caso contrario aparece `movement_target_division_missing`.
+V1 no persiste movimientos ni crea futuras `TeamEntry`.
+
+El primer cierre cambia únicamente `Competition.Status` a `FINISHED` y persiste
+`CompletedAt = UtcNow`. Reintentos conservan el timestamp y devuelven
+`AlreadyCompleted=true`. Preview y POST comparten evaluador; el POST relee y
+serializa por Competition dentro de una transacción. `PATCH /status` nunca puede
+establecer `FINISHED`.
 
 # 16. Regeneración controlada de fixture
 

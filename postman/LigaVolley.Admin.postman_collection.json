@@ -182,7 +182,43 @@
       ]
     },
     {
-      "name": "06 - Casos de error",
+      "name": "06 - Competition Progression y Completion",
+      "description": "Use completionCompetitionId para una Competition IN_PROGRESS totalmente resuelta y blockedCompetitionId para una Competition con blockers.",
+      "item": [
+        {
+          "name": "Consultar progresión deportiva",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{completionCompetitionId}}/progression" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 y contadores consistentes', () => { pm.response.to.have.status(200); const body=pm.response.json(); pm.expect(body.matches.total).to.eql(body.matches.pending + body.matches.inProgress + body.matches.finished + body.matches.cancelled); });"] } }]
+        },
+        {
+          "name": "Preview de cierre exitoso",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{completionCompetitionId}}/completion-preview" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 y CanComplete true', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().canComplete).to.be.true; });"] } }]
+        },
+        {
+          "name": "Preview de cierre con blockers",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{blockedCompetitionId}}/completion-preview" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 y blockers', () => { pm.response.to.have.status(200); const body=pm.response.json(); pm.expect(body.canComplete).to.be.false; pm.expect(body.blockers).to.be.an('array').that.is.not.empty; });"] } }]
+        },
+        {
+          "name": "CompleteCompetition exitoso",
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/admin/competitions/{{completionCompetitionId}}/complete" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Finished con CompletedAt', () => { pm.response.to.have.status(200); const body=pm.response.json(); pm.expect(body.status).to.eql('Finished'); pm.expect(body.alreadyCompleted).to.be.false; pm.expect(body.completedAt).to.not.be.null; });"] } }]
+        },
+        {
+          "name": "CompleteCompetition repetido",
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/admin/competitions/{{completionCompetitionId}}/complete" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Cierre idempotente', () => { pm.response.to.have.status(200); const body=pm.response.json(); pm.expect(body.status).to.eql('Finished'); pm.expect(body.alreadyCompleted).to.be.true; });"] } }]
+        },
+        {
+          "name": "CompleteCompetition bloqueado",
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/admin/competitions/{{blockedCompetitionId}}/complete" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('409 con blockers estructurados', () => { pm.response.to.have.status(409); const body=pm.response.json(); pm.expect(body.code).to.eql('competition_cannot_complete'); pm.expect(body.blockers).to.be.an('array').that.is.not.empty; });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "07 - Casos de error",
       "item": [
         {
           "name": "Temporada duplicada devuelve 409",

@@ -14,6 +14,8 @@ using LigaVolley.Application.Matches;
 using LigaVolley.Application.Standings;
 using LigaVolley.Domain.Standings;
 using LigaVolley.Application.PhaseCompletion;
+using LigaVolley.Application.PlayoffProgression;
+using LigaVolley.Application.CompetitionProgression;
 using LigaVolley.Infrastructure;
 using LigaVolley.Infrastructure.Persistence.Seed;
 
@@ -48,6 +50,8 @@ builder.Services.AddScoped<MatchAdminService>();
 builder.Services.AddScoped<StandingsService>();
 builder.Services.AddSingleton<StandingsCalculator>();
 builder.Services.AddScoped<PhaseCompletionService>();
+builder.Services.AddScoped<PlayoffProgressionService>();
+builder.Services.AddScoped<CompetitionProgressionService>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -79,6 +83,7 @@ app.MapSeasonEndpoints();
 app.MapDivisionEndpoints();
 app.MapCompetitionFormatEndpoints();
 app.MapCompetitionEndpoints();
+app.MapCompetitionProgressionEndpoints();
 app.MapClubEndpoints();
 app.MapTeamEndpoints();
 app.MapVenueEndpoints();

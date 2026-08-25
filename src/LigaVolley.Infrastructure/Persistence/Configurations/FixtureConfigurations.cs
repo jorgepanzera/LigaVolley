@@ -38,6 +38,7 @@ internal sealed class MatchConfiguration : IEntityTypeConfiguration<Match>
         b.HasOne(x=>x.Venue).WithMany().HasForeignKey(x=>x.VenueId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_MATCH_VENUE");
         b.HasIndex(x=>new{x.CompetitionId,x.PhaseId,x.MatchNumber}).IsUnique().HasFilter("[phase_group_id] IS NULL AND [series_id] IS NULL").HasDatabaseName("UQ_MATCH_phase_scope_number");
         b.HasIndex(x=>new{x.CompetitionId,x.PhaseId,x.PhaseGroupId,x.MatchNumber}).IsUnique().HasFilter("[phase_group_id] IS NOT NULL").HasDatabaseName("UQ_MATCH_group_scope_number");
+        b.HasIndex(x=>new{x.SeriesId,x.MatchNumber}).IsUnique().HasFilter("[series_id] IS NOT NULL").HasDatabaseName("UQ_MATCH_series_number");
         b.HasIndex(x=>new{x.CompetitionId,x.MatchDate}).HasDatabaseName("IX_MATCH_competition_date"); b.HasIndex(x=>new{x.PhaseId,x.RoundNumber}).HasDatabaseName("IX_MATCH_phase_round");
         b.HasMany(x=>x.Sets).WithOne().HasForeignKey(x=>x.MatchId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_MATCH_SET_MATCH");
     }

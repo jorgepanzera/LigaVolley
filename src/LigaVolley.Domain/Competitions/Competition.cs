@@ -38,6 +38,7 @@ public sealed class Competition
     public DateOnly? StartDate { get; private set; }
     public DateOnly? EndDate { get; private set; }
     public CompetitionStatus Status { get; private set; }
+    public DateTimeOffset? CompletedAt { get; private set; }
     public List<CompetitionPhase> Phases { get; private set; } = [];
 
     public void Update(string name, CompetitionPeriodType periodType, DateOnly? startDate, DateOnly? endDate)
@@ -55,6 +56,8 @@ public sealed class Competition
 
     public void ChangeStatus(CompetitionStatus target)
     {
+        if (target == CompetitionStatus.Finished)
+            throw new DomainValidationException("Competition can only be set to Finished by CompleteCompetition.");
         if (target == Status) return;
         if (target == CompetitionStatus.Cancelled && Status is CompetitionStatus.Draft or CompetitionStatus.Scheduled)
         { Status = target; return; }
@@ -66,6 +69,22 @@ public sealed class Competition
         if (Status != CompetitionStatus.Draft)
             throw new DomainValidationException("Only a Draft competition can be scheduled after fixture generation.");
         Status = CompetitionStatus.Scheduled;
+    }
+    public void MarkInProgressAfterMatchStart()
+    {
+        if (Status == CompetitionStatus.InProgress) return;
+        if (Status != CompetitionStatus.Scheduled)
+            throw new DomainValidationException("Only a Scheduled competition can start with its first match.");
+        Status = CompetitionStatus.InProgress;
+    }
+
+    public void Complete(DateTimeOffset completedAt)
+    {
+        if (Status == CompetitionStatus.Finished) return;
+        if (Status != CompetitionStatus.InProgress)
+            throw new DomainValidationException("Only an InProgress competition can be completed.");
+        Status = CompetitionStatus.Finished;
+        CompletedAt = completedAt;
     }
 
     private void InstantiateStructure(CompetitionFormat format)
@@ -112,6 +131,12 @@ public sealed class CompetitionPhase
     public void Complete()
     {
         if (Status != CompetitionPhaseStatus.InProgress) throw new DomainValidationException("Only an in-progress phase can be completed.");
+        Status = CompetitionPhaseStatus.Finished;
+    }
+    public void FinishPlayoff()
+    {
+        if (PhaseType != PhaseType.Playoff) throw new DomainValidationException("Only a playoff phase can be finished by series progression.");
+        if (Status == CompetitionPhaseStatus.Cancelled) throw new DomainValidationException("A cancelled phase cannot finish automatically.");
         Status = CompetitionPhaseStatus.Finished;
     }
 }
@@ -174,6 +199,8 @@ public sealed class CompetitionPlayoffSeries
     public TeamEntry? Team1Entry { get; private set; }
     public int? Team2EntryId { get; private set; }
     public TeamEntry? Team2Entry { get; private set; }
+    public int? WinnerTeamEntryId { get; private set; }
+    public TeamEntry? WinnerTeamEntry { get; private set; }
     public PlayoffSeriesStatus Status { get; private set; } = PlayoffSeriesStatus.Pending;
     public List<CompetitionSeriesParticipantSource> ParticipantSources { get; private set; } = [];
     public void AssignParticipant(byte side, TeamEntry entry)
@@ -186,6 +213,23 @@ public sealed class CompetitionPlayoffSeries
         if (side == 1) { Team1Entry = entry; Team1EntryId = entry.TeamEntryId; }
         else { Team2Entry = entry; Team2EntryId = entry.TeamEntryId; }
         if (Team1EntryId.HasValue && Team2EntryId.HasValue && Status == PlayoffSeriesStatus.Pending) Status = PlayoffSeriesStatus.Ready;
+    }
+    public void MarkInProgress()
+    {
+        if (Status == PlayoffSeriesStatus.InProgress) return;
+        if (Status != PlayoffSeriesStatus.Ready) throw new DomainValidationException("Only a ready playoff series can start.");
+        Status = PlayoffSeriesStatus.InProgress;
+    }
+    public void Finish(TeamEntry winner)
+    {
+        if (Status == PlayoffSeriesStatus.Cancelled) throw new DomainValidationException("A cancelled playoff series cannot finish automatically.");
+        if (winner.TeamEntryId != Team1EntryId && winner.TeamEntryId != Team2EntryId)
+            throw new DomainValidationException("Series winner must be one of its participants.");
+        if (WinnerTeamEntryId.HasValue && WinnerTeamEntryId != winner.TeamEntryId)
+            throw new DomainValidationException("Series already has a different winner.");
+        WinnerTeamEntry = winner;
+        WinnerTeamEntryId = winner.TeamEntryId;
+        Status = PlayoffSeriesStatus.Finished;
     }
 }
 

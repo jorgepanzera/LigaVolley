@@ -117,7 +117,13 @@ public sealed class FormatPlayoffSeries
 {
     private FormatPlayoffSeries() { }
     public FormatPlayoffSeries(string code, string name, short sequence, short winsRequired, short team1InitialWins, short team2InitialWins)
-    { Code = code.Trim(); Name = name.Trim(); Sequence = sequence; WinsRequired = winsRequired; Team1InitialWins = team1InitialWins; Team2InitialWins = team2InitialWins; Active = true; }
+    {
+        if (sequence <= 0 || winsRequired <= 0 || team1InitialWins < 0 || team2InitialWins < 0 ||
+            team1InitialWins >= winsRequired || team2InitialWins >= winsRequired)
+            throw new DomainValidationException("Playoff series sequence and wins configuration is invalid.");
+        Code = code.Trim(); Name = name.Trim(); Sequence = sequence; WinsRequired = winsRequired;
+        Team1InitialWins = team1InitialWins; Team2InitialWins = team2InitialWins; Active = true;
+    }
     public int FormatSeriesId { get; private set; }
     public int CompetitionFormatId { get; private set; }
     public int FormatPhaseId { get; private set; }

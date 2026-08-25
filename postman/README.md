@@ -40,3 +40,9 @@ Los requests incluyen aserciones básicas de código HTTP, contratos de error y
 resultados relevantes. Las colecciones son una ayuda de exploración y smoke
 testing; los tests automatizados de integración siguen siendo la prueba de
 regresión principal.
+
+La carpeta **06 - Competition Progression y Completion** utiliza
+`completionCompetitionId` para una Competition `IN_PROGRESS` con todas sus
+fases/series resueltas y `blockedCompetitionId` para un escenario incompleto.
+Ejecutar el cierre exitoso antes del cierre repetido. Los movimientos son
+resultados derivados: los requests no crean inscripciones futuras.
