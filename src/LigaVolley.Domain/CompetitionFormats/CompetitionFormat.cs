@@ -184,6 +184,12 @@ public sealed class FormatScoringRule(byte winnerSets, byte loserSets, short win
     public byte LoserSets { get; private set; } = loserSets;
     public short WinnerTablePoints { get; private set; } = winnerTablePoints;
     public short LoserTablePoints { get; private set; } = loserTablePoints;
+
+    public void UpdateTablePoints(short winnerTablePoints, short loserTablePoints)
+    {
+        WinnerTablePoints = winnerTablePoints;
+        LoserTablePoints = loserTablePoints;
+    }
 }
 
 public sealed class FormatTiebreakRule(short sequence, TiebreakCriterion criterion, SortDirection sortDirection)
@@ -193,6 +199,13 @@ public sealed class FormatTiebreakRule(short sequence, TiebreakCriterion criteri
     public short Sequence { get; private set; } = sequence;
     public TiebreakCriterion Criterion { get; private set; } = criterion;
     public SortDirection SortDirection { get; private set; } = sortDirection;
+
+    public void UpdateConfiguration(short sequence, TiebreakCriterion criterion, SortDirection sortDirection)
+    {
+        Sequence = sequence;
+        Criterion = criterion;
+        SortDirection = sortDirection;
+    }
 }
 
 public sealed class FormatMovementRule

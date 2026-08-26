@@ -53,6 +53,8 @@ public sealed class Livosur2026Seeder(LigaVolleyDbContext db)
             .Include(x => x.Phases).ThenInclude(x => x.Groups)
             .Include(x => x.QualificationRules).ThenInclude(x => x.SourcePhase)
             .Include(x => x.QualificationRules).ThenInclude(x => x.TargetGroup)
+            .Include(x => x.ScoringRules)
+            .Include(x => x.TiebreakRules)
             .AsSplitQuery()
             .Where(x => x.Code == "ROUND_ROBIN" || x.Code == "SPLIT_STAGE")
             .ToDictionaryAsync(x => x.Code, ct);
@@ -69,6 +71,8 @@ public sealed class Livosur2026Seeder(LigaVolleyDbContext db)
             db.CompetitionFormats.Add(splitStage);
             formats.Add("SPLIT_STAGE", splitStage);
         }
+        EnsureStandingsRules(roundRobin);
+        EnsureStandingsRules(splitStage);
         await db.SaveChangesAsync(ct);
         Require(roundRobin.Active && roundRobin.MinTeams <= 6 && roundRobin.MaxTeams >= 8,
             "CompetitionFormat 'ROUND_ROBIN' must be active and support 6..8 teams.");
@@ -87,6 +91,69 @@ public sealed class Livosur2026Seeder(LigaVolleyDbContext db)
                 splitStage.QualificationRules.Any(x => x.SourcePhase == first && x.SelectionMode == QualificationSelectionMode.BottomHalf && x.TargetGroup == relegation),
             "CompetitionFormat 'SPLIT_STAGE' must route TOP_HALF to Championship and BOTTOM_HALF to Relegation.");
         return formats;
+    }
+
+    private void EnsureStandingsRules(CompetitionFormat format)
+    {
+        var scoringRules = new[]
+        {
+            (WinnerSets: (byte)3, LoserSets: (byte)0),
+            (WinnerSets: (byte)3, LoserSets: (byte)1),
+            (WinnerSets: (byte)3, LoserSets: (byte)2)
+        };
+
+        foreach (var duplicate in format.ScoringRules
+                     .GroupBy(x => (x.WinnerSets, x.LoserSets))
+                     .SelectMany(x => x.Skip(1))
+                     .ToArray())
+        {
+            format.ScoringRules.Remove(duplicate);
+            db.Remove(duplicate);
+        }
+
+        foreach (var rule in format.ScoringRules.Where(x => !scoringRules.Contains((x.WinnerSets, x.LoserSets))).ToArray())
+        {
+            format.ScoringRules.Remove(rule);
+            db.Remove(rule);
+        }
+        foreach (var definition in scoringRules)
+        {
+            var rule = format.ScoringRules.SingleOrDefault(x => x.WinnerSets == definition.WinnerSets && x.LoserSets == definition.LoserSets);
+            if (rule is null)
+                format.ScoringRules.Add(new FormatScoringRule(definition.WinnerSets, definition.LoserSets, 2, 1));
+            else
+                rule.UpdateTablePoints(2, 1);
+        }
+
+        var tiebreakRules = new[]
+        {
+            (Sequence: (short)1, Criterion: TiebreakCriterion.TablePoints),
+            (Sequence: (short)2, Criterion: TiebreakCriterion.MatchWins),
+            (Sequence: (short)3, Criterion: TiebreakCriterion.SetRatio),
+            (Sequence: (short)4, Criterion: TiebreakCriterion.PointRatio),
+            (Sequence: (short)5, Criterion: TiebreakCriterion.HeadToHead)
+        };
+        foreach (var duplicate in format.TiebreakRules
+                     .GroupBy(x => x.Sequence)
+                     .SelectMany(x => x.Skip(1))
+                     .ToArray())
+        {
+            format.TiebreakRules.Remove(duplicate);
+            db.Remove(duplicate);
+        }
+        foreach (var rule in format.TiebreakRules.Where(x => x.Sequence < 1 || x.Sequence > 5).ToArray())
+        {
+            format.TiebreakRules.Remove(rule);
+            db.Remove(rule);
+        }
+        foreach (var definition in tiebreakRules)
+        {
+            var rule = format.TiebreakRules.SingleOrDefault(x => x.Sequence == definition.Sequence);
+            if (rule is null)
+                format.TiebreakRules.Add(new FormatTiebreakRule(definition.Sequence, definition.Criterion, SortDirection.Desc));
+            else
+                rule.UpdateConfiguration(definition.Sequence, definition.Criterion, SortDirection.Desc);
+        }
     }
 
     private static CompetitionFormat CreateRoundRobinFormat()
