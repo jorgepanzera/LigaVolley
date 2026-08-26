@@ -43,6 +43,8 @@ Aplicación especializada en el partido en vivo. Debe concebirse como una consol
 
 Aplicación de consulta pública, sin funciones administrativas ni de scoring. Permitirá consultar información publicada de las competiciones, incluyendo como mínimo fixture, resultados, tablas de posiciones e información pública de partidos. Sus contratos y experiencia de usuario deben optimizarse para lectura y navegación pública.
 
+Public v1 usa React 18, TypeScript y Vite. Es anónimo, read-only y server-centric: no usa PWA, Dexie, IndexedDB deportivo ni MatchEngine local. Livescore consulta el último estado central mediante polling HTTP; SignalR/WebSocket queda diferido.
+
 ## API surfaces
 
 Las rutas se separan obligatoriamente por consumidor mediante estos prefijos:

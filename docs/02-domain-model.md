@@ -10,6 +10,10 @@ El modelo se divide conceptualmente en:
 4. partidos;
 5. acta electrónica y estado en vivo.
 
+## Proyección pública y frescura operacional
+
+`MATCH_SHEET.last_operational_update_at` conserva el instante generado por el servidor en que se persistió la última mutación deportiva observable. Se actualiza en la misma transacción de mutaciones online o eventos nuevos de sync, nunca por GET, polling, reintentos idempotentes, UUID conocidos o requests rechazados. Puede ser NULL para actas históricas hasta su próxima mutación. La cancha pública deriva los seis jugadores efectivos mediante el calculador canónico; sólo publica P1..P6, dorsal, display name e indicador de líbero.
+
 ## Entidades base ya consideradas
 
 Entre las entidades del dominio base se encuentran conceptos equivalentes a:

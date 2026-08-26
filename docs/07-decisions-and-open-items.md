@@ -2,6 +2,16 @@
 
 ## Decisiones cerradas
 
+- Public v1 usa React 18 + TypeScript + Vite y es anónimo, read-only y server-centric.
+- La publicación deriva exclusivamente de Competition.Status: SCHEDULED, IN_PROGRESS, FINISHED y CANCELLED son públicos; DRAFT no lo es y la regla es transitiva con 404.
+- El catálogo Public v1 comprende seasons, competitions, competition detail, fixture/resultados, standings, match detail y live.
+- Fixture y resultados están unificados y agrupados por fase/grupo/ronda/serie; playoffs usan bracket/series y no standings.
+- Public reutiliza standings y cancha efectiva canónicos; sólo publica dorsal, display name e indicador de líbero de P1..P6 efectivos.
+- Match Detail contiene contexto y resultado final; Live contiene el último estado operacional central.
+- `LastOperationalUpdateAt` es server-side y transaccional; Live agrega `ServerTime`.
+- Polling: 5 s IN_PROGRESS, 15 s SUSPENDED, refresh al recuperar visibilidad, backoff 5/10/20/30 s y stop en FINISHED. Umbrales visuales: 0..30 s vivo, 31..120 s actualizado, >120 s demorado.
+- SignalR/WebSocket, PWA, IndexedDB deportivo y MatchEngine Public quedan fuera de v1.
+
 - Backend único.
 - Base SQL Server única.
 - Arquitectura backend Modular Monolith.
@@ -191,11 +201,11 @@
 
 ## Pendientes que NO deben inventarse durante implementación
 
-1. Tecnología exacta de `LigaVolley.Admin` y `LigaVolley.Public`; para `LigaVolley.Scorer` ya están cerrados React + TypeScript + Vite, PWA y Dexie/IndexedDB.
+1. Tecnología exacta de `LigaVolley.Admin`; Public y Scorer ya están cerrados con React + TypeScript + Vite, con modelos operacionales distintos documentados.
 2. Proveedor y esquema de autenticación/autorización.
 3. Reglas finas de permisos.
 4. Catálogo completo de endpoints de módulos aún no diseñados.
-5. DTOs finales de People/Rosters/Match Officials/Scorer/Public.
+5. DTOs finales de People/Rosters/Match Officials/Scorer; Public Query v1 ya está cerrado.
 6. Algoritmo exacto de generación de fixtures para cada `FixtureMode`; el contrato y las reglas de progresión ya están cerrados, pero no debe inventarse el algoritmo interno.
 7. Alcance exacto de la regeneración cuando existan partidos programados pero todavía no iniciados y UX de confirmación de pérdida de fecha/sede.
 8. Reglas exactas adicionales para considerar una Competition preparada para pasar de `DRAFT` a `SCHEDULED`, además de rango de equipos y fixture inicial válido.

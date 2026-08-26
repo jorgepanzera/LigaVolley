@@ -460,3 +460,6 @@ Regla conservadora v1:
 - el frontend debe recibir una advertencia/preview cuando existan programaciones que se perderían.
 
 La programación (`fecha/hora/sede`) permanece conceptualmente separada de la generación de emparejamientos.
+# Proyección Public v1
+
+Public expone fases y grupos ordenados y series playoff con participantes resueltos o su fuente semántica (`SERIES_WINNER`/`SERIES_LOSER` y código de serie). Conserva `seriesWins = initialWins + realMatchWins`; la ventaja inicial nunca crea partidos ficticios. Playoffs se presentan como bracket/series, no como standings, y sólo aparecen partidos realmente materializados.

@@ -118,3 +118,6 @@ PrepareSet permite completar P1→P6 con avance automático, reemplazar una sele
 El tracking de sustituciones y líbero es opcional y estable por MatchSheet. Cada equipo decide por set si usa líbero, cuál y qué plazas lógicas cubre. El motor deriva el estado pre-saque y las entradas/salidas naturales; no hay botones primarios de entrada/salida. Una sustitución cambia al regular vigente de la plaza, por lo que el líbero lo cubre y posteriormente lo restaura.
 
 Timeout, CorrectLastPoint con reconstrucción, historial de consulta, revisión y CloseMatch explícito completan el recorrido. El cierre puede persistirse offline y la reentrada recupera primero los cinco stores IndexedDB; `navigator.storage.persist()` es una mejora progresiva, nunca un bloqueo.
+# Consumo Public Live v1
+
+`GET /api/public/matches/{id}/live` lee exclusivamente el último estado operacional central persistido y reutiliza la derivación canónica de cancha. `LastUpdatedAt` proviene de `MATCH_SHEET.last_operational_update_at` y `ServerTime` del servidor que responde. PENDING, SCHEDULED y CANCELLED no tienen live; IN_PROGRESS, SUSPENDED y FINISHED sí. Public no simula pendientes locales ni ejecuta MatchEngine.

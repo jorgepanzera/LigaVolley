@@ -1332,3 +1332,14 @@ CompleteCompetition
         ↓
 Competition FINISHED
 ```
+# Public Query API v1
+
+- `GET /api/public/seasons`
+- `GET /api/public/competitions`
+- `GET /api/public/competitions/{competitionId}`
+- `GET /api/public/competitions/{competitionId}/fixture`
+- `GET /api/public/competitions/{competitionId}/standings`
+- `GET /api/public/matches/{matchId}`
+- `GET /api/public/matches/{matchId}/live`
+
+La superficie es GET, anónima y read-only. Publicables: SCHEDULED, IN_PROGRESS, FINISHED y CANCELLED; DRAFT y sus recursos transitivos responden 404. Fixture agrupa fase → ronda, fase → grupo → ronda o playoff → serie → partidos. Standings devuelve tablas independientes calculadas por el servicio canónico. Match Detail separa contexto/resultado de Live, que expone marcador operacional, sets, saque, cancha P1..P6, `LastUpdatedAt` y `ServerTime`. Los códigos estables incluyen `public_competition_not_found`, `public_match_not_found`, `public_live_match_not_available`, `public_live_state_inconsistent`, `public_invalid_standings_scope` y `public_standings_inconsistent`.

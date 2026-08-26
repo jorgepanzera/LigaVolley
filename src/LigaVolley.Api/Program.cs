@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using LigaVolley.Api.Endpoints.Admin;
 using LigaVolley.Api.Endpoints.Scorer;
+using LigaVolley.Api.Endpoints.Public;
 using LigaVolley.Api.ErrorHandling;
 using LigaVolley.Application.Divisions;
 using LigaVolley.Application.Seasons;
@@ -21,6 +22,7 @@ using LigaVolley.Application.People;
 using LigaVolley.Application.CompetitionRosters;
 using LigaVolley.Application.MatchOfficials;
 using LigaVolley.Application.MatchSheets;
+using LigaVolley.Application.PublicQueries;
 using LigaVolley.Infrastructure;
 using LigaVolley.Infrastructure.Persistence.Seed;
 
@@ -63,6 +65,7 @@ builder.Services.AddScoped<MatchOfficialService>();
 builder.Services.AddScoped<MatchSheetService>();
 builder.Services.AddScoped<MatchEngineService>();
 builder.Services.AddScoped<OfflineSyncService>();
+builder.Services.AddScoped<PublicQueryService>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -110,6 +113,7 @@ app.MapScorerMatchOfficialEndpoints();
 app.MapScorerMatchSheetEndpoints();
 app.MapScorerMatchEngineEndpoints();
 app.MapScorerOfflineSyncEndpoints();
+app.MapPublicQueryEndpoints();
 
 app.Run();
 

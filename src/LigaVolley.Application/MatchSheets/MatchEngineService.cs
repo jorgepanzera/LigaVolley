@@ -15,7 +15,7 @@ public sealed class MatchEngineService(IMatchSheetRepository sheets, IUnitOfWork
         if (active is not null) return Result(true, sheet, active);
         if (sheet.HomeSets == 3 || sheet.AwaySets == 3) throw Conflict("match_already_decided", "The match is already decided.");
         if (sheet.Status == MatchSheetStatus.Open && sheet.Match.Status != MatchStatus.Scheduled || sheet.Status == MatchSheetStatus.InProgress && sheet.Match.Status != MatchStatus.InProgress) throw Conflict("match_sheet_invalid_state", "Match and MatchSheet states are inconsistent.");
-        try { var set = sheet.PrepareSet(); await unit.SaveChangesAsync(ct); return Result(false, sheet, set); } catch (DomainValidationException ex) { throw Conflict("maximum_sets_reached", ex.Message); }
+        try { var set = sheet.PrepareSet(); sheet.TouchOperationalState(DateTimeOffset.UtcNow); await unit.SaveChangesAsync(ct); return Result(false, sheet, set); } catch (DomainValidationException ex) { throw Conflict("maximum_sets_reached", ex.Message); }
     }, ct);
 
     public Task<MatchEngineCommandResult> SaveLineupAsync(int matchId, byte setNumber, MatchSide side, SetLineupRequest request, CancellationToken ct) => Mutate(matchId, async sheet =>
@@ -25,7 +25,7 @@ public sealed class MatchEngineService(IMatchSheetRepository sheets, IUnitOfWork
         var team = Team(sheet, side); var players = new List<MatchPlayer>();
         foreach (var id in ids) { var p = team.Players.SingleOrDefault(x => x.MatchPlayerId == id); if (p is null) throw Invalid("lineup_player_wrong_team", $"MatchPlayer '{id}' does not belong to {side}."); if (p.Status != MatchPlayerStatus.Available) throw Invalid("lineup_invalid", "Every lineup player must be available."); if (team.Liberos.Any(x => x.MatchPlayerId == id)) throw Invalid("lineup_libero_not_allowed", "A declared libero cannot be in P1..P6."); players.Add(p); }
         var lineup = set.Lineups.SingleOrDefault(x => x.MatchTeamId == team.MatchTeamId); if (lineup is null) { lineup = new MatchLineup(set, team); set.Lineups.Add(lineup); }
-        lineup.Replace(players); ConfigureLiberoPlan(sheet, set, team, request, ids); await unit.SaveChangesAsync(ct); return Result(false, sheet, set);
+        lineup.Replace(players); ConfigureLiberoPlan(sheet, set, team, request, ids); sheet.TouchOperationalState(DateTimeOffset.UtcNow); await unit.SaveChangesAsync(ct); return Result(false, sheet, set);
     }, ct);
 
     public Task<MatchEngineCommandResult> StartSetAsync(int matchId, byte setNumber, StartSetRequest request, CancellationToken ct) => Mutate(matchId, async sheet =>
@@ -33,7 +33,7 @@ public sealed class MatchEngineService(IMatchSheetRepository sheets, IUnitOfWork
         var set = Set(sheet, setNumber); if (set.Status == MatchSetStatus.InProgress) return Result(true, sheet, set); if (set.Status != MatchSetStatus.Ready) throw Conflict("match_set_invalid_state", "Only a Ready set can start.");
         if (set.Lineups.Count != 2 || set.Lineups.Any(x => x.Positions.Count != 6)) throw Conflict("lineup_incomplete", $"Both complete lineups are required (lineups={set.Lineups.Count}, positions={string.Join(',', set.Lineups.Select(x => x.Positions.Count))}).");
         if (sheet.Sets.Any(x => x != set && x.Status == MatchSetStatus.InProgress)) throw Conflict("match_set_already_active", "Another set is in progress.");
-        var now = DateTimeOffset.UtcNow; set.Start(request.InitialServingSide, now); ReconcileAutomaticLiberos(sheet, set, now);
+        var now = DateTimeOffset.UtcNow; set.Start(request.InitialServingSide, now); ReconcileAutomaticLiberos(sheet, set, now); sheet.TouchOperationalState(now);
         if (setNumber == 1) { sheet.StartFirstSet(now); sheet.Match.Start(); sheet.Match.Competition.MarkInProgressAfterMatchStart(); }
         await unit.SaveChangesAsync(ct); return Result(false, sheet, set);
     }, ct);

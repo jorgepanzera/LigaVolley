@@ -316,6 +316,22 @@
       ]
     },
     {
+      "name": "12 - Public Query",
+      "description": "Catálogo público anónimo, fixture/resultados, standings, detalle y estado central live.",
+      "item": [
+        {"name":"01 - Public Seasons","request":{"method":"GET","url":"{{baseUrl}}/api/public/seasons"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200 seasons',()=>pm.response.to.have.status(200));"]}}]},
+        {"name":"02 - Public Competitions","request":{"method":"GET","url":"{{baseUrl}}/api/public/competitions?seasonId={{seasonId}}"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('only public statuses',()=>{pm.response.to.have.status(200);pm.response.json().forEach(x=>pm.expect(x.status).not.eql('DRAFT'));});"]}}]},
+        {"name":"03 - Competition Detail","request":{"method":"GET","url":"{{baseUrl}}/api/public/competitions/{{competitionId}}"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('public structure',()=>pm.response.to.have.status(200));"]}}]},
+        {"name":"04 - Fixture and Results","request":{"method":"GET","url":"{{baseUrl}}/api/public/competitions/{{competitionId}}/fixture"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('grouped fixture',()=>pm.response.to.have.status(200));"]}}]},
+        {"name":"05 - Standings","request":{"method":"GET","url":"{{baseUrl}}/api/public/competitions/{{competitionId}}/standings"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('canonical tables',()=>pm.response.to.have.status(200));"]}}]},
+        {"name":"06 - Match Detail","request":{"method":"GET","url":"{{baseUrl}}/api/public/matches/{{matchId}}"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('match detail',()=>pm.response.to.have.status(200));"]}}]},
+        {"name":"07 - Live IN_PROGRESS","request":{"method":"GET","url":"{{baseUrl}}/api/public/matches/{{matchId}}/live"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('central live state',()=>{pm.response.to.have.status(200);const x=pm.response.json();pm.expect(x.serverTime).to.exist;pm.expect(x.lastUpdatedAt).to.exist;});"]}}]},
+        {"name":"08 - Live FINISHED","request":{"method":"GET","url":"{{baseUrl}}/api/public/matches/{{finishedMatchId}}/live"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('finished remains available',()=>{pm.response.to.have.status(200);pm.expect(pm.response.json().status).to.eql('FINISHED');});"]}}]},
+        {"name":"09 - DRAFT Not Publishable","request":{"method":"GET","url":"{{baseUrl}}/api/public/competitions/{{draftCompetitionId}}"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('404 hidden',()=>{pm.response.to.have.status(404);pm.expect(pm.response.json().code).to.eql('public_competition_not_found');});"]}}]},
+        {"name":"10 - Live Not Available","request":{"method":"GET","url":"{{baseUrl}}/api/public/matches/{{scheduledMatchId}}/live"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('404 unavailable',()=>{pm.response.to.have.status(404);pm.expect(pm.response.json().code).to.eql('public_live_match_not_available');});"]}}]}
+      ]
+    },
+    {
       "name": "08 - Casos de error",
       "item": [
         {
