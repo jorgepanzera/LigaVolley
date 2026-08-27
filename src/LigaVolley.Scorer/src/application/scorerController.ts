@@ -119,6 +119,7 @@ export class ScorerController {
   }
   saveLineup(side: Side, players: number[], plan: LiberoPlan) {
     const payload: Record<string, unknown> = {
+      setNumber: this.view.state?.currentSetNumber,
       side,
       liberoMatchPlayerId: plan.enabled ? plan.liberoMatchPlayerId : null,
       liberoLogicalPositions: plan.enabled ? plan.logicalPositions : [],

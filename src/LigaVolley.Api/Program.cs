@@ -29,7 +29,8 @@ using LigaVolley.Infrastructure.Persistence.Seed;
 var builder = WebApplication.CreateBuilder(args);
 
 var runLivosurSeed = args.Contains("--seed-livosur-2026", StringComparer.OrdinalIgnoreCase);
-if (runLivosurSeed)
+var runDemoMatchSeed = args.Contains("--seed-demo-match", StringComparer.OrdinalIgnoreCase);
+if (builder.Environment.IsDevelopment() || runLivosurSeed || runDemoMatchSeed)
 {
     builder.Logging.ClearProviders();
     builder.Logging.AddConsole();
@@ -69,6 +70,25 @@ builder.Services.AddScoped<PublicQueryService>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
+
+if (runLivosurSeed && runDemoMatchSeed)
+    throw new InvalidOperationException("Choose either --seed-livosur-2026 or --seed-demo-match.");
+
+if (runDemoMatchSeed)
+{
+    if (!app.Environment.IsDevelopment())
+        throw new InvalidOperationException("The demo Match seed can only run in the Development environment.");
+
+    await using var scope = app.Services.CreateAsyncScope();
+    var result = await scope.ServiceProvider.GetRequiredService<DemoMatchSeeder>().SeedAsync();
+    app.Logger.LogInformation(
+        "Demo Match ready. CompetitionId={CompetitionId} ({CompetitionName}); MatchId={MatchId}; HOME={Home}; AWAY={Away}; Venue={Venue}",
+        result.CompetitionId, result.CompetitionName, result.MatchId, result.HomeTeam, result.AwayTeam, result.Venue);
+    app.Logger.LogInformation("Scorer: {ScorerPath}", result.ScorerPath);
+    app.Logger.LogInformation("Public Competition: {PublicCompetitionPath}", result.PublicCompetitionPath);
+    app.Logger.LogInformation("Public Match: {PublicMatchPath}", result.PublicMatchPath);
+    return;
+}
 
 if (runLivosurSeed)
 {

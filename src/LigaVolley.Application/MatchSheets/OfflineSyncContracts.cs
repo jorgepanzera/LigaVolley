@@ -1,6 +1,9 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 namespace LigaVolley.Application.MatchSheets;
+[JsonConverter(typeof(UpperSnakeCaseEnumConverter<ScorerSyncEventType>))]
 public enum ScorerSyncEventType{PrepareSet,SetLineup,StartSet,Point,CorrectLastPoint,Substitution,LiberoEnter,LiberoExit,Timeout,MatchClose}
+[JsonConverter(typeof(UpperSnakeCaseEnumConverter<ScorerSyncResultStatus>))]
 public enum ScorerSyncResultStatus{Applied,AlreadyAccepted}
 public sealed record ScorerSyncEvent(Guid EventUuid,long Sequence,ScorerSyncEventType Type,DateTimeOffset OccurredAt,JsonElement Payload);
 public sealed record SyncMatchSheetRequest(Guid SheetUuid,Guid SessionUuid,string DeviceId,IReadOnlyList<ScorerSyncEvent> Events);
@@ -16,3 +19,23 @@ internal sealed record SyncSubstitutionPayload(byte SetNumber,int PlayerOutMatch
 internal sealed record SyncLiberoEnterPayload(byte SetNumber,int LiberoMatchPlayerId,int ReplacedMatchPlayerId);
 internal sealed record SyncLiberoExitPayload(byte SetNumber,int LiberoMatchPlayerId);
 internal sealed record SyncTimeoutPayload(byte SetNumber,Domain.MatchSheets.MatchSide Side);
+
+public sealed class UpperSnakeCaseEnumConverter<TEnum> : JsonConverter<TEnum> where TEnum : struct, Enum
+{
+    public override TEnum Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var value = reader.GetString() ?? throw new JsonException($"A string is required for {typeof(TEnum).Name}.");
+        var normalized = value.Replace("_", string.Empty, StringComparison.Ordinal);
+        foreach (var candidate in Enum.GetValues<TEnum>())
+            if (string.Equals(candidate.ToString(), normalized, StringComparison.OrdinalIgnoreCase))
+                return candidate;
+        throw new JsonException($"'{value}' is not a valid {typeof(TEnum).Name}.");
+    }
+
+    public override void Write(Utf8JsonWriter writer, TEnum value, JsonSerializerOptions options)
+    {
+        var name = value.ToString();
+        writer.WriteStringValue(string.Concat(name.Select((c, index) =>
+            index > 0 && char.IsUpper(c) ? "_" + c : c.ToString())).ToUpperInvariant());
+    }
+}

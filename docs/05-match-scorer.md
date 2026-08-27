@@ -121,3 +121,7 @@ Timeout, CorrectLastPoint con reconstrucción, historial de consulta, revisión 
 # Consumo Public Live v1
 
 `GET /api/public/matches/{id}/live` lee exclusivamente el último estado operacional central persistido y reutiliza la derivación canónica de cancha. `LastUpdatedAt` proviene de `MATCH_SHEET.last_operational_update_at` y `ServerTime` del servidor que responde. PENDING, SCHEDULED y CANCELLED no tienen live; IN_PROGRESS, SUSPENDED y FINISHED sí. Public no simula pendientes locales ni ejecuta MatchEngine.
+
+## Escenario demo LIVOSUR 2026
+
+En Development, `dotnet run --project src/LigaVolley.Api -- --seed-demo-match` crea o reutiliza un escenario explícito inmediatamente anterior a `OpenMatchSheet`. Selecciona una Competition LIVOSUR `ROUND_ROBIN` de 7/8 equipos, genera fixture mediante el caso de uso existente si falta, programa un Match con Venue, crea dos rosters ACTIVE de ocho jugadores (un líbero) y un coach, y asigna los tres oficiales. Los perfiles se identifican mediante documentos `DEMO/LV-DEMO-*`; reintentar no duplica datos. El comando no abre acta ni inicia Competition/Match y muestra los IDs y rutas directas de Scorer/Public.

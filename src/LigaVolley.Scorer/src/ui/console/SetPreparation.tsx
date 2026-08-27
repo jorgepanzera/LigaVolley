@@ -43,6 +43,12 @@ export function SetPreparation({
     new Set(drafts.HOME).size === 6 &&
     new Set(drafts.AWAY).size === 6;
   const persistedComplete = set.lineups.HOME.length === 6 && set.lineups.AWAY.length === 6;
+  const missingDrafts = (['HOME', 'AWAY'] as Side[]).filter(
+    (side) => drafts[side].length !== 6 || new Set(drafts[side]).size !== 6,
+  );
+  const missingSaved = (['HOME', 'AWAY'] as Side[]).filter(
+    (side) => set.lineups[side].length !== 6,
+  );
   return (
     <section className="preparation">
       <header>
@@ -116,8 +122,12 @@ export function SetPreparation({
           </article>
         ))}
       </div>
-      {complete && (
-        <footer>
+      <footer>
+        {!complete ? (
+          <p>Completa seis jugadores distintos para: {missingDrafts.join(' y ')}.</p>
+        ) : !persistedComplete ? (
+          <p>Guarda la alineación de: {missingSaved.join(' y ')}.</p>
+        ) : null}
           <h3>¿Quién comienza sacando?</h3>
           <div>
             <button
@@ -135,13 +145,12 @@ export function SetPreparation({
           </div>
           <button
             className="start-set"
-            disabled={!serving || !persistedComplete}
+            disabled={!serving || !complete || !persistedComplete}
             onClick={() => serving && void onStart(serving)}
           >
             Iniciar Set {set.setNumber}
           </button>
-        </footer>
-      )}
+      </footer>
     </section>
   );
 }

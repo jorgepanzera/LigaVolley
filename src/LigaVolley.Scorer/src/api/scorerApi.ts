@@ -1,4 +1,35 @@
 import type { LocalEvent, ServerSheetSnapshot } from '../domain/types';
+
+const syncEventTypes = {
+  PREPARE_SET: 'PrepareSet',
+  SET_LINEUP: 'SetLineup',
+  START_SET: 'StartSet',
+  POINT: 'Point',
+  CORRECT_LAST_POINT: 'CorrectLastPoint',
+  SUBSTITUTION: 'Substitution',
+  LIBERO_ENTER: 'LiberoEnter',
+  LIBERO_EXIT: 'LiberoExit',
+  TIMEOUT: 'Timeout',
+  MATCH_CLOSE: 'MatchClose',
+} as const satisfies Record<LocalEvent['type'], string>;
+
+function serializeEvents(events: LocalEvent[]) {
+  let preparedSetNumber = 0;
+  return events.map(({ eventUuid, sequence, type, occurredAt, payload }) => {
+    if (type === 'PREPARE_SET') preparedSetNumber += 1;
+    const requiresSetNumber = !['PREPARE_SET', 'MATCH_CLOSE'].includes(type);
+    return {
+      eventUuid,
+      sequence,
+      type: syncEventTypes[type],
+      occurredAt,
+      payload:
+        requiresSetNumber && payload.setNumber == null
+          ? { ...payload, setNumber: preparedSetNumber }
+          : payload,
+    };
+  });
+}
 export class ApiProblem extends Error {
   constructor(
     public status: number,
@@ -42,13 +73,7 @@ export const scorerApi = {
       method: 'POST',
       body: JSON.stringify({
         ...body,
-        events: body.events.map(({ eventUuid, sequence, type, occurredAt, payload }) => ({
-          eventUuid,
-          sequence,
-          type,
-          occurredAt,
-          payload,
-        })),
+        events: serializeEvents(body.events),
       }),
     }),
   takeOver: (

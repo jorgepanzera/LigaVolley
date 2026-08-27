@@ -209,6 +209,8 @@ LigaVolley.Scorer PWA Core v1 está cerrado: React + TypeScript + Vite, Service 
 
 Electronic Scoresheet Match Engine v1 está cerrado: Match best-of-5, primero a tres sets; sets 1..4 a 25 y set 5 a 15, siempre diferencia mínima de dos. Los sets se preparan secuencialmente, las lineups P1..P6 sólo se editan en READY, el saque/servidor/rotación son derivados y Point finaliza el set automáticamente. CorrectLastPoint sólo cancela el último evento deportivo efectivo y reconstruye el estado. Sustituciones y reemplazos de líbero son seguimientos configurables por MatchSheet; timeouts son obligatorios y máximo dos por equipo/set. El tercer set ganado decide el resultado pero sólo CloseMatch deja MatchSheet CLOSED y Match FINISHED y dispara la progresión existente. CLOSED es definitivo. Offline/sync no pertenece a este slice.
 
+Demo Match Seed está disponible sólo en Development mediante `--seed-demo-match`: reutiliza LIVOSUR 2026, fixture/scheduling existentes, deja un Match SCHEDULED con rosters ACTIVE y tres oficiales, y nunca abre MatchSheet ni inicia el partido. Sus datos se identifican con documentos `DEMO/LV-DEMO-*` y el proceso es idempotente.
+
 En orden de prioridad:
 
 1. decisiones explícitas más recientes del proyecto;

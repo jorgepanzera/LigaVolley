@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IPublicQueryRepository, PublicQueryRepository>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<LigaVolleyDbContext>());
         services.AddScoped<Livosur2026Seeder>();
+        services.AddScoped<DemoMatchSeeder>();
         return services;
     }
 }
