@@ -1,0 +1,7 @@
+export type Status='Draft'|'Scheduled'|'InProgress'|'Finished'|'Cancelled';
+export type Competition={competitionId:number;name:string;season:{seasonId:number;year:number;name:string};division:{divisionId:number;name:string;gender:string};format:{competitionFormatId:number;name:string;minTeams:number;maxTeams:number};periodType:string;startDate?:string;endDate?:string;status:Status;scheduledAt?:string;completedAt?:string};
+export type CompetitionSummary={competitionId:number;name:string;seasonYear:number;divisionName:string;gender:string;formatName:string;periodType:string;status:Status};
+export type SchedulePreview={competitionId:number;status:Status;canSchedule:boolean;activeTeamEntries:number;minTeams:number;maxTeams:number;initialMatches:number;scheduledMatches:number;unscheduledMatches:number;blockers:{code:string;message:string;teamEntryIds?:number[];matchIds?:number[]}[]};
+export type Entry={teamEntryId:number;teamId:number;teamName:string;seed?:number;status:'Registered'|'Active'|'Withdrawn'|'Disqualified'};
+export type Match={matchId:number;roundNumber:number;matchNumber:number;homeTeam:{teamEntryId:number;teamName:string;status:string};awayTeam:{teamEntryId:number;teamName:string;status:string};matchDate?:string;venueId?:number;status:string};
+export type Fixture={competitionId:number;phases:{phaseId:number;code:string;name:string;phaseType:string;matches:Match[];groups:{phaseGroupId:number;name:string;matches:Match[]}[];series:{playoffSeriesId:number;name:string;matches:Match[]}[]}[]};

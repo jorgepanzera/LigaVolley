@@ -6,6 +6,12 @@ LigaVolley tendrá un único backend y una única base de datos SQL Server. Tend
 
 ## Backend
 
+## Admin v1
+
+`LigaVolley.Admin` usa React 18, TypeScript, Vite, React Router, TanStack Query, React Hook Form y Zod para validación superficial. Es server-centric, consume exclusivamente `/api/admin` y no incorpora PWA, Service Worker, IndexedDB, offline ni MatchEngine local. Competition Workspace agrupa Resumen, Participantes, Fixture y Progresión.
+
+## Backend
+
 Se adopta un **Modular Monolith**. El objetivo es separar claramente módulos y responsabilidades sin asumir el coste operacional y transaccional de microservicios.
 
 Proyectos base:

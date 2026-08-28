@@ -77,7 +77,7 @@ public sealed class CompetitionService(
         new SeasonSummaryDto(x.Season.SeasonId, x.Season.Year, x.Season.Name, x.Season.Active),
         new DivisionSummaryDto(x.Division.DivisionId, x.Division.Name, x.Division.LevelOrder, x.Division.Gender, x.Division.Active),
         new CompetitionFormatSummaryDto(x.CompetitionFormat.CompetitionFormatId, x.CompetitionFormat.Code, x.CompetitionFormat.Name, x.CompetitionFormat.MinTeams, x.CompetitionFormat.MaxTeams, x.CompetitionFormat.Active),
-        x.PeriodType, x.StartDate, x.EndDate, x.Status);
+        x.PeriodType, x.StartDate, x.EndDate, x.Status, x.ScheduledAt, x.CompletedAt);
 
     private static CompetitionSummaryDto ToSummary(Competition x) => new(x.CompetitionId, x.Name, x.Season.Year, x.Division.Name, x.Division.Gender, x.CompetitionFormat.Name, x.PeriodType, x.Status);
 

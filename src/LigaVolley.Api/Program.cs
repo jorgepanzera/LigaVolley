@@ -49,6 +49,7 @@ builder.Services.AddScoped<SeasonService>();
 builder.Services.AddScoped<DivisionService>();
 builder.Services.AddScoped<CompetitionFormatService>();
 builder.Services.AddScoped<CompetitionService>();
+builder.Services.AddScoped<CompetitionSchedulingService>();
 builder.Services.AddScoped<ClubService>();
 builder.Services.AddScoped<TeamService>();
 builder.Services.AddScoped<VenueService>();

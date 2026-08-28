@@ -2,6 +2,17 @@
 
 ## Decisiones cerradas
 
+## Admin + Competition Scheduling v1
+
+- Admin usa React 18 + TypeScript + Vite, React Router, TanStack Query, React Hook Form, Zod superficial y fetch centralizado; es server-centric y no offline/PWA.
+- Competition Workspace usa Resumen, Participantes, Fixture y Progresión.
+- DRAFT → SCHEDULED usa preview y `ScheduleCompetition`, nunca PATCH status ni generación automática de fixture.
+- Sólo TeamEntry ACTIVE cuenta; el fixture inicial coincide exactamente con ACTIVE y las fases futuras incrementales no bloquean.
+- Fecha/sede, rosters y oficiales no bloquean readiness.
+- `scheduled_at` registra la transición y el retry lo conserva.
+- Desde SCHEDULED el cuadro inicial queda congelado; MatchDate/Venue continúa editable.
+- Permanecen pendientes Security, CRUD completo Clubs/Teams/Venues, CompetitionFormat Editor, UI People/Rosters/Officials/MatchSheet y la semántica operativa de WITHDRAWN/DISQUALIFIED.
+
 - Public v1 usa React 18 + TypeScript + Vite y es anónimo, read-only y server-centric.
 - La publicación deriva exclusivamente de Competition.Status: SCHEDULED, IN_PROGRESS, FINISHED y CANCELLED son públicos; DRAFT no lo es y la regla es transitiva con 404.
 - El catálogo Public v1 comprende seasons, competitions, competition detail, fixture/resultados, standings, match detail y live.
@@ -201,25 +212,23 @@
 
 ## Pendientes que NO deben inventarse durante implementación
 
-1. Tecnología exacta de `LigaVolley.Admin`; Public y Scorer ya están cerrados con React + TypeScript + Vite, con modelos operacionales distintos documentados.
-2. Proveedor y esquema de autenticación/autorización.
-3. Reglas finas de permisos.
-4. Catálogo completo de endpoints de módulos aún no diseñados.
-5. DTOs finales de People/Rosters/Match Officials/Scorer; Public Query v1 ya está cerrado.
-6. Algoritmo exacto de generación de fixtures para cada `FixtureMode`; el contrato y las reglas de progresión ya están cerrados, pero no debe inventarse el algoritmo interno.
-7. Alcance exacto de la regeneración cuando existan partidos programados pero todavía no iniciados y UX de confirmación de pérdida de fecha/sede.
-8. Reglas exactas adicionales para considerar una Competition preparada para pasar de `DRAFT` a `SCHEDULED`, además de rango de equipos y fixture inicial válido.
-9. Política de edición de metadatos de Competition según estado.
-10. Política exacta de eliminación/retiro de TeamEntry cuando ya existen partidos o fases dependientes.
-11. Consecuencia deportiva exacta de `MATCH`/serie `CANCELLED`, suspendida o no disputada.
-12. Semántica deportiva futura de `CarryOverMode.ALL` y `CarryOverMode.QUALIFIED_ONLY`; v1 sólo implementa `NONE`.
-13. Reglas funcionales finas de ascensos/descensos entre Apertura/Clausura o temporadas y creación futura de inscripciones.
-14. Evolución visual y ergonomía avanzada del Scorer; IndexedDB/PWA Core y el contrato backend de sincronización ya están cerrados.
-15. Correcciones históricas distintas de `CorrectLastPoint` y correcciones de sustitución, líbero o timeout.
-16. Reglas reglamentarias finas sobre uso/habilitación de uno o dos líberos.
-17. Reglas adicionales de publicación para planteles, personas, oficiales u otros datos públicos.
-18. Reglas reglamentarias adicionales que aún no se hayan validado explícitamente.
-19. Observabilidad, logging, tracing y despliegue.
+1. Proveedor y esquema de autenticación/autorización.
+2. Reglas finas de permisos.
+3. Catálogo completo de endpoints de módulos aún no diseñados.
+4. DTOs finales de People/Rosters/Match Officials/Scorer; Public Query v1 ya está cerrado.
+5. Algoritmo exacto de generación de fixtures para cada `FixtureMode`; el contrato y las reglas de progresión ya están cerrados, pero no debe inventarse el algoritmo interno.
+6. Alcance exacto de la regeneración cuando existan partidos programados pero todavía no iniciados y UX de confirmación de pérdida de fecha/sede.
+7. Política de edición de metadatos de Competition según estado.
+8. Política exacta de eliminación/retiro de TeamEntry cuando ya existen partidos o fases dependientes.
+9. Consecuencia deportiva exacta de `MATCH`/serie `CANCELLED`, suspendida o no disputada.
+10. Semántica deportiva futura de `CarryOverMode.ALL` y `CarryOverMode.QUALIFIED_ONLY`; v1 sólo implementa `NONE`.
+11. Reglas funcionales finas de ascensos/descensos entre Apertura/Clausura o temporadas y creación futura de inscripciones.
+12. Evolución visual y ergonomía avanzada del Scorer; IndexedDB/PWA Core y el contrato backend de sincronización ya están cerrados.
+13. Correcciones históricas distintas de `CorrectLastPoint` y correcciones de sustitución, líbero o timeout.
+14. Reglas reglamentarias finas sobre uso/habilitación de uno o dos líberos.
+15. Reglas adicionales de publicación para planteles, personas, oficiales u otros datos públicos.
+16. Reglas reglamentarias adicionales que aún no se hayan validado explícitamente.
+17. Observabilidad, logging, tracing y despliegue.
 
 ### PWA Core y sincronización cerrados
 

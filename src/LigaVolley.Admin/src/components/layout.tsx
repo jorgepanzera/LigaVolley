@@ -1,0 +1,5 @@
+import {NavLink,Outlet,useLocation} from 'react-router-dom';import type{ReactNode}from'react';
+const nav=[['Dashboard','/admin'],['Competiciones','/admin/competitions'],['Temporadas','/admin/seasons'],['Divisionales','/admin/divisions']];
+export function AdminShell(){return <div className="shell"><aside><h1>LigaVolley <span>Admin</span></h1><nav>{nav.map(([n,p])=><NavLink key={p} end={p==='/admin'} to={p}>{n}</NavLink>)}</nav><h3>Próximamente</h3><span className="disabled">Personas</span><span className="disabled">Equipos / Clubes</span><span className="disabled">Sedes</span><span className="disabled">Formatos</span></aside><main><Topbar/><Outlet/></main></div>}
+export function Topbar(){const l=useLocation();return <header className="topbar"><span>{l.pathname.split('/').filter(Boolean).join(' / ')}</span><span className="user-space">Usuario</span></header>}
+export function PageHeader({title,children}:{title:string;children?:ReactNode}){return <div className="page-header"><h2>{title}</h2>{children}</div>}

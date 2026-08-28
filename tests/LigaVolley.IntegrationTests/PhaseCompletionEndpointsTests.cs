@@ -14,6 +14,7 @@ using LigaVolley.Domain.CompetitionFormats;
 using LigaVolley.Domain.Competitions;
 using LigaVolley.Domain.Divisions;
 using LigaVolley.Domain.Fixtures;
+using LigaVolley.Domain.TeamEntries;
 using LigaVolley.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,8 +43,9 @@ public sealed class PhaseCompletionEndpointsTests:IClassFixture<LigaVolleyApiFac
         var definition=new CompetitionFormatDefinitionDto(phases,rules,[new(3,0,2,1),new(3,1,2,1),new(3,2,2,1)],[new(1,TiebreakCriterion.MatchWins,SortDirection.Desc),new(2,TiebreakCriterion.PointRatio,SortDirection.Desc)],[]);
         var format=await Create<CompetitionFormatDto>("/api/admin/competition-formats",new CreateCompetitionFormatRequest($"PC_{suffix}",$"Completion {suffix}",null,4,4,definition));
         var competition=await Create<CompetitionDto>("/api/admin/competitions",new CreateCompetitionRequest($"Completion {suffix}",season.SeasonId,division.DivisionId,CompetitionPeriodType.Annual,null,null,new(CompetitionStructureSourceType.Format,format.CompetitionFormatId,null)));
-        for(var i=1;i<=4;i++){var team=await Create<TeamDto>("/api/admin/teams",new CreateTeamRequest($"Completion {suffix} {i}",Gender.Female,null));await Create<TeamEntryDto>($"/api/admin/competitions/{competition.CompetitionId}/entries",new AddTeamEntryRequest(team.TeamId,(short)i));}
+        for(var i=1;i<=4;i++){var team=await Create<TeamDto>("/api/admin/teams",new CreateTeamRequest($"Completion {suffix} {i}",Gender.Female,null));var entry=await Create<TeamEntryDto>($"/api/admin/competitions/{competition.CompetitionId}/entries",new AddTeamEntryRequest(team.TeamId,(short)i));(await factory.Client.PatchAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/entries/{entry.TeamEntryId}/status",new ChangeTeamEntryStatusRequest(TeamEntryStatus.Active),Json)).EnsureSuccessStatusCode();}
         var generate=await factory.Client.PostAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/fixture/generate",new GenerateFixtureRequest(777));generate.EnsureSuccessStatusCode();
+        (await factory.Client.PostAsync($"/api/admin/competitions/{competition.CompetitionId}/schedule",null)).EnsureSuccessStatusCode();
         int sourcePhaseId;
         using(var scope=factory.Services.CreateScope())
         {

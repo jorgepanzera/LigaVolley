@@ -38,6 +38,7 @@ public sealed class Competition
     public DateOnly? StartDate { get; private set; }
     public DateOnly? EndDate { get; private set; }
     public CompetitionStatus Status { get; private set; }
+    public DateTimeOffset? ScheduledAt { get; private set; }
     public DateTimeOffset? CompletedAt { get; private set; }
     public List<CompetitionPhase> Phases { get; private set; } = [];
 
@@ -64,12 +65,16 @@ public sealed class Competition
         throw new DomainValidationException($"Transition from {Status} to {target} is not available without the fixture/progression use cases.");
     }
 
-    public void MarkScheduledAfterInitialFixture()
+    public void Schedule(DateTimeOffset scheduledAt)
     {
         if (Status != CompetitionStatus.Draft)
-            throw new DomainValidationException("Only a Draft competition can be scheduled after fixture generation.");
+            throw new DomainValidationException("Only a Draft competition can be scheduled.");
         Status = CompetitionStatus.Scheduled;
+        ScheduledAt = scheduledAt;
     }
+
+    // Legacy test/seed setup only; production scheduling is performed by CompetitionSchedulingService.
+    public void MarkScheduledAfterInitialFixture() => Schedule(DateTimeOffset.UtcNow);
     public void MarkInProgressAfterMatchStart()
     {
         if (Status == CompetitionStatus.InProgress) return;

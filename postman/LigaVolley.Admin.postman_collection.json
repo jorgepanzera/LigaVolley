@@ -345,6 +345,31 @@
           "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('404 ProblemDetails', () => { pm.response.to.have.status(404); pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'); });"] } }]
         }
       ]
+    },
+    {
+      "name": "Competition Scheduling",
+      "item": [
+        {
+          "name": "Schedule Preview",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/schedule-preview" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Preview 200', () => pm.response.to.have.status(200));", "const json = pm.response.json(); pm.expect(json).to.have.property('canSchedule'); pm.expect(json).to.have.property('blockers');"] } }]
+        },
+        {
+          "name": "Schedule Competition",
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/schedule" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Scheduled 200', () => pm.response.to.have.status(200));", "const json = pm.response.json(); pm.expect(json.status).to.eql('Scheduled'); pm.expect(json.scheduledAt).to.exist;"] } }]
+        },
+        {
+          "name": "Schedule Competition - Retry",
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/schedule" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Retry 200', () => pm.response.to.have.status(200));", "pm.expect(pm.response.json().alreadyScheduled).to.eql(true);"] } }]
+        },
+        {
+          "name": "Schedule Competition - Invalid State",
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/admin/competitions/{{invalidScheduleCompetitionId}}/schedule" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Invalid state 409', () => pm.response.to.have.status(409));", "pm.expect(pm.response.json().code).to.eql('competition_cannot_schedule');"] } }]
+        }
+      ]
     }
   ]
 }

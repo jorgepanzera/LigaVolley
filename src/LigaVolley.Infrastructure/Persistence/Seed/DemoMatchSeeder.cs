@@ -1,5 +1,6 @@
 using LigaVolley.Application.Fixtures;
 using LigaVolley.Application.Matches;
+using LigaVolley.Application.Competitions;
 using LigaVolley.Domain.CompetitionRosters;
 using LigaVolley.Domain.Competitions;
 using LigaVolley.Domain.Fixtures;
@@ -26,6 +27,7 @@ public sealed class DemoMatchSeeder(
     LigaVolleyDbContext db,
     Livosur2026Seeder livosur,
     FixtureService fixtures,
+    CompetitionSchedulingService scheduling,
     MatchAdminService matches)
 {
     private const string DemoDocumentType = "DEMO";
@@ -41,6 +43,8 @@ public sealed class DemoMatchSeeder(
             var competition = await SelectCompetitionAsync(ct);
             if (!await db.Matches.AnyAsync(x => x.CompetitionId == competition.CompetitionId, ct))
                 await fixtures.GenerateInitialAsync(competition.CompetitionId, new GenerateFixtureRequest(2026), ct);
+            if (competition.Status == CompetitionStatus.Draft)
+                await scheduling.ScheduleAsync(competition.CompetitionId, ct);
 
             var match = await SelectMatchAsync(competition.CompetitionId, ct);
             var venue = await db.Venues.AsNoTracking().Where(x => x.Active).OrderBy(x => x.VenueId).FirstOrDefaultAsync(ct)

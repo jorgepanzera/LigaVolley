@@ -18,6 +18,8 @@ internal sealed class CompetitionRepository(LigaVolleyDbContext db) : ICompetiti
     { IQueryable<Competition> query = db.Competitions; if (!tracking) query = query.AsNoTracking(); return Complete(query).SingleOrDefaultAsync(x => x.CompetitionId == id, ct); }
     public void Add(Competition competition) => db.Competitions.Add(competition);
     private static IQueryable<Competition> Complete(IQueryable<Competition> query) => query.AsSplitQuery().Include(x => x.Season).Include(x => x.Division)
+        .Include(x => x.CompetitionFormat).ThenInclude(x => x.Phases).ThenInclude(x => x.Groups)
+        .Include(x => x.CompetitionFormat).ThenInclude(x => x.Phases).ThenInclude(x => x.Series)
         .Include(x => x.CompetitionFormat).ThenInclude(x => x.ScoringRules)
         .Include(x => x.CompetitionFormat).ThenInclude(x => x.TiebreakRules)
         .Include(x => x.CompetitionFormat).ThenInclude(x => x.QualificationRules).ThenInclude(x => x.SourcePhase)

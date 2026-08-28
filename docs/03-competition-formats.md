@@ -2,6 +2,10 @@
 
 ## Objetivo
 
+## Preparación DRAFT → SCHEDULED
+
+Generar el fixture no cambia el status. `ScheduleCompetition` exige estructura consistente, sólo TeamEntry ACTIVE dentro de min/max y fixture inicial completo que coincida exactamente con esos ACTIVE. No exige fechas, sedes, rosters ni oficiales. Al programar persiste `scheduled_at`; el cuadro inicial queda congelado, aunque MatchDate/Venue pueden seguir editándose.
+
 Permitir representar formatos de competición reutilizables y clonables sin codificar un torneo específico en la aplicación.
 
 El principio central es:

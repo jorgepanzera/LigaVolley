@@ -2,6 +2,8 @@
 
 ## Objetivo
 
+Admin + Competition Scheduling v1 está cerrado: `LigaVolley.Admin` usa React 18, TypeScript, Vite, React Router, TanStack Query, React Hook Form, Zod superficial y fetch centralizado. Es server-centric, no PWA y consume sólo `/api/admin`. DRAFT sale mediante `schedule-preview` + `ScheduleCompetition`; sólo TeamEntry ACTIVE cuenta, el fixture inicial debe coincidir exactamente y fechas/sedes, rosters y oficiales no bloquean. `ScheduledAt` registra el instante administrativo. En SCHEDULED el cuadro inicial queda congelado, pero la programación de partidos continúa.
+
 LigaVolley es una plataforma para administrar competiciones de voleibol, operar el acta electrónica de los partidos y ofrecer consulta pública de la información deportiva.
 
 El sistema tendrá:

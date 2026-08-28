@@ -29,6 +29,14 @@ internal static class CompetitionEndpoints
 
         // Example: GET /api/admin/competitions/1/structure
         group.MapGet("/{id:int}/structure", async (int id, CompetitionService service, CancellationToken ct) => Results.Ok(await service.GetStructureAsync(id, ct)));
+
+        // Example: GET /api/admin/competitions/1/schedule-preview
+        group.MapGet("/{id:int}/schedule-preview", async (int id, CompetitionSchedulingService service, CancellationToken ct) => Results.Ok(await service.PreviewAsync(id, ct)))
+            .Produces<CompetitionSchedulePreviewDto>().ProducesProblem(404).ProducesProblem(409);
+
+        // Example: POST /api/admin/competitions/1/schedule
+        group.MapPost("/{id:int}/schedule", async (int id, CompetitionSchedulingService service, CancellationToken ct) => Results.Ok(await service.ScheduleAsync(id, ct)))
+            .Produces<CompetitionScheduleResultDto>().ProducesProblem(404).ProducesProblem(409);
         return endpoints;
     }
 }

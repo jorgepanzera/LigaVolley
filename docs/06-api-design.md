@@ -2,6 +2,13 @@
 
 ## Estado
 
+## Competition Scheduling Admin v1
+
+- `GET /api/admin/competitions/{competitionId}/schedule-preview`: 200 con `CanSchedule` y blockers operativos; 404 si no existe.
+- `POST /api/admin/competitions/{competitionId}/schedule`: sin body; 200 en éxito y retry idempotente, 404 si no existe, 409 `competition_cannot_schedule` si no está preparada o el estado no admite la operación.
+
+Blockers: `competition_schedule_not_draft`, `competition_schedule_team_count_below_minimum`, `competition_schedule_team_count_above_maximum`, `competition_schedule_no_active_entries`, `competition_schedule_fixture_missing`, `competition_schedule_fixture_incomplete`, `competition_schedule_fixture_participant_mismatch`, `competition_schedule_structure_inconsistent` y `competition_schedule_match_already_started`.
+
 La arquitectura de la API está acordada a nivel de módulos y superficies. Los contratos se cierran módulo por módulo antes de implementar cada bloque.
 
 Este documento incorpora el contrato inicial detallado para:

@@ -12,6 +12,7 @@ using LigaVolley.Application.TeamEntries;
 using LigaVolley.Application.Teams;
 using LigaVolley.Domain.CompetitionFormats;
 using LigaVolley.Domain.Competitions;
+using LigaVolley.Domain.TeamEntries;
 using LigaVolley.Domain.Divisions;
 using LigaVolley.Domain.Fixtures;
 using LigaVolley.Infrastructure.Persistence;
@@ -57,9 +58,11 @@ public sealed class CompetitionProgressionEndpointsTests : IClassFixture<LigaVol
         for (var i = 1; i <= 2; i++)
         {
             var team = await Create<TeamDto>("/api/admin/teams", new CreateTeamRequest($"Completion {suffix} {i}", Gender.Female, null));
-            await Create<TeamEntryDto>($"/api/admin/competitions/{competition.CompetitionId}/entries", new AddTeamEntryRequest(team.TeamId, (short)i));
+            var entry=await Create<TeamEntryDto>($"/api/admin/competitions/{competition.CompetitionId}/entries", new AddTeamEntryRequest(team.TeamId, (short)i));
+            (await factory.Client.PatchAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/entries/{entry.TeamEntryId}/status",new ChangeTeamEntryStatusRequest(TeamEntryStatus.Active),Json)).EnsureSuccessStatusCode();
         }
         (await factory.Client.PostAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/fixture/generate", new GenerateFixtureRequest(12))).EnsureSuccessStatusCode();
+        (await factory.Client.PostAsync($"/api/admin/competitions/{competition.CompetitionId}/schedule",null)).EnsureSuccessStatusCode();
 
         int winnerEntryId;
         using (var scope = factory.Services.CreateScope())

@@ -16,7 +16,7 @@ public sealed class FixtureService(ICompetitionRepository competitions, ITeamEnt
         if (competition.Status != CompetitionStatus.Draft)
             throw new ResourceConflictException("fixture_competition_not_draft", "Initial fixture can only be generated for a Draft competition.");
 
-        var validEntries = (await entries.ListAsync(competitionId, true, ct)).Where(x => x.IsValid).OrderBy(x => x.TeamEntryId).ToArray();
+        var validEntries = (await entries.ListAsync(competitionId, true, ct)).Where(x => x.Status == TeamEntryStatus.Active).OrderBy(x => x.TeamEntryId).ToArray();
         var format = competition.CompetitionFormat;
         if (validEntries.Length < format.MinTeams || validEntries.Length > format.MaxTeams)
             throw new ResourceConflictException("fixture_team_count_out_of_range", $"Fixture requires between {format.MinTeams} and {format.MaxTeams} valid teams; found {validEntries.Length}.");
@@ -32,7 +32,6 @@ public sealed class FixtureService(ICompetitionRepository competitions, ITeamEnt
         var matches = pairings.Select(x => new Match(competition, phase, null, entryById[x.HomeParticipantId], entryById[x.AwayParticipantId], x.RoundNumber, x.MatchNumber)).ToArray();
         var generation = new FixtureGeneration(competition, phase, null, randomSeed, DateTime.UtcNow);
         fixtures.AddGeneration(generation); fixtures.AddMatches(matches);
-        competition.MarkScheduledAfterInitialFixture();
         await unit.SaveChangesAsync(ct);
         return new(competitionId, matches.Length, randomSeed, [new(phase.CompetitionPhaseId, phase.Code, matches.Length)]);
     }
