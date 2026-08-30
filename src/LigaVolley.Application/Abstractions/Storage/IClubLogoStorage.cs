@@ -10,5 +10,6 @@ public interface IClubLogoStorage
 {
     Task<StoredClubLogo> SaveAsync(int clubId, Stream content, string contentType, CancellationToken ct);
     Task<ClubLogoContent?> OpenReadAsync(string storageKey, CancellationToken ct);
+    Task<bool> ContentEqualsAsync(string storageKey, Stream candidate, string contentType, CancellationToken ct);
     Task DeleteAsync(string storageKey, CancellationToken ct);
 }

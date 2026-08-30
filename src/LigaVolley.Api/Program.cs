@@ -29,8 +29,9 @@ using LigaVolley.Infrastructure.Persistence.Seed;
 var builder = WebApplication.CreateBuilder(args);
 
 var runLivosurSeed = args.Contains("--seed-livosur-2026", StringComparer.OrdinalIgnoreCase);
+var runLivosurClubLogoSeed = args.Contains("--seed-livosur-2026-club-logos", StringComparer.OrdinalIgnoreCase);
 var runDemoMatchSeed = args.Contains("--seed-demo-match", StringComparer.OrdinalIgnoreCase);
-if (builder.Environment.IsDevelopment() || runLivosurSeed || runDemoMatchSeed)
+if (builder.Environment.IsDevelopment() || runLivosurSeed || runLivosurClubLogoSeed || runDemoMatchSeed)
 {
     builder.Logging.ClearProviders();
     builder.Logging.AddConsole();
@@ -74,8 +75,21 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
-if (runLivosurSeed && runDemoMatchSeed)
-    throw new InvalidOperationException("Choose either --seed-livosur-2026 or --seed-demo-match.");
+if (new[] { runLivosurSeed, runLivosurClubLogoSeed, runDemoMatchSeed }.Count(x => x) > 1)
+    throw new InvalidOperationException("Choose only one seed command.");
+
+if (runLivosurClubLogoSeed)
+{
+    if (!app.Environment.IsDevelopment())
+        throw new InvalidOperationException("The LIVOSUR 2026 Club Logo seed can only run in the Development environment.");
+
+    await using var scope = app.Services.CreateAsyncScope();
+    var result = await scope.ServiceProvider.GetRequiredService<Livosur2026ClubLogoSeeder>().SeedAsync();
+    app.Logger.LogInformation(
+        "LIVOSUR 2026 Club Logo seed completed. ManifestRows={ManifestRows}; ClubsFound={ClubsFound}; Applied={Applied}; Replaced={Replaced}; AlreadyCurrent={AlreadyCurrent}; SkippedClubNotFound={SkippedClubNotFound}; Errors={Errors}",
+        result.ManifestRows, result.ClubsFound, result.Applied, result.Replaced, result.AlreadyCurrent, result.SkippedClubNotFound, result.Errors);
+    return;
+}
 
 if (runDemoMatchSeed)
 {

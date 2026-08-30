@@ -129,6 +129,17 @@ Este documento resume qué decisiones son fuente de verdad y qué aspectos sigue
 - No abre MatchSheet ni inicia Match o Competition.
 - Usa documentos `DEMO/LV-DEMO-*` y es idempotente.
 
+### Logos de Clubs LIVOSUR 2026
+
+En Development, primero se cargan los datos base y luego, mediante un comando separado, los logos aprobados:
+
+```powershell
+dotnet run --project src/LigaVolley.Api -- --seed-livosur-2026
+dotnet run --project src/LigaVolley.Api -- --seed-livosur-2026-club-logos
+```
+
+El segundo comando sólo procesa `seed-assets/club-logos/manifest.csv` y sus imágenes. No crea Clubs ni otros datos: omite los Clubs inexistentes, valida el SHA-256 del paquete y es idempotente respecto de la versión y el archivo normalizado almacenado. La ubicación puede sobrescribirse con `Seed:Livosur2026ClubLogos:Path`.
+
 ### Admin Master Data y Club Logo v1
 
 - Club, Team y Venue son maestros administrables, sin DELETE físico.

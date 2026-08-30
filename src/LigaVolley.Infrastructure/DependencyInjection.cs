@@ -38,8 +38,10 @@ public static class DependencyInjection
         services.AddScoped<IPublicQueryRepository, PublicQueryRepository>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<LigaVolleyDbContext>());
         services.Configure<ClubLogoStorageOptions>(options => options.RootPath = configuration["ClubLogoStorage:RootPath"] ?? "App_Data/club-logos");
+        services.Configure<Livosur2026ClubLogoSeedOptions>(options => options.Path = configuration["Seed:Livosur2026ClubLogos:Path"] ?? "seed-assets/club-logos");
         services.AddSingleton<IClubLogoStorage, FileSystemClubLogoStorage>();
         services.AddScoped<Livosur2026Seeder>();
+        services.AddScoped<Livosur2026ClubLogoSeeder>();
         services.AddScoped<DemoMatchSeeder>();
         return services;
     }
