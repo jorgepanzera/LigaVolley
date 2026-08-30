@@ -1,266 +1,159 @@
-# 07 — Decisiones y pendientes
+# 07 — Decisiones cerradas y pendientes
+
+## Propósito
+
+Este documento resume qué decisiones son fuente de verdad y qué aspectos siguen abiertos. El detalle estructural vive en `03-competition-formats.md`, los contratos HTTP en `06-api-design.md` y las reglas específicas en los documentos temáticos.
 
 ## Decisiones cerradas
 
-## Admin + Competition Scheduling v1
+### Arquitectura y superficies
 
-- Admin usa React 18 + TypeScript + Vite, React Router, TanStack Query, React Hook Form, Zod superficial y fetch centralizado; es server-centric y no offline/PWA.
-- Competition Workspace usa Resumen, Participantes, Fixture y Progresión.
-- DRAFT → SCHEDULED usa preview y `ScheduleCompetition`, nunca PATCH status ni generación automática de fixture.
-- Sólo TeamEntry ACTIVE cuenta; el fixture inicial coincide exactamente con ACTIVE y las fases futuras incrementales no bloquean.
-- Fecha/sede, rosters y oficiales no bloquean readiness.
-- `scheduled_at` registra la transición y el retry lo conserva.
-- Desde SCHEDULED el cuadro inicial queda congelado; MatchDate/Venue continúa editable.
-- Permanecen pendientes Security, CRUD completo Clubs/Teams/Venues, CompetitionFormat Editor, UI People/Rosters/Officials/MatchSheet y la semántica operativa de WITHDRAWN/DISQUALIFIED.
+- Backend único, SQL Server único y arquitectura Modular Monolith.
+- Frontends separados: Admin, Scorer y Public.
+- Prefijos obligatorios: `/api/admin`, `/api/scorer` y `/api/public`.
+- Contratos HTTP diferenciados por consumidor.
+- Estado operacional persistido más auditoría; no event sourcing.
 
-- Public v1 usa React 18 + TypeScript + Vite y es anónimo, read-only y server-centric.
-- La publicación deriva exclusivamente de Competition.Status: SCHEDULED, IN_PROGRESS, FINISHED y CANCELLED son públicos; DRAFT no lo es y la regla es transitiva con 404.
-- El catálogo Public v1 comprende seasons, competitions, competition detail, fixture/resultados, standings, match detail y live.
-- Fixture y resultados están unificados y agrupados por fase/grupo/ronda/serie; playoffs usan bracket/series y no standings.
-- Public reutiliza standings y cancha efectiva canónicos; sólo publica dorsal, display name e indicador de líbero de P1..P6 efectivos.
-- Match Detail contiene contexto y resultado final; Live contiene el último estado operacional central.
-- `LastOperationalUpdateAt` es server-side y transaccional; Live agrega `ServerTime`.
-- Polling: 5 s IN_PROGRESS, 15 s SUSPENDED, refresh al recuperar visibilidad, backoff 5/10/20/30 s y stop en FINISHED. Umbrales visuales: 0..30 s vivo, 31..120 s actualizado, >120 s demorado.
-- SignalR/WebSocket, PWA, IndexedDB deportivo y MatchEngine Public quedan fuera de v1.
+### Admin y Competition Scheduling v1
 
-- Backend único.
-- Base SQL Server única.
-- Arquitectura backend Modular Monolith.
-- Tres frontends: Admin, Scorer y Public.
-- Prefijos de API obligatorios por consumidor: `/api/admin`, `/api/scorer` y `/api/public`.
-- Flujo inicial del Scorer: seleccionar/validar planteles → abrir acta → asignar oficiales → alineación inicial.
-- `Season` y `Divisional` son entidades maestras.
-- Toda `Competition` referencia obligatoriamente una `Season`, una `Divisional` y un `CompetitionFormat`.
-- No existe una `Competition` válida sin formato.
-- Los modos técnicos iniciales de creación de Competition son `FROM_FORMAT` y `FROM_COMPETITION`.
-- La opción funcional "desde cero" significa crear o seleccionar previamente un `CompetitionFormat`.
-- Crear una Competition basada en otra Competition reutiliza el `CompetitionFormat` de la competición modelo y crea nuevas instancias de fases/grupos/series.
-- Crear una Competition basada en otra no duplica físicamente el `CompetitionFormat`.
-- Clonar físicamente un `CompetitionFormat` es un caso de uso independiente.
-- Formatos de competición parametrizables.
-- Un `CompetitionFormat` utilizado por una competición que ya dejó `DRAFT` queda estructuralmente bloqueado; para introducir una variante se debe clonar.
-- La API de CompetitionFormat trabaja con el agregado completo y no expone por defecto CRUD directo para cada tabla `FORMAT_*`.
-- Las referencias internas de una definición nueva de CompetitionFormat deben usar códigos lógicos (`code`) y no depender de IDs persistentes todavía inexistentes.
-- No copiar equipos, `TEAM_ENTRY`, fixture, partidos, resultados, fechas ni planteles al crear una competición basada en otra.
-- `Team` representa identidad permanente y `TeamEntry` la inscripción de un equipo en una Competition.
-- Durante inscripción de equipos puede existir temporalmente menos de `minTeams`; nunca se puede superar `maxTeams`.
-- Antes de generar fixture debe cumplirse el rango de equipos definido por el formato.
-- La estructura de fases/grupos/series se instancia al crear Competition; no se requiere un endpoint administrativo separado de "instantiate structure".
-- `PHASE_GROUP_ENTRY` se poblará cuando la clasificación/reglas de progresión determinen los participantes concretos de un grupo.
-- El frontend no vuelve a enviar reglas estructurales de fixture que ya pertenecen al CompetitionFormat.
-- El generador de fixture puede aceptar `randomSeed` opcional para reproducibilidad.
-- No se crearán por defecto partidos de playoff con participantes nulos; se generan cuando los participantes estén resueltos.
-- Estados iniciales de Competition: `DRAFT`, `SCHEDULED`, `IN_PROGRESS`, `FINISHED`, `CANCELLED`.
-- Transición base: `DRAFT → SCHEDULED → IN_PROGRESS → FINISHED`; cancelación inicial desde `DRAFT` o `SCHEDULED`.
-- La API debe validar transiciones de estado; el frontend no puede establecer estados arbitrariamente.
-- La API utiliza `ProblemDetails` para errores HTTP y puede agregar un `code` de error estable.
-- No usar entidades EF/Domain como contratos HTTP.
-- Endpoints orientados a casos de uso/Application; no lógica de negocio en controllers.
-- `PLAYER_ROLE` es contextual al ámbito competitivo/plantel, no una clasificación global inmutable del jugador.
-- Una `PERSON` puede ser simultáneamente `PLAYER`, `COACH` y/o `REFEREE`; por ahora no se modelan vigencias ni exclusividad.
-- No se adopta event sourcing: se persiste estado operacional actual y se registran eventos/auditoría relevantes.
-- Public expone solo información explícitamente habilitada para publicación.
-- Public es la aplicación de consulta pública de competiciones, fixture, resultados, tablas de posiciones e información pública de partidos.
-- Scorer es una consola del partido.
-- `PERSON` como raíz de jugador/técnico/árbitro.
-- Planteles contextualizados por competición.
-- Hasta dos líberos.
-- Estado de seis jugadores efectivos derivado de alineación + sustituciones + rotación + líbero.
-- Se contempla tercer puesto además de semifinales y final.
-- Scorer debe contemplar offline/sincronización.
+- Admin usa React 18, TypeScript y Vite; es server-centric y consume sólo `/api/admin`.
+- No usa PWA, Service Worker, IndexedDB, Dexie ni MatchEngine local.
+- `DRAFT → SCHEDULED` se ejecuta mediante `schedule-preview` y `ScheduleCompetition`, nunca mediante cambio libre de status.
+- Sólo TeamEntry ACTIVE cuenta para scheduling; el fixture inicial debe coincidir exactamente con ellos.
+- Fecha, Venue, rosters y oficiales no bloquean Competition Schedule Readiness.
+- `scheduled_at` registra la transición administrativa y un retry idempotente lo conserva.
+- Al quedar SCHEDULED se congela el cuadro inicial; MatchDate y Venue continúan editables según las reglas del Match.
 
-- La progresión deportiva se separa en resultados → standings → progresión → generación incremental de fixture.
-- El cierre de fases de liga/grupos es un caso de uso administrativo explícito `CompletePhase`; no se expone un cambio libre de status para finalizar una fase.
-- Antes de completar una fase existe un `completion-preview` sin efectos persistentes.
-- `CompletePhase` debe ser transaccional e idempotente y no puede duplicar clasificados ni partidos ante reintentos.
-- Una fase de liga/grupos sólo se completa cuando todos sus partidos requeridos están resueltos; `CANCELLED` no cuenta automáticamente como resultado deportivo resuelto.
-- Una fase con varios grupos se completa como unidad en v1; no existe `CompletePhaseGroup`.
-- `TOP_HALF`/`BOTTOM_HALF`: con N par se divide N/2 y N/2; con N impar Championship/TOP_HALF recibe `(N+1)/2` y Relegation/BOTTOM_HALF `(N-1)/2`.
-- En v1 `CarryOverMode` soportado operativamente es sólo `NONE`; `ALL` y `QUALIFIED_ONLY` permanecen sin semántica implementable.
-- `PHASE_GROUP_ENTRY.source_position` conserva la posición de clasificación en el origen y es independiente de `seed`.
-- El fixture se genera incrementalmente cuando se resuelven los participantes reales de cada fase/grupo/serie.
-- Semifinal, Final y Tercer Puesto se modelan siempre como `PLAYOFF_SERIES`.
-- Un playoff a partido único se representa con `winsRequired = 1` e `initialWins = 0/0`.
-- En una serie se genera sólo el siguiente partido real requerido; no se crean anticipadamente partidos que quizá no deban jugarse.
-- Las victorias de una serie se calculan como `initialWins + realMatchWins`.
-- Estados de `PLAYOFF_SERIES`: `PENDING`, `READY`, `IN_PROGRESS`, `FINISHED`, `CANCELLED` con la semántica documentada en `03` y `06`.
-- Los participantes de Final y Tercer Puesto se resuelven automáticamente mediante `SERIES_WINNER`/`SERIES_LOSER`; el orden de finalización de semifinales no afecta la resolución.
-- La progresión entre series playoff es automática al quedar una serie `FINISHED`; no requiere `CompletePhase` por cada serie.
-- `SCHEDULED → IN_PROGRESS` ocurre automáticamente al comenzar el primer partido oficial.
-- `IN_PROGRESS → FINISHED` requiere `CompleteCompetition`; no se cierra automáticamente al terminar la Final.
-- Existe `completion-preview` de Competition antes del cierre.
-- `FORMAT_MOVEMENT_RULE` puede calcular movimientos resultantes, pero v1 no crea automáticamente inscripciones en competiciones futuras.
-- `CompetitionProgression` informa contadores de partidos actualmente materializados y victorias de serie derivadas; no mezcla blockers ni movimientos.
-- `CompleteCompetition` es el único camino a `Competition.FINISHED`, persiste `completed_at`, es transaccional/idempotente y no modifica fases, series, partidos ni TeamEntry.
-- Los movimientos usan posiciones de fase/grupo, resultado de serie o LAST_N y resuelven la Division destino por nivel exacto más mismo género, sin saltar niveles.
-- Regeneración de fixture: se permite sólo mientras ningún partido del ámbito afectado esté `IN_PROGRESS` o `FINISHED`; puede invalidar programación de fecha/sede.
-## Endpoints Admin cerrados en esta etapa
+### Competitions, formatos y fixture
 
-## Decisiones People v1 cerradas
+- Toda Competition referencia Season, Divisional y CompetitionFormat.
+- Los modos de creación son `FROM_FORMAT` y `FROM_COMPETITION`.
+- Crear desde otra Competition reutiliza el formato e instancia nueva estructura; no copia equipos, TeamEntry, fixture, resultados, fechas ni planteles.
+- Clonar físicamente un CompetitionFormat es un caso de uso independiente.
+- Un formato usado por una Competition fuera de DRAFT queda estructuralmente bloqueado; las variantes se crean mediante clonación.
+- Team representa identidad permanente y TeamEntry la inscripción en una Competition.
+- La estructura se instancia al crear la Competition. El frontend no reenvía reglas estructurales al generar fixture.
+- El fixture posterior se genera incrementalmente cuando los participantes reales están resueltos; no se crean por defecto partidos con participantes nulos.
+- La regeneración se rechaza si algún Match afectado está IN_PROGRESS o FINISHED.
 
-- `PERSON` es la única raíz de identidad.
-- `PLAYER`, `COACH` y `REFEREE` son perfiles 1:1 opcionales, simultáneos y sin vigencias.
-- Los perfiles no se crean implícitamente y People no tiene DELETE físico.
-- Los documentos adicionales contienen Health Card y League Card; no existe League en v1.
-- Health Card es warning para Player/Referee y nunca bloqueo; Coach no la requiere.
+### Progresión y cierre
 
-## Decisiones Competition Rosters v1 cerradas
+- El cierre de una fase de liga/grupos usa `completion-preview` y `CompletePhase`; es transaccional e idempotente.
+- Una fase con varios grupos se completa como unidad; no existe `CompletePhaseGroup` en v1.
+- `TOP_HALF` recibe `(N+1)/2` cuando N es impar y `BOTTOM_HALF` recibe `(N-1)/2`.
+- Sólo `CarryOverMode.NONE` tiene semántica implementada en v1.
+- `PHASE_GROUP_ENTRY` se materializa desde QualificationRules y conserva `source_position` separado de `seed`.
+- Semifinal, Final y Tercer Puesto son PLAYOFF_SERIES; partido único equivale a `winsRequired = 1`.
+- Una serie genera sólo el siguiente partido real necesario y calcula victorias como `initialWins + realMatchWins`.
+- Final y Tercer Puesto resuelven participantes mediante ganador o perdedor de semifinales.
+- El primer partido oficial iniciado mueve Competition de SCHEDULED a IN_PROGRESS.
+- Sólo `CompleteCompetition` mueve Competition a FINISHED y persiste `completed_at`.
+- Los movimientos pueden calcularse, pero v1 no crea TeamEntry en futuras competiciones.
 
-## Decisiones Match Officials v1 cerradas
+### People v1
 
-- `MATCH_OFFICIAL` referencia `REFEREE`; roles v1: `FIRST_REFEREE`, `SECOND_REFEREE`, `SCORER`.
-- Hay un oficial por rol y un Referee no ocupa dos roles del mismo Match.
-- Admin designa inicialmente y edita sólo antes del inicio; Scorer reemplaza durante `IN_PROGRESS` sin dejar el rol vacío.
-- La asignación vigente vive en `MATCH_OFFICIAL`; el reemplazo deberá auditarse en el futuro MatchSheet.
-- Health Card es warning; no se validan conflictos de agenda.
-- OpenMatchSheet deberá exigir los tres roles.
-- Pendientes: auditoría definitiva `OFFICIAL_REPLACEMENT`, conflictos horarios, roles adicionales, ausencias excepcionales y permisos exactos de Scorer.
+- PERSON es la única raíz de identidad.
+- PLAYER, COACH y REFEREE son perfiles 1:1 opcionales, simultáneos, sin vigencias y nunca implícitos.
+- No existe DELETE físico de People ni entidad League.
+- Health Card y League Card son documentos históricos.
+- Health Card es warning para Player y Referee, nunca blocker; Coach no la requiere.
 
-## Decisiones MatchSheet Opening v1 cerradas
+### Competition Rosters v1
 
-- Un `MATCH_SHEET` por Match; abrir requiere Match SCHEDULED y no inicia Match/Competition.
-- HOME/AWAY se resuelven desde Match. Ambos rosters deben estar ACTIVE y se seleccionan al menos seis jugadores ACTIVE por lado.
-- Convocatoria, dorsal, staff y líberos se materializan y no siguen dinámicamente cambios del roster.
-- Futuros lineups, sustituciones y eventos referencian `MATCH_PLAYER`.
-- Se requieren FirstReferee, SecondReferee y Scorer; Health Card nunca bloquea.
-- Apertura atómica/idempotente, sesión ACTIVE única, auditoría `MATCH_SHEET_OPENED` y UUID operativos para futuro offline.
-- Pendientes: edición explícita de convocatoria mientras OPEN y protocolo de sync.
+- Existe como máximo un roster explícito por TeamEntry.
+- Estados: DRAFT, ACTIVE y CLOSED; no hay mínimos para activar.
+- Máximos ACTIVE: 15 jugadores, dos técnicos y dos líberos.
+- Player y Coach son únicos dentro del roster; el dorsal es único entre jugadores ACTIVE.
+- PLAYER_ROLE y dorsal son contextuales al roster.
+- Los miembros INACTIVE permanecen históricos y no cuentan para máximos.
+- Un roster ACTIVE sigue editable mientras Competition y TeamEntry sean operativos; CLOSED es read-only.
+- Los cambios del roster no modifican una convocatoria ya materializada en MatchSheet.
 
-- Un roster por TeamEntry, con creación explícita y estados `DRAFT`, `ACTIVE`, `CLOSED`.
-- Activación sin mínimos; máximos de 15 jugadores, dos técnicos y dos líberos activos.
-- Miembros inactivos permanecen históricos y no existe DELETE físico.
-- Un roster activo sigue editable durante una Competition operativa; uno cerrado no es editable.
-- `PLAYER_ROLE` y dorsal son contextuales; Health Card es warning y nunca bloqueo.
-- Competition `FINISHED` o `CANCELLED` y TeamEntry no operativo rechazan mutaciones.
+### Match Officials v1
 
-### Season
+- MATCH_OFFICIAL referencia REFEREE.
+- Roles exclusivos: FIRST_REFEREE, SECOND_REFEREE y SCORER.
+- Existe como máximo un Referee por rol y un Referee no ocupa dos roles en el mismo Match.
+- Admin edita en PENDING o SCHEDULED; desde IN_PROGRESS queda read-only.
+- Scorer puede reemplazar un oficial vigente durante IN_PROGRESS sin dejar el rol vacío.
+- Health Card es warning y no se validan conflictos de agenda.
 
-- `GET /api/admin/seasons`
-- `GET /api/admin/seasons/{id}`
-- `POST /api/admin/seasons`
-- `PUT /api/admin/seasons/{id}`
-- `PATCH /api/admin/seasons/{id}/active`
+### MatchSheet Opening y readiness
 
-### Divisional
+- Un Match SCHEDULED puede materializar un único MatchSheet OPEN.
+- HOME y AWAY se resuelven desde Match.
+- Ambos rosters deben estar ACTIVE, con al menos seis jugadores ACTIVE disponibles por lado, y deben existir los tres oficiales.
+- La selección concreta de convocatoria pertenece a Scorer y se congela en MATCH_PLAYER y MATCH_TEAM_STAFF.
+- Abrir el acta no inicia Match ni Competition; la apertura es transaccional e idempotente y crea sesión, auditoría y UUID.
+- Match Scorer Readiness reutiliza las precondiciones comunes de OpenMatchSheet, es read-only y devuelve blockers dentro de una respuesta 200.
+- MatchDate, Venue y Health Card son warnings para readiness.
+- Un MatchSheet existente se proyecta normalmente y bloquea una nueva apertura.
 
-- `GET /api/admin/divisions`
-- `GET /api/admin/divisions/{id}`
-- `POST /api/admin/divisions`
-- `PUT /api/admin/divisions/{id}`
-- `PATCH /api/admin/divisions/{id}/active`
+### Electronic Scoresheet y Offline Sync v1
 
-### CompetitionFormat
+- Match best-of-5, primero a tres sets; sets 1..4 a 25 y set 5 a 15, siempre con diferencia mínima de dos.
+- Los sets se preparan secuencialmente; P1..P6 sólo se edita en READY.
+- Saque, servidor, rotación y cancha efectiva son derivados.
+- Point termina el set automáticamente; el tercer set ganado decide el resultado, pero sólo CloseMatch cierra MatchSheet y Match.
+- CorrectLastPoint cancela sólo el último evento deportivo efectivo y reconstruye el estado.
+- Tracking de sustituciones y líbero es configurable y estable por MatchSheet; timeout es obligatorio, con máximo dos por equipo y set.
+- La clave idempotente es EventUuid y la secuencia causal es local, contigua y reinicia en 1 por sesión.
+- Sync acepta retries conocidos y aplica atómicamente todos los eventos nuevos contiguos.
+- TakeOver abandona la sesión esperada, crea la única sesión ACTIVE con secuencia cero y conserva el estado deportivo.
+- Scorer usa exactamente cinco stores IndexedDB: `appMeta`, `matchSheets`, `sessions`, `snapshots` y `events`.
+- Reconciliation usa snapshot canónico más replay de pendientes. La pérdida de autoridad deja el runtime BLOCKED sin borrar eventos.
 
-- `GET /api/admin/competition-formats`
-- `GET /api/admin/competition-formats/{id}`
-- `POST /api/admin/competition-formats`
-- `PUT /api/admin/competition-formats/{id}`
-- `POST /api/admin/competition-formats/{id}/clone`
-- `PATCH /api/admin/competition-formats/{id}/active`
-- `POST /api/admin/competition-formats/validate`
+### Admin People & Match Operations v1
 
-### Competition
+- Admin ofrece People UI, directorios Player/Coach/Referee y gestión de CompetitionRoster.
+- Competition Workspace incluye Planteles.
+- Match Workspace incluye Resumen, Preparación, Oficiales y Acta.
+- Admin prepara y supervisa; no abre actas ni ejecuta acciones de scoring.
+- MatchSheet Oversight es read-only y consulta sólo el estado central.
+- Polling de oversight: 5 segundos en IN_PROGRESS, 15 segundos en SUSPENDED y sin polling continuo en estados estables.
 
-- `GET /api/admin/competitions`
-- `GET /api/admin/competitions/{id}`
-- `POST /api/admin/competitions`
-- `PUT /api/admin/competitions/{id}`
-- `PATCH /api/admin/competitions/{id}/status`
-- `GET /api/admin/competitions/{id}/structure`
+### Public Query + Web v1
 
-### TeamEntry
+- Public es anónimo, read-only y server-centric.
+- Son publicables SCHEDULED, IN_PROGRESS, FINISHED y CANCELLED; DRAFT y sus recursos dependientes responden 404.
+- Fixture y resultados comparten recurso; standings reutiliza el cálculo canónico y playoffs se presentan como bracket/series.
+- Match Detail contiene contexto y resultado; Live contiene el último estado operacional central.
+- `LastOperationalUpdateAt` cambia sólo con mutaciones aceptadas y Live agrega `ServerTime`.
+- Live usa polling de 5 segundos en IN_PROGRESS, 15 segundos en SUSPENDED, backoff 5/10/20/30 y se detiene en FINISHED.
+- No hay SignalR, WebSocket, PWA, IndexedDB ni MatchEngine en Public v1.
 
-- `GET /api/admin/competitions/{id}/entries`
-- `POST /api/admin/competitions/{id}/entries`
-- `PATCH /api/admin/competitions/{id}/entries/{entryId}/seed`
-- `PATCH /api/admin/competitions/{id}/entries/{entryId}/status`
-- `DELETE /api/admin/competitions/{id}/entries/{entryId}`
+### Demo Match Seed
 
-### Fixture / Scheduling inicial y avanzado
+- Disponible sólo en Development mediante `--seed-demo-match`.
+- Reutiliza LIVOSUR 2026 y deja un Match SCHEDULED con rosters ACTIVE y tres oficiales.
+- No abre MatchSheet ni inicia Match o Competition.
+- Usa documentos `DEMO/LV-DEMO-*` y es idempotente.
 
-- `POST /api/admin/competitions/{id}/fixture/generate`
-- `POST /api/admin/competitions/{id}/fixture/regenerate`
-- `GET /api/admin/competitions/{id}/fixture`
-- `GET /api/admin/matches/{matchId}`
-- `PUT /api/admin/matches/{matchId}/schedule`
+## Pendientes que no deben inventarse
 
-### Progresión de fases
+1. Proveedor y esquema de autenticación/autorización, roles, claims y permisos finos.
+2. Auditoría definitiva de reemplazos de oficiales y permisos exactos del Scorer para esa operación.
+3. Conflictos horarios, disponibilidad y agenda de árbitros; roles adicionales y ausencias excepcionales.
+4. Edición explícita de una convocatoria ya materializada mientras el MatchSheet está OPEN.
+5. Correcciones históricas distintas de CorrectLastPoint y correcciones de sustitución, líbero o timeout.
+6. Reglas reglamentarias finas para habilitar uno o dos líberos.
+7. Semántica deportiva de `CarryOverMode.ALL` y `QUALIFIED_ONLY`.
+8. Consecuencia deportiva exacta de Match o serie CANCELLED, suspendida o no disputada.
+9. Política exacta de retiro o eliminación de TeamEntry cuando existen dependencias deportivas.
+10. Alcance y UX de regeneración cuando hay partidos programados aún no iniciados.
+11. Política de edición de metadatos de Competition según estado.
+12. Reglas finas de ascensos y descensos entre torneos o temporadas y creación de futuras inscripciones.
+13. Reglas adicionales de publicación para personas, planteles, oficiales u otros datos.
+14. Algoritmos específicos aún no cerrados para cada FixtureMode.
+15. Observabilidad, logging, tracing y despliegue.
 
-- `GET /api/admin/competitions/{competitionId}/phases/{phaseId}/completion-preview`
-- `POST /api/admin/competitions/{competitionId}/phases/{phaseId}/complete`
-- `GET /api/admin/competitions/{competitionId}/progression`
+## Prioridad documental
 
-### Cierre de Competition
+Ante diferencias, aplicar este orden:
 
-- `GET /api/admin/competitions/{competitionId}/completion-preview`
-- `POST /api/admin/competitions/{competitionId}/complete`
+1. decisiones explícitas más recientes;
+2. `AGENTS.md`;
+3. documentos de `docs/`;
+4. código y tests existentes.
 
-## Decisiones Electronic Scoresheet Match Engine v1 cerradas
-
-- Best-of-5, primero a tres sets; sets 1..4 a 25 y set 5 a 15, diferencia dos y sin tope.
-- PrepareSet secuencial; no se crean cinco sets anticipadamente.
-- Lineup P1..P6 editable sólo en READY. P1 inicia como servidor del lado solicitado.
-- Rotación por offset módulo seis y servidor siempre derivado de la cancha efectiva.
-- Point finaliza el set automáticamente; el tercer set ganado decide pero no cierra.
-- CorrectLastPoint sólo corrige el último evento deportivo efectivo, cancela sin borrar y reconstruye el set.
-- Sustituciones con pareja titular/suplente y reingreso del titular, sin máximo global de seis.
-- Tracking de sustituciones y líbero configurable por MatchSheet; puntos y sets son independientes de ambos flags.
-- Líbero declarado sólo entra por P1/P5/P6; hasta dos declarados y reemplazo separado de sustitución.
-- Timeouts obligatorios, máximo dos por equipo/set.
-- CloseMatch explícito produce MatchSheet CLOSED y Match FINISHED, persiste resultado y dispara progresión existente; CLOSED es definitivo.
-- UUID únicos identifican retries; la secuencia es local y contigua por sesión. `/sync` tolera solapamientos aceptados y aplica atómicamente eventos nuevos bajo la serialización existente por Match.
-
-## Pendientes que NO deben inventarse durante implementación
-
-1. Proveedor y esquema de autenticación/autorización.
-2. Reglas finas de permisos.
-3. Catálogo completo de endpoints de módulos aún no diseñados.
-4. DTOs finales de People/Rosters/Match Officials/Scorer; Public Query v1 ya está cerrado.
-5. Algoritmo exacto de generación de fixtures para cada `FixtureMode`; el contrato y las reglas de progresión ya están cerrados, pero no debe inventarse el algoritmo interno.
-6. Alcance exacto de la regeneración cuando existan partidos programados pero todavía no iniciados y UX de confirmación de pérdida de fecha/sede.
-7. Política de edición de metadatos de Competition según estado.
-8. Política exacta de eliminación/retiro de TeamEntry cuando ya existen partidos o fases dependientes.
-9. Consecuencia deportiva exacta de `MATCH`/serie `CANCELLED`, suspendida o no disputada.
-10. Semántica deportiva futura de `CarryOverMode.ALL` y `CarryOverMode.QUALIFIED_ONLY`; v1 sólo implementa `NONE`.
-11. Reglas funcionales finas de ascensos/descensos entre Apertura/Clausura o temporadas y creación futura de inscripciones.
-12. Evolución visual y ergonomía avanzada del Scorer; IndexedDB/PWA Core y el contrato backend de sincronización ya están cerrados.
-13. Correcciones históricas distintas de `CorrectLastPoint` y correcciones de sustitución, líbero o timeout.
-14. Reglas reglamentarias finas sobre uso/habilitación de uno o dos líberos.
-15. Reglas adicionales de publicación para planteles, personas, oficiales u otros datos públicos.
-16. Reglas reglamentarias adicionales que aún no se hayan validado explícitamente.
-17. Observabilidad, logging, tracing y despliegue.
-
-### PWA Core y sincronización cerrados
-
-- `LigaVolley.Scorer` usa React + TypeScript + Vite y PWA offline-first.
-- Dexie/IndexedDB, exactamente cinco stores v1 y cola durable.
-- Evento + snapshot + secuencia en una transacción local antes del sync.
-- PENDING/SYNCING/ACCEPTED y recuperación de SYNCING al arrancar.
-- Reentry offline inmediata y reconciliation = snapshot canónico del servidor + replay Pending.
-- El snapshot canónico expone el estado operacional completo necesario para reconstrucción.
-- Service Worker sólo para App Shell.
-- UUID idempotente, secuencia local contigua por sesión y batch nuevo atómico.
-- Conflictos temporales vuelven a PENDING; conflictos de sesión, gap o UUID dejan BLOCKED preservando eventos.
-- Takeover reemplaza sesión local sin alterar deporte; pérdida de sesión pasa a BLOCKED.
-- No existe merge automático de eventos inéditos de una sesión abandonada.
-
-## Próximo paso recomendado
-
-El bloque de contratos de `Competitions + CompetitionFormat + Scheduling` queda funcionalmente cerrado para una primera implementación, con excepción de los pendientes explícitos anteriores.
-
-Para implementación incremental con Codex:
-
-1. `Season` + `Divisional`;
-2. `CompetitionFormat`;
-3. `Competition` y creación de estructura;
-4. `TeamEntry`;
-5. fixture inicial;
-6. standings necesarios para progresión;
-7. `completion-preview` + `CompletePhase`;
-8. poblamiento de `PHASE_GROUP_ENTRY` y fixture incremental;
-9. resolución de `PLAYOFF_SERIES`;
-10. `CompetitionProgression` + `CompleteCompetition`.
-
-El contrato Scorer `open → estado/eventos locales → sync → close`, Offline Sync y Scorer Console UI v1 están cerrados. La tecnología es React 18 + TypeScript + Vite PWA, Dexie/IndexedDB con cinco stores y Service Worker sólo para App Shell. La sincronización usa sesión, UUID idempotente, secuencia local contigua, cola PENDING/SYNCING/ACCEPTED, snapshot canónico + replay y takeover con bloqueo de la sesión abandonada.
-
-También quedan cerrados el layout de consola, la interacción P1..P6, PrepareSet rápido con copia/rotación, puntos como acción primaria, doble toque protegido, tracking opcional estable, líbero configurable independientemente por lado/set y por plaza lógica, transición pre-saque, automatismo de entrada/salida, timeout, CorrectLastPoint, historial de consulta, revisión, cierre offline y recuperación desde IndexedDB.
+Una contradicción real debe resolverse documentalmente antes de cambiar el código; no se debe inventar una regla para justificar la implementación.

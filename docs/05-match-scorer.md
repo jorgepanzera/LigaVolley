@@ -10,11 +10,11 @@ Modelar un partido completo desde la apertura del acta hasta el cierre, preserva
 
 La apertura es idempotente por Match, respaldada por `UNIQUE(match_id)` y bloqueo serializable. La convocatoria, dorsales y UUID quedan congelados; no existen todavía set, alineación, saque, servidor ni líbero activo.
 
-## Flujo mínimo validado conceptualmente
+## Flujo operacional v1
 
 1. Cargar/seleccionar los planteles habilitados.
-2. Abrir acta.
-3. Asignar oficiales.
+2. Verificar los tres oficiales asignados.
+3. Abrir acta.
 4. Definir alineación inicial del primer set.
 5. Iniciar set.
 6. Registrar puntos.
@@ -68,9 +68,11 @@ Para cualquier instante relevante del partido:
 
 ## Persistencia de estado y eventos
 
+El estado actual se persiste para operación y consulta eficiente; los eventos y auditorías complementan esa proyección sin convertirla en event sourcing.
+
 ### Reemplazo de oficiales
 
-Los tres oficiales se designan inicialmente desde Admin. Durante `IN_PROGRESS`, Scorer puede reemplazar el Referee vigente de un rol mediante un caso de uso específico, sin convertir Scorer en CRUD administrativo. `MATCH_OFFICIAL` conserva el estado canónico actual. El futuro MatchSheet deberá auditar un evento `OFFICIAL_REPLACEMENT` con rol, Referee anterior, Referee nuevo y fecha. Antes de `OpenMatchSheet` deberán existir los tres roles; esa precondición no forma parte de este slice.
+Los tres oficiales se designan inicialmente desde Admin y son precondición de `OpenMatchSheet`. Durante `IN_PROGRESS`, Scorer puede reemplazar el Referee vigente de un rol mediante un caso de uso específico, sin convertir Scorer en CRUD administrativo. `MATCH_OFFICIAL` conserva el estado canónico actual. La auditoría deportiva definitiva de `OFFICIAL_REPLACEMENT` permanece pendiente.
 
 No se adopta event sourcing como arquitectura. El estado operacional actual necesario para operar y consultar eficientemente el partido se persiste. Los cambios relevantes se registran además como eventos/auditoría para mantener trazabilidad y permitir correcciones o reconstrucción cuando corresponda.
 
@@ -78,7 +80,7 @@ El servidor persiste estado operacional canónico y eventos de trazabilidad; no 
 
 ## Correcciones
 
-Una corrección no debe destruir la trazabilidad necesaria del partido. El mecanismo exacto —anulación, compensación, versionado u otro equivalente— queda abierto hasta diseñar los casos de uso de corrección y sincronización del Scorer, pero debe preservar la consistencia del estado resultante y la historia relevante.
+`CorrectLastPoint` cancela el último evento deportivo efectivo sin borrarlo y reconstruye el estado resultante. Correcciones históricas diferentes de ese caso y correcciones de sustitución, líbero o timeout permanecen fuera de v1.
 
 ## Motor online v1
 
@@ -95,7 +97,7 @@ Una corrección no debe destruir la trazabilidad necesaria del partido. El mecan
 - Tres sets ganados sólo marcan `MatchDecided`; `CloseMatch` explícito deja MatchSheet CLOSED y Match FINISHED. CLOSED no se reabre.
 - CloseMatch reutiliza la progresión de playoffs dentro de la misma transacción; los partidos de liga quedan disponibles para standings.
 
-## Offline
+## Offline Sync v1
 
 Scorer tolera pérdida temporal de conectividad mediante eventos locales con UUID y secuencia por sesión. Al reentrar, el cliente obtiene `GET /sheet`, confirma hasta `LastAcceptedSequence`, reconstruye desde el snapshot, reaplica sus eventos Pending y llama `/sync`. El batch tolera UUID ya aceptados y aplica atómicamente sólo una continuación contigua. IndexedDB, Service Worker y background sync quedan fuera del backend v1.
 
@@ -118,10 +120,15 @@ PrepareSet permite completar P1→P6 con avance automático, reemplazar una sele
 El tracking de sustituciones y líbero es opcional y estable por MatchSheet. Cada equipo decide por set si usa líbero, cuál y qué plazas lógicas cubre. El motor deriva el estado pre-saque y las entradas/salidas naturales; no hay botones primarios de entrada/salida. Una sustitución cambia al regular vigente de la plaza, por lo que el líbero lo cubre y posteriormente lo restaura.
 
 Timeout, CorrectLastPoint con reconstrucción, historial de consulta, revisión y CloseMatch explícito completan el recorrido. El cierre puede persistirse offline y la reentrada recupera primero los cinco stores IndexedDB; `navigator.storage.persist()` es una mejora progresiva, nunca un bloqueo.
-# Consumo Public Live v1
+
+## Consumo Public Live v1
 
 `GET /api/public/matches/{id}/live` lee exclusivamente el último estado operacional central persistido y reutiliza la derivación canónica de cancha. `LastUpdatedAt` proviene de `MATCH_SHEET.last_operational_update_at` y `ServerTime` del servidor que responde. PENDING, SCHEDULED y CANCELLED no tienen live; IN_PROGRESS, SUSPENDED y FINISHED sí. Public no simula pendientes locales ni ejecuta MatchEngine.
 
 ## Escenario demo LIVOSUR 2026
 
 En Development, `dotnet run --project src/LigaVolley.Api -- --seed-demo-match` crea o reutiliza un escenario explícito inmediatamente anterior a `OpenMatchSheet`. Selecciona una Competition LIVOSUR `ROUND_ROBIN` de 7/8 equipos, genera fixture mediante el caso de uso existente si falta, programa un Match con Venue, crea dos rosters ACTIVE de ocho jugadores (un líbero) y un coach, y asigna los tres oficiales. Los perfiles se identifican mediante documentos `DEMO/LV-DEMO-*`; reintentar no duplica datos. El comando no abre acta ni inicia Competition/Match y muestra los IDs y rutas directas de Scorer/Public.
+
+## Frontera con Admin Match Operations
+
+Admin prepara programación, rosters y oficiales, evalúa readiness y supervisa el estado central. No abre actas ni ejecuta acciones deportivas. Scorer conserva en exclusiva OpenMatchSheet, takeover, preparación de sets, puntos, correcciones, sustituciones, líbero, timeout, sync y cierre.

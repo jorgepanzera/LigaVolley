@@ -40,8 +40,6 @@ El plantel no debe estar embebido directamente en Team porque puede variar entre
 
 Representa el rol deportivo del jugador dentro de un contexto competitivo/plantel, no una clasificación global e inmutable de `PERSON` o `PLAYER`. Permite, entre otros usos, identificar al líbero sin convertirlo en una entidad de persona distinta. El rol puede variar entre competiciones/planteles.
 
-## Oficiales del partido
-
 ## Alcance implementado: People v1
 
 - Person nace activa y no existe DELETE físico.
@@ -67,3 +65,7 @@ Las mutaciones se serializan mediante bloqueo de `TEAM_ENTRY`; las unicidades na
 Admin puede crear, modificar y eliminar designaciones en `PENDING` o `SCHEDULED`. Desde `IN_PROGRESS` Admin queda bloqueado; Scorer puede reemplazar una asignación existente, pero no vaciarla. `FINISHED`, `CANCELLED` y `SUSPENDED` son de consulta para este slice.
 
 Al abrir el acta, el Scorer selecciona únicamente miembros ACTIVE de cada roster ACTIVE. Esa selección se copia a `MATCH_PLAYER`/`MATCH_TEAM_STAFF`; cambios posteriores del roster no alteran el acta ya materializada. Health Card continúa siendo warning.
+
+## Admin People & Rosters UI v1
+
+Admin ofrece Personas y directorios paginados de Player, Coach y Referee sobre la misma raíz PERSON. Competition Workspace agrega Planteles y el detalle usa exclusivamente la API de roster existente. Visitar la vista no crea un roster. Los miembros INACTIVE permanecen históricos, CLOSED es read-only y los cambios posteriores no alteran una convocatoria ya materializada.

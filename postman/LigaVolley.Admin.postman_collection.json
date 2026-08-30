@@ -347,6 +347,18 @@
       ]
     },
     {
+      "name": "14 - Admin People & Match Operations",
+      "description": "Consultas administrativas de People, planteles, preparación, oficiales y supervisión read-only del acta.",
+      "item": [
+        { "name": "People - búsqueda paginada", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/people?query={{personQuery}}&page=1&pageSize=25" } },
+        { "name": "Players - selector paginado", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/players?query={{personQuery}}&active=true&page=1&pageSize=10" } },
+        { "name": "CompetitionRoster - consultar", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries/{{teamEntryId}}/roster" } },
+        { "name": "Match Officials - consultar", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/matches/{{matchId}}/officials" } },
+        { "name": "Match Readiness - ready o blockers", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/matches/{{matchId}}/readiness" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Readiness is an operational 200 projection',()=>{pm.response.to.have.status(200);const b=pm.response.json();pm.expect(b).to.have.property('readyForScorer');pm.expect(b.blockers).to.be.an('array');});"] } }] },
+        { "name": "Admin MatchSheet - no sheet/open/in progress", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/matches/{{matchId}}/match-sheet" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Oversight is 200 even before opening',()=>{pm.response.to.have.status(200);pm.expect(pm.response.json()).to.have.property('exists');});"] } }] }
+      ]
+    },
+    {
       "name": "Competition Scheduling",
       "item": [
         {

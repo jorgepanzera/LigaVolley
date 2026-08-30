@@ -56,6 +56,8 @@ builder.Services.AddScoped<VenueService>();
 builder.Services.AddScoped<TeamEntryService>();
 builder.Services.AddScoped<FixtureService>();
 builder.Services.AddScoped<MatchAdminService>();
+builder.Services.AddScoped<MatchOpeningPrerequisiteEvaluator>();
+builder.Services.AddScoped<MatchOperationsService>();
 builder.Services.AddScoped<StandingsService>();
 builder.Services.AddSingleton<StandingsCalculator>();
 builder.Services.AddScoped<PhaseCompletionService>();

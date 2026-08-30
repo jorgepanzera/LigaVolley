@@ -41,9 +41,7 @@ Los equipos que participan efectivamente en una competición se representan medi
 
 `MATCH` es la entidad reutilizada por fixture y acta electrónica. El partido en vivo agrega información operacional sin crear una identidad paralela del encuentro.
 
-## Principio de identidad
-
-## People v1
+## Principio de identidad y People v1
 
 `PERSON` es la única raíz de identidad física. Su documento opcional es único
 por `(document_type, document_number)`. `PLAYER`, `COACH` y `REFEREE` son perfiles
@@ -73,6 +71,11 @@ Separar entidades permanentes (por ejemplo Team o Person) de su participación c
 La cancha efectiva se deriva centralmente como alineación inicial + sustituciones + `rotation_offset` + reemplazo activo de líbero. El servidor es siempre el jugador regular vigente en P1 del lado que posee el saque; el líbero nunca se convierte en servidor.
 
 `MATCH_SET_LIBERO_PLAN` guarda, por lado y set, el líbero elegido y una máscara de plazas lógicas cubiertas. El plan se configura en READY y se rechaza si alguna combinación de rotación/saque pudiera requerir dos reemplazos simultáneos. P5/P6 son elegibles; P1 sólo lo es cuando el equipo recibe. P2/P3/P4 restauran automáticamente al regular vigente de la plaza.
-# Sesiones de Scorer y sincronización
+
+## Sesiones de Scorer y sincronización
 
 `MATCH_SHEET_SESSION` admite ACTIVE, ABANDONED y CLOSED, conserva `LastAcceptedSequence` y tiene como máximo una fila ACTIVE por MatchSheet. `MATCH_EVENT` mantiene su secuencia global y puede vincularse a la sesión con una secuencia local y hash del payload sincronizado. `MATCH_SHEET_AUDIT` registra `MATCH_SHEET_TAKEN_OVER` con sesión/dispositivo anterior y nuevo.
+
+## Proyecciones administrativas del partido
+
+Match Readiness es una evaluación sin persistencia que reutiliza las precondiciones comunes de OpenMatchSheet. Admin MatchSheet Oversight proyecta MatchSheet, sesión relevante y estado operacional resumido sin exponer eventos, lineups ni estado offline local. No agrega tablas ni estado de dominio.

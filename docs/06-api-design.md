@@ -2,16 +2,16 @@
 
 ## Estado
 
-## Competition Scheduling Admin v1
+La arquitectura de la API y los contratos de los slices implementados están cerrados. Este documento es el catálogo contractual; las reglas de dominio se desarrollan en los documentos temáticos y las decisiones abiertas se concentran en `07-decisions-and-open-items.md`.
+
+### Competition Scheduling Admin v1
 
 - `GET /api/admin/competitions/{competitionId}/schedule-preview`: 200 con `CanSchedule` y blockers operativos; 404 si no existe.
 - `POST /api/admin/competitions/{competitionId}/schedule`: sin body; 200 en éxito y retry idempotente, 404 si no existe, 409 `competition_cannot_schedule` si no está preparada o el estado no admite la operación.
 
 Blockers: `competition_schedule_not_draft`, `competition_schedule_team_count_below_minimum`, `competition_schedule_team_count_above_maximum`, `competition_schedule_no_active_entries`, `competition_schedule_fixture_missing`, `competition_schedule_fixture_incomplete`, `competition_schedule_fixture_participant_mismatch`, `competition_schedule_structure_inconsistent` y `competition_schedule_match_already_started`.
 
-La arquitectura de la API está acordada a nivel de módulos y superficies. Los contratos se cierran módulo por módulo antes de implementar cada bloque.
-
-Este documento incorpora el contrato inicial detallado para:
+Este documento incorpora contratos detallados para:
 
 - `Season`;
 - `Divisional`;
@@ -28,7 +28,7 @@ Este documento incorpora el contrato inicial detallado para:
 
 ## Superficies
 
-## Competition Rosters Admin
+### Competition Rosters Admin v1
 
 El agregado se expone bajo `/api/admin/competitions/{competitionId}/entries/{teamEntryId}/roster`: `GET`, `POST`, `PATCH /status`, `POST /players`, `PUT /players/{rosterPlayerId}`, `PATCH /players/{rosterPlayerId}/status`, `POST /staff` y `PATCH /staff/{rosterStaffId}/status`. Las respuestas usan los DTOs específicos de Admin, enums JSON expresivos y `ProblemDetails` con `code`; creación devuelve 201, mutaciones 200, faltantes 404 y conflictos 409.
 
@@ -40,7 +40,7 @@ Prefijo obligatorio:
 
 `/api/admin`
 
-Responsabilidades previstas:
+Responsabilidades:
 
 - CRUD/consulta de entidades maestras;
 - personas y roles;
@@ -57,7 +57,7 @@ Prefijo obligatorio:
 
 `/api/scorer`
 
-Responsabilidades previstas:
+Responsabilidades:
 
 - abrir/consultar acta;
 - obtener contexto operativo del partido;
@@ -70,7 +70,7 @@ Responsabilidades previstas:
 - fin de set;
 - correcciones;
 - cierre del partido;
-- sincronización futura.
+- sincronización offline y takeover.
 
 ### Public
 
@@ -78,7 +78,7 @@ Prefijo obligatorio:
 
 `/api/public`
 
-Responsabilidades previstas:
+Responsabilidades:
 
 - consultar competiciones publicadas;
 - consultar fixture y calendario;
@@ -100,7 +100,7 @@ Esta superficie será consumida por `LigaVolley.Public` y es de solo consulta. N
 - Priorizar endpoints orientados a casos de uso y agregados.
 - Usar enums/nombres expresivos en el contrato y no exponer detalles físicos como `CHAR(1)` de SQL cuando no aportan valor al consumidor.
 
-## Convenciones HTTP iniciales
+## Convenciones HTTP
 
 - `GET` correcto → `200 OK`.
 - `POST` de creación → `201 Created`.
@@ -980,8 +980,8 @@ Esto permite que una semifinal con ventaja 1-0 y `winsRequired = 2` genere un se
 
 La progresión de una serie no expone `CompletePlayoffSeries` ni un endpoint
 administrativo de avance. El caso de uso de Application
-`ProcessFinishedPlayoffMatch` será invocado por el futuro flujo que cierre
-definitivamente un partido, especialmente el cierre del Scorer.
+`ProcessFinishedPlayoffMatch` es invocado por el flujo que cierra
+definitivamente un partido desde Scorer.
 
 Después de cada `MATCH` `FINISHED` perteneciente a una serie se recalcula:
 
@@ -1014,7 +1014,7 @@ códigos de Application estables `playoff_series_*`.
 
 Cuando todas las series obligatorias de una fase playoff están `FINISHED`, la
 fase pasa automáticamente a `FINISHED`. La Competition no se finaliza: continúa
-requiriendo el futuro `CompleteCompetition`. Series o partidos `CANCELLED` no
+requiriendo `CompleteCompetition`. Series o partidos `CANCELLED` no
 producen ganador ni progresión automática.
 
 # 13. Final y tercer puesto
@@ -1257,15 +1257,17 @@ FIXTURE
 └─ POST /competitions/{competitionId}/fixture/regenerate
 ```
 
-# 18. Flujo deportivo soportado
+# 18. People Admin
 
-# 19. People Admin
+People y documentos se exponen bajo `/api/admin/people`; perfiles y listados bajo `/api/admin/players`, `/api/admin/coaches` y `/api/admin/referees`. Los perfiles se crean con `POST /api/admin/people/{personId}/{player|coach|referee}` sin body. No existe DELETE físico.
 
-# 20. Match Officials
+Los listados son paginados (`page`, `pageSize`, máximo 100). Los enums HTTP son `HealthCard`, `LeagueCard`, `Valid`, `Missing`, `Expired` y `ValidityUnknown`. Request inválido devuelve 400, inexistencia 404 y unicidad 409 con ProblemDetails.
+
+# 19. Match Officials
 
 Admin: `GET/POST /api/admin/matches/{matchId}/officials` y `PUT/DELETE /api/admin/matches/{matchId}/officials/{matchOfficialId}`. Scorer: `PUT /api/scorer/matches/{matchId}/officials/{role}` para reemplazo durante `IN_PROGRESS`. Requests usan `refereeId` y roles expresivos; responses incluyen identidad proyectada de Person y `HealthCardStatus`. Se documentan respuestas 400, 404 y 409 mediante ProblemDetails con `code` estable.
 
-# 21. MatchSheet Opening
+# 20. MatchSheet Opening
 
 - `GET /api/scorer/matches/{matchId}/open-context`: 200, 404 y contexto con warnings/acta existente.
 - `POST /api/scorer/matches/{matchId}/open`: 201 al crear; 200 idempotente; 400 para selección inválida; 404 para Match; 409 para estado persistido incompatible.
@@ -1273,7 +1275,7 @@ Admin: `GET/POST /api/admin/matches/{matchId}/officials` y `PUT/DELETE /api/admi
 
 El request sólo contiene `clientRequestId`, `deviceId` y selecciones por IDs de miembros del roster. TeamEntry, equipos, dorsales, roster, sede y oficiales se resuelven server-side. El response incluye UUID de sheet/session/team/player/staff/libero, estado inicial uniforme y Health Card informativa.
 
-# 22. Electronic Scoresheet Match Engine
+# 21. Electronic Scoresheet Match Engine
 
 - `POST /api/scorer/matches/{matchId}/sets/prepare`
 - `PUT /api/scorer/matches/{matchId}/sets/{setNumber}/lineups/{side}`
@@ -1298,13 +1300,7 @@ Cada mutación devuelve DTO Scorer con set, puntos, sets ganados, saque, servido
 
 `PUT .../lineups/{side}` acepta además, de forma compatible, `liberoMatchPlayerId` y `liberoLogicalPositions` (índices 0..5 correspondientes a P1..P6). Ambos se omiten o envían vacíos cuando el lado no utiliza líbero en ese set. El backend valida la declaración, la pertenencia al lado y la ausencia de ambigüedad simultánea antes de iniciar.
 
-People y documentos se exponen bajo `/api/admin/people`; perfiles y listados bajo
-`/players`, `/coaches` y `/referees`. Los perfiles se crean con
-`POST /people/{personId}/{player|coach|referee}` sin body. No existe DELETE.
-
-Los listados son paginados (`page`, `pageSize`, máximo 100). Los enums HTTP son
-`HealthCard`, `LeagueCard`, `Valid`, `Missing`, `Expired` y `ValidityUnknown`.
-Request inválido devuelve 400, inexistencia 404 y unicidad 409 con ProblemDetails.
+## Flujo deportivo consolidado
 
 ```text
 Competition DRAFT
@@ -1339,7 +1335,8 @@ CompleteCompetition
         ↓
 Competition FINISHED
 ```
-# Public Query API v1
+
+# 22. Public Query API v1
 
 - `GET /api/public/seasons`
 - `GET /api/public/competitions`
@@ -1350,3 +1347,10 @@ Competition FINISHED
 - `GET /api/public/matches/{matchId}/live`
 
 La superficie es GET, anónima y read-only. Publicables: SCHEDULED, IN_PROGRESS, FINISHED y CANCELLED; DRAFT y sus recursos transitivos responden 404. Fixture agrupa fase → ronda, fase → grupo → ronda o playoff → serie → partidos. Standings devuelve tablas independientes calculadas por el servicio canónico. Match Detail separa contexto/resultado de Live, que expone marcador operacional, sets, saque, cancha P1..P6, `LastUpdatedAt` y `ServerTime`. Los códigos estables incluyen `public_competition_not_found`, `public_match_not_found`, `public_live_match_not_available`, `public_live_state_inconsistent`, `public_invalid_standings_scope` y `public_standings_inconsistent`.
+
+# 23. Admin Match Operations v1
+
+- `GET /api/admin/matches/{matchId}/readiness`: siempre 200 para un Match existente aunque tenga blockers; 404 si no existe y 409 sólo ante inconsistencia persistida.
+- `GET /api/admin/matches/{matchId}/match-sheet`: 200 con `exists=false` cuando aún no existe acta; 404 sólo si no existe el Match.
+
+Competition Schedule Readiness responde si Competition puede pasar de DRAFT a SCHEDULED y no requiere roster, oficiales, MatchDate ni Venue. Match Scorer Readiness exige Match SCHEDULED, roster ACTIVE y seis jugadores ACTIVE por lado y los tres roles oficiales. MatchDate, Venue y Health Card son warnings.

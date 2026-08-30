@@ -2,80 +2,71 @@
 
 ## Visión
 
-LigaVolley tendrá un único backend y una única base de datos SQL Server. Tendrá tres frontends separados —Admin, Scorer y Public— que consumen el mismo backend.
+LigaVolley tiene un único backend ASP.NET Core, una única base SQL Server y tres frontends separados: Admin, Scorer y Public.
 
 ## Backend
 
-## Admin v1
-
-`LigaVolley.Admin` usa React 18, TypeScript, Vite, React Router, TanStack Query, React Hook Form y Zod para validación superficial. Es server-centric, consume exclusivamente `/api/admin` y no incorpora PWA, Service Worker, IndexedDB, offline ni MatchEngine local. Competition Workspace agrupa Resumen, Participantes, Fixture y Progresión.
-
-## Backend
-
-Se adopta un **Modular Monolith**. El objetivo es separar claramente módulos y responsabilidades sin asumir el coste operacional y transaccional de microservicios.
+El backend es un **Modular Monolith**. Los módulos comparten proceso y base de datos, pero preservan límites claros de dominio y aplicación. No se introducen microservicios, mensajería distribuida, CQRS distribuido ni event sourcing salvo una decisión de arquitectura posterior.
 
 Proyectos base:
 
-- Domain
-- Application
-- Infrastructure
-- Api
+- `LigaVolley.Domain`: entidades, value objects, reglas e invariantes;
+- `LigaVolley.Application`: casos de uso, contratos, validaciones y puertos;
+- `LigaVolley.Infrastructure`: SQL Server, persistencia e integraciones;
+- `LigaVolley.Api`: endpoints HTTP y composición.
+
+Domain y Application no dependen de Infrastructure. Los endpoints delegan las reglas de negocio en Application o Domain.
 
 ## Frontends
 
 ### Admin
 
-Aplicación orientada a mantenimiento y administración de:
+`LigaVolley.Admin` usa React 18, TypeScript, Vite, React Router, TanStack Query, React Hook Form, Zod superficial y el cliente HTTP centralizado. Es server-centric, consume exclusivamente `/api/admin` y no incorpora PWA, Service Worker, IndexedDB, Dexie, modo offline ni MatchEngine local.
 
-- clubes;
-- equipos;
-- sedes/canchas;
-- personas;
-- jugadores/técnicos/árbitros;
-- planteles por competencia;
-- competiciones;
-- formatos;
-- inscripciones de equipos;
-- fixture;
-- configuración y seguimiento de partidos.
+Admin prepara y supervisa:
+
+- catálogos y personas;
+- perfiles Player, Coach y Referee;
+- competiciones, formatos, participantes, fixture y progresión;
+- planteles por Competition;
+- programación y oficiales de Match;
+- readiness para Scorer;
+- supervisión read-only del MatchSheet.
+
+Competition Workspace agrupa Resumen, Participantes, Fixture, Planteles y Progresión. Match Workspace agrupa Resumen, Preparación, Oficiales y Acta. Admin no abre el acta ni ejecuta acciones deportivas.
 
 ### Scorer
 
-La apertura del acta requiere conectividad y materializa un snapshot operacional autosuficiente (`MATCH_SHEET`, equipos, convocatoria, staff, líberos y sesión). A partir de ese bootstrap la futura PWA podrá persistir el estado en IndexedDB; este slice no implementa todavía el protocolo de sincronización.
+`LigaVolley.Scorer` usa React, TypeScript y Vite como PWA offline-first. Es la única consola operacional del partido.
 
-Aplicación especializada en el partido en vivo. Debe concebirse como una consola operacional con flujos rápidos, estado visible y tolerancia a conectividad intermitente.
+La apertura del acta requiere conectividad y materializa un snapshot autosuficiente con MatchSheet, equipos, convocatoria, staff, líberos y sesión. Desde allí, Dexie/IndexedDB conserva el estado deportivo y una cola local durable. El Service Worker cubre únicamente el App Shell.
+
+El MatchEngine TypeScript es puro y no depende de React, red ni persistencia. Cada mutación se aplica primero localmente y persiste evento, snapshot y secuencia en una transacción; la sincronización con el backend ocurre después. La reconciliación usa snapshot canónico más replay de pendientes.
 
 ### Public
 
-Aplicación de consulta pública, sin funciones administrativas ni de scoring. Permitirá consultar información publicada de las competiciones, incluyendo como mínimo fixture, resultados, tablas de posiciones e información pública de partidos. Sus contratos y experiencia de usuario deben optimizarse para lectura y navegación pública.
+`LigaVolley.Public` usa React 18, TypeScript y Vite. Es anónimo, read-only y server-centric; no usa PWA, IndexedDB deportivo ni MatchEngine local.
 
-Public v1 usa React 18, TypeScript y Vite. Es anónimo, read-only y server-centric: no usa PWA, Dexie, IndexedDB deportivo ni MatchEngine local. Livescore consulta el último estado central mediante polling HTTP; SignalR/WebSocket queda diferido.
+Public sólo consulta información explícitamente publicable. Live lee el último estado operacional central mediante polling HTTP; no usa SignalR ni WebSocket en v1.
 
-## API surfaces
+## Superficies HTTP
 
-Las rutas se separan obligatoriamente por consumidor mediante estos prefijos:
+Las rutas se separan obligatoriamente por consumidor:
 
-- `/api/admin`
-- `/api/scorer`
-- `/api/public`
+- `/api/admin`;
+- `/api/scorer`;
+- `/api/public`.
+
+Cada superficie tiene contratos propios. Se puede reutilizar lógica interna, pero no se comparte automáticamente el mismo DTO HTTP entre consumidores.
+
+## Persistencia y consistencia
+
+SQL Server es la única base de datos. PK, FK, UNIQUE y CHECK preservan las invariantes relacionales pertinentes.
+
+No se adopta event sourcing. Se persiste el estado operacional actual y, cuando corresponde, eventos o auditoría para trazabilidad y reconstrucción.
+
+La sincronización offline entra por Application y reutiliza el mismo MatchEngine del backend dentro de una transacción serializable y el bloqueo existente por Match. `MATCH_EVENT.SequenceNumber` es global y canónico; `LocalSequence` es causal dentro de una sesión.
 
 ## Security
 
-Security es transversal. En esta etapa no están cerrados:
-
-- proveedor de identidad;
-- autenticación;
-- roles;
-- claims;
-- permisos finos.
-
-No acoplar el dominio a una tecnología concreta de autenticación hasta tomar esa decisión.
-
-## Persistencia
-
-SQL Server es la base de datos única de la aplicación. Se preservan restricciones relacionales importantes mediante PK, FK, UNIQUE y CHECK cuando resulte apropiado.
-# Scorer offline
-
-La sincronización offline conserva el monolito modular: el batch entra por Application y reutiliza el mismo MatchEngine de los endpoints online dentro de una transacción serializable y el bloqueo existente por Match. `MATCH_EVENT.SequenceNumber` continúa siendo global/canónico; `LocalSequence` pertenece a una sesión. No se adopta event sourcing ni un motor deportivo alternativo.
-
-`LigaVolley.Scorer` es una PWA React/TypeScript/Vite. Cache Storage contiene solamente el App Shell; Dexie sobre IndexedDB contiene partido, sesión, snapshot y cola durable. React consume un controlador de aplicación, sin reglas deportivas ni acceso directo a fetch/Dexie. El MatchEngine TypeScript es puro y no conoce React, persistencia ni red.
+Security es transversal. Permanecen abiertos el proveedor de identidad, autenticación, roles, claims y permisos finos. El dominio no debe acoplarse a una tecnología concreta hasta cerrar esas decisiones.

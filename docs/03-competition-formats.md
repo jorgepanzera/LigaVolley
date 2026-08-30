@@ -2,6 +2,8 @@
 
 ## Objetivo
 
+Definir la estructura parametrizable de una Competition, su instanciación operativa, la generación incremental del fixture y las reglas de progresión y cierre sin trasladar decisiones estructurales al frontend.
+
 ## Preparación DRAFT → SCHEDULED
 
 Generar el fixture no cambia el status. `ScheduleCompetition` exige estructura consistente, sólo TeamEntry ACTIVE dentro de min/max y fixture inicial completo que coincida exactamente con esos ACTIVE. No exige fechas, sedes, rosters ni oficiales. Al programar persiste `scheduled_at`; el cuadro inicial queda congelado, aunque MatchDate/Venue pueden seguir editándose.
@@ -406,8 +408,8 @@ partidos impares y Team2 en partidos pares. Cada partido incremental nace
 El motor recalcula las victorias desde resultados persistidos y no mantiene un
 contador mutable. Su ejecución es transaccional e idempotente, incluso ante el
 reintento concurrente del mismo resultado o la finalización concurrente de dos
-semifinales. Será llamado por el futuro caso de uso que cierre un partido; no
-existe deliberadamente un endpoint `CompletePlayoffSeries`.
+semifinales. Lo invoca el cierre del partido en Scorer; no existe deliberadamente
+un endpoint `CompletePlayoffSeries`.
 
 ## Estados de PLAYOFF_SERIES
 
@@ -464,6 +466,7 @@ Regla conservadora v1:
 - el frontend debe recibir una advertencia/preview cuando existan programaciones que se perderían.
 
 La programación (`fecha/hora/sede`) permanece conceptualmente separada de la generación de emparejamientos.
-# Proyección Public v1
+
+## Proyección Public v1
 
 Public expone fases y grupos ordenados y series playoff con participantes resueltos o su fuente semántica (`SERIES_WINNER`/`SERIES_LOSER` y código de serie). Conserva `seriesWins = initialWins + realMatchWins`; la ventaja inicial nunca crea partidos ficticios. Playoffs se presentan como bracket/series, no como standings, y sólo aparecen partidos realmente materializados.

@@ -2,11 +2,9 @@
 
 ## Objetivo
 
-Admin + Competition Scheduling v1 está cerrado: `LigaVolley.Admin` usa React 18, TypeScript, Vite, React Router, TanStack Query, React Hook Form, Zod superficial y fetch centralizado. Es server-centric, no PWA y consume sólo `/api/admin`. DRAFT sale mediante `schedule-preview` + `ScheduleCompetition`; sólo TeamEntry ACTIVE cuenta, el fixture inicial debe coincidir exactamente y fechas/sedes, rosters y oficiales no bloquean. `ScheduledAt` registra el instante administrativo. En SCHEDULED el cuadro inicial queda congelado, pero la programación de partidos continúa.
-
 LigaVolley es una plataforma para administrar competiciones de voleibol, operar el acta electrónica de los partidos y ofrecer consulta pública de la información deportiva.
 
-El sistema tendrá:
+El sistema tiene:
 
 - un único backend ASP.NET Core/.NET;
 - una única base SQL Server;
@@ -167,7 +165,7 @@ El sistema debe poder responder en cualquier momento:
 
 ## Offline y sincronización
 
-El Scorer debe diseñarse contemplando funcionamiento offline/intermitente y sincronización posterior. No asumir conectividad permanente en decisiones de dominio o UI.
+Scorer contempla funcionamiento offline/intermitente y sincronización posterior. Ninguna decisión de dominio o UI debe asumir conectividad permanente.
 
 Scorer Console UI v1 está cerrada: la consola mantiene HOME a la izquierda y AWAY a la derecha, muestra marcador/cancha P1..P6 y usa los puntos como acción primaria. PrepareSet permite carga rápida, copiar y rotar la alineación inicial. Los flags de tracking son estables por partido. El uso de líbero se decide por equipo y set mediante un líbero activo y plazas lógicas; sus entradas/salidas naturales y el estado pre-saque se derivan automáticamente. P1 es elegible al recibir, pero el líbero nunca sirve. Un plan que pudiera requerir dos reemplazos simultáneos se rechaza en READY. Timeout, corrección del último punto, revisión, cierre offline y recuperación IndexedDB forman parte del recorrido cerrado.
 
@@ -194,24 +192,48 @@ La tecnología y el protocolo del Scorer quedaron cerrados con PWA Core v1 y Off
 
 ## Fuente de verdad
 
+### People v1
+
 People v1 está cerrado: Player/Coach/Referee son perfiles 1:1 opcionales, sin
 vigencias y nunca implícitos. Health Card y League Card son documentos históricos;
 Health Card es warning para Player/Referee, no bloqueo, y Coach no la requiere.
 No existe entidad League ni DELETE físico en People v1.
 
+### Competition Rosters v1
+
 Competition Rosters v1 está cerrado: existe un roster explícito por TeamEntry con estados DRAFT/ACTIVE/CLOSED, sin mínimos de activación; máximos de 15 jugadores, 2 técnicos y 2 líberos ACTIVE. Los miembros INACTIVE permanecen históricos, ACTIVE sigue editable durante la Competition operativa, PLAYER_ROLE/dorsal son contextuales, Health Card nunca bloquea y no existe DELETE físico. Un roster CLOSED no es editable.
 
-Match Officials v1 está cerrado: `MATCH_OFFICIAL` referencia `REFEREE`; los roles son FIRST_REFEREE, SECOND_REFEREE y SCORER, únicos por Match, y un Referee no puede ocupar dos roles. Admin edita en PENDING/SCHEDULED; Scorer reemplaza sin vaciar roles en IN_PROGRESS. Health Card nunca bloquea y los reemplazos deberán auditarse en el futuro MatchSheet.
+### Match Officials v1
 
-MatchSheet Opening v1 está cerrado: un Match SCHEDULED puede materializar una única acta OPEN. HOME/AWAY se resuelven desde Match; ambos rosters deben estar ACTIVE, con al menos seis jugadores ACTIVE seleccionados por equipo y los tres oficiales presentes. La convocatoria se congela en MATCH_PLAYER, la apertura no inicia Match/Competition, es transaccional e idempotente, crea sesión/auditoría y produce UUID/snapshot para futuro offline.
+Match Officials v1 está cerrado: `MATCH_OFFICIAL` referencia `REFEREE`; los roles son FIRST_REFEREE, SECOND_REFEREE y SCORER, únicos por Match, y un Referee no puede ocupar dos roles. Admin edita en PENDING/SCHEDULED; Scorer reemplaza sin vaciar roles en IN_PROGRESS. Health Card nunca bloquea. La auditoría deportiva definitiva del reemplazo permanece pendiente.
+
+### MatchSheet Opening v1
+
+MatchSheet Opening v1 está cerrado: un Match SCHEDULED puede materializar una única acta OPEN. HOME/AWAY se resuelven desde Match; ambos rosters deben estar ACTIVE, con al menos seis jugadores ACTIVE seleccionados por equipo y los tres oficiales presentes. La convocatoria se congela en MATCH_PLAYER, la apertura no inicia Match/Competition, es transaccional e idempotente y crea sesión, auditoría, UUID y snapshot operacional.
+
+### Scorer Offline Sync v1
 
 Scorer Offline Sync v1 está cerrado: `EventUuid` es la clave idempotente y la secuencia causal es local, contigua y reinicia en 1 por `MATCH_SHEET_SESSION`. El batch admite retries ya aceptados, pero todos los eventos nuevos son atómicos y contiguos. `TakeOverMatchSheet` abandona la sesión esperada, crea la única sesión ACTIVE con secuencia cero y conserva el estado deportivo. Una sesión ABANDONED sólo puede reintentar UUID ya conocidos; no existe merge automático de eventos inéditos.
 
+### Scorer PWA Core v1
+
 LigaVolley.Scorer PWA Core v1 está cerrado: React + TypeScript + Vite, Service Worker sólo para App Shell y Dexie/IndexedDB como persistencia deportiva. Existen exactamente cinco stores (`appMeta`, `matchSheets`, `sessions`, `snapshots`, `events`). Toda mutación aplica primero el MatchEngine local y persiste evento PENDING, snapshot y secuencia en una transacción; sync es posterior. Reconciliation es snapshot canónico más replay de pendientes. Una pérdida de autoridad deja la sesión ABANDONED y el runtime BLOCKED.
+
+### Electronic Scoresheet Match Engine v1
 
 Electronic Scoresheet Match Engine v1 está cerrado: Match best-of-5, primero a tres sets; sets 1..4 a 25 y set 5 a 15, siempre diferencia mínima de dos. Los sets se preparan secuencialmente, las lineups P1..P6 sólo se editan en READY, el saque/servidor/rotación son derivados y Point finaliza el set automáticamente. CorrectLastPoint sólo cancela el último evento deportivo efectivo y reconstruye el estado. Sustituciones y reemplazos de líbero son seguimientos configurables por MatchSheet; timeouts son obligatorios y máximo dos por equipo/set. El tercer set ganado decide el resultado pero sólo CloseMatch deja MatchSheet CLOSED y Match FINISHED y dispara la progresión existente. CLOSED es definitivo. Offline/sync no pertenece a este slice.
 
+### Demo Match Seed
+
 Demo Match Seed está disponible sólo en Development mediante `--seed-demo-match`: reutiliza LIVOSUR 2026, fixture/scheduling existentes, deja un Match SCHEDULED con rosters ACTIVE y tres oficiales, y nunca abre MatchSheet ni inicia el partido. Sus datos se identifican con documentos `DEMO/LV-DEMO-*` y el proceso es idempotente.
+
+### Admin People & Match Operations v1
+
+Admin People & Match Operations v1 está cerrado: Admin incorpora People y directorios de perfiles, Competition Rosters, Match Workspace, Officials, Match Readiness y supervisión read-only del MatchSheet. Admin prepara y supervisa; Scorer sigue siendo la única consola operacional. Competition Schedule Readiness no exige roster, oficiales, fecha ni Venue. Match Scorer Readiness exige Match SCHEDULED, ambos rosters ACTIVE, seis jugadores ACTIVE disponibles por lado y FIRST_REFEREE, SECOND_REFEREE y SCORER; fecha, Venue y Health Card son warnings.
+
+### Public Query + Web v1
+
+`LigaVolley.Public` usa React 18 + TypeScript + Vite y es anónimo, read-only y server-centric. Sólo expone información con una regla explícita de publicación; planteles, personas y oficiales no son públicos por defecto. Una Competition es pública exclusivamente si está SCHEDULED, IN_PROGRESS, FINISHED o CANCELLED; DRAFT y todos sus recursos dependientes se comportan como inexistentes (404). Fixture y resultados comparten recurso, standings reutiliza el cálculo canónico y playoffs se publican como series/bracket. Match Detail contiene contexto/resultado y Live sólo el último estado operacional central, cancha efectiva P1..P6 y saque. `MATCH_SHEET.last_operational_update_at` es server-side y sólo cambia con mutaciones aceptadas. Live incluye `ServerTime`; usa polling HTTP cada 5 s en IN_PROGRESS, 15 s en SUSPENDED, backoff 5/10/20/30 s y se detiene en FINISHED. No hay SignalR/WebSocket, PWA, IndexedDB ni MatchEngine en Public v1.
 
 En orden de prioridad:
 
@@ -221,9 +243,3 @@ En orden de prioridad:
 4. código y tests existentes.
 
 Si dos documentos contradicen una decisión más reciente, actualizar la documentación antes de continuar implementando.
-
-## Publicación pública
-
-`LigaVolley.Public` y `/api/public` solo exponen información explícitamente habilitada para publicación; no equivalen a exponer todo lo almacenado. Como mínimo se contempla: competiciones visibles/publicadas, equipos participantes, fixture, resultados confirmados, tablas de posiciones e información pública de partidos. Planteles, personas, oficiales y otros datos requieren una regla explícita de publicación antes de exponerse.
-
-Public Query + Web v1 está cerrado: `LigaVolley.Public` usa React 18 + TypeScript + Vite, es anónimo, read-only y server-centric. Una Competition es pública exclusivamente si está SCHEDULED, IN_PROGRESS, FINISHED o CANCELLED; DRAFT y todos sus recursos dependientes se comportan como inexistentes (404). Fixture y resultados comparten recurso, standings reutiliza el cálculo canónico y playoffs se publican como series/bracket. Match Detail contiene contexto/resultado y Live sólo el último estado operacional central, cancha efectiva P1..P6 y saque. `MATCH_SHEET.last_operational_update_at` es server-side y sólo cambia con mutaciones aceptadas. Live incluye `ServerTime`; usa polling HTTP cada 5 s en IN_PROGRESS, 15 s en SUSPENDED, backoff 5/10/20/30 s y se detiene en FINISHED. No hay SignalR/WebSocket, PWA, IndexedDB ni MatchEngine en Public v1.
