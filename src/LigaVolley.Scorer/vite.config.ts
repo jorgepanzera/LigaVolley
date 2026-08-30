@@ -22,5 +22,10 @@ export default defineConfig({
       workbox: { navigateFallback: '/index.html', runtimeCaching: [] },
     }),
   ],
-  server: { proxy: { '/api': 'http://localhost:5000' } },
+  server: {
+    host: 'localhost',
+    port: 5174,
+    strictPort: true,
+    proxy: { '/api': 'http://localhost:5195' },
+  },
 });

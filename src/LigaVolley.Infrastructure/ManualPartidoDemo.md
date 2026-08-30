@@ -1,30 +1,70 @@
-Manual para reproducirlo
-Abre cuatro terminales en C:\JCode\LigaVolley.
-1. Crear o restaurar el escenario demo
-$env:ASPNETCORE_ENVIRONMENT = 'Development'
-dotnet run --project src/LigaVolley.Api -- --seed-demo-match
-El seeder es idempotente: puedes ejecutarlo nuevamente sin duplicar jugadores, planteles, oficiales ni seleccionar otro partido demo.
-Al finalizar imprime los identificadores y URLs correspondientes.
-2. Ejecutar la API
-$env:ASPNETCORE_ENVIRONMENT = 'Development'
-dotnet run --project src/LigaVolley.Api --urls http://localhost:5000
-Debe usarse localhost:5000 porque los proxies de Vite apuntan a esa dirección.
-3. Ejecutar Scorer
-cd C:\JCode\LigaVolley\src\LigaVolley.Scorer
-npm install
-npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
-npm install solamente es necesario la primera vez o cuando cambien las dependencias.
-Abrir:
-http://127.0.0.1:5173/?matchId=160
-4. Ejecutar Public
+# Ejecución local de LigaVolley
+
+Abrir cuatro terminales. Cada proceso tiene un puerto fijo y Vite falla de forma
+explícita si ese puerto ya está ocupado.
+
+| Aplicación | Comando desde su proyecto | URL |
+|---|---|---|
+| API | `dotnet run dev` | `http://localhost:5195` |
+| Public | `npm run dev` | `http://localhost:5173` |
+| Scorer | `npm run dev` | `http://localhost:5174` |
+| Admin | `npm run dev` | `http://localhost:5175/admin/` |
+
+## 1. API
+
+```powershell
+cd C:\JCode\LigaVolley\src\LigaVolley.Api
+dotnet run dev
+```
+
+El perfil predeterminado `dev` establece `ASPNETCORE_ENVIRONMENT=Development`
+y publica HTTP en `5195`. Swagger queda disponible en
+`http://localhost:5195/swagger`.
+
+Para crear o restaurar el partido demo antes de iniciar normalmente la API:
+
+```powershell
+dotnet run -- --seed-demo-match
+```
+
+El seeder es idempotente y al finalizar imprime los identificadores y rutas del
+partido preparado.
+
+## 2. Frontends
+
+En una terminal distinta para cada proyecto:
+
+```powershell
 cd C:\JCode\LigaVolley\src\LigaVolley.Public
-npm install
-npm run dev -- --host 127.0.0.1 --port 5174 --strictPort
-Abrir:
-http://127.0.0.1:5174/matches/160
-http://127.0.0.1:5174/competitions/5
-5. Detener todo
-Pulsa Ctrl+C en cada una de las tres terminales de ejecución.
-Nota sobre la vista pública
-Mientras el partido permanezca SCHEDULED, Public mostrará su información programada. Después de iniciar el partido desde Scorer, recarga una vez la página pública; desde ese momento habilitará la consulta live y actualizará el marcador periódicamente.
-Si una instalación anterior del Scorer conserva eventos incompatibles en IndexedDB, limpia los datos del sitio 127.0.0.1:5173 desde DevTools → Application → Storage → Clear site data y vuelve a abrir la URL.
+npm run dev
+```
+
+```powershell
+cd C:\JCode\LigaVolley\src\LigaVolley.Scorer
+npm run dev
+```
+
+```powershell
+cd C:\JCode\LigaVolley\src\LigaVolley.Admin
+npm run dev
+```
+
+Los tres frontends consumen rutas relativas `/api`. Durante desarrollo sus
+servidores Vite las redirigen a `http://localhost:5195`, por lo que no requieren
+CORS ni una URL configurada manualmente en el navegador.
+
+`npm install` sólo es necesario la primera vez o cuando cambien las dependencias.
+
+## 3. Partido demo
+
+Reemplazar los IDs por los impresos por el seeder:
+
+- Scorer: `http://localhost:5174/?matchId=160`
+- Public Match: `http://localhost:5173/matches/160`
+- Public Competition: `http://localhost:5173/competitions/5`
+
+Si una instalación anterior del Scorer conserva eventos incompatibles en
+IndexedDB, limpiar los datos de `http://localhost:5174` desde DevTools →
+Application → Storage → Clear site data.
+
+Para detener los procesos, pulsar `Ctrl+C` en cada terminal.

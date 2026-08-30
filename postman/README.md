@@ -17,7 +17,7 @@ participan en recorridos deportivos transversales.
 4. Iniciar la API:
 
    ```powershell
-   dotnet run --project src/LigaVolley.Api --launch-profile http
+   dotnet run --project src/LigaVolley.Api --launch-profile dev
    ```
 
 El environment representa un despliegue y contiene únicamente `baseUrl`. Los
