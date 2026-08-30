@@ -20,12 +20,12 @@ internal sealed class PublicQueryRepository(LigaVolleyDbContext db) : IPublicQue
         return await q.OrderByDescending(x=>x.Season.Year).ThenBy(x=>x.Division.LevelOrder).ThenBy(x=>x.Name).ToListAsync(ct);
     }
     public Task<Competition?> GetCompetitionAsync(int id,CancellationToken ct)=>Complete(BaseCompetitions()).SingleOrDefaultAsync(x=>x.CompetitionId==id,ct);
-    public async Task<IReadOnlyList<TeamEntry>> ListTeamsAsync(int id,CancellationToken ct)=>await db.TeamEntries.AsNoTracking().Include(x=>x.Team).Where(x=>x.CompetitionId==id&&(x.Status==TeamEntryStatus.Registered||x.Status==TeamEntryStatus.Active)).OrderBy(x=>x.Team.Name).ToListAsync(ct);
+    public async Task<IReadOnlyList<TeamEntry>> ListTeamsAsync(int id,CancellationToken ct)=>await db.TeamEntries.AsNoTracking().Include(x=>x.Team).ThenInclude(x=>x.Club).Where(x=>x.CompetitionId==id&&(x.Status==TeamEntryStatus.Registered||x.Status==TeamEntryStatus.Active)).OrderBy(x=>x.Team.Name).ToListAsync(ct);
     public async Task<IReadOnlyList<Match>> ListMatchesAsync(int id,CancellationToken ct)=>await Matches().Where(x=>x.CompetitionId==id).OrderBy(x=>x.Phase.Sequence).ThenBy(x=>x.RoundNumber).ThenBy(x=>x.MatchNumber).ToListAsync(ct);
     public Task<Match?> GetMatchAsync(int id,CancellationToken ct)=>Matches().Include(x=>x.Competition).ThenInclude(x=>x.Season).Include(x=>x.Competition).ThenInclude(x=>x.Division).SingleOrDefaultAsync(x=>x.MatchId==id,ct);
     public Task<MatchSheet?> GetMatchSheetAsync(int id,CancellationToken ct)=>new MatchSheetRepository(db).GetAsync(id,false,ct);
 
     private IQueryable<Competition> BaseCompetitions()=>db.Competitions.AsNoTracking().Include(x=>x.Season).Include(x=>x.Division);
     private static IQueryable<Competition> Complete(IQueryable<Competition> q)=>q.AsSplitQuery().Include(x=>x.Phases).ThenInclude(x=>x.Groups).Include(x=>x.Phases).ThenInclude(x=>x.Series).ThenInclude(x=>x.Team1Entry).ThenInclude(x=>x!.Team).Include(x=>x.Phases).ThenInclude(x=>x.Series).ThenInclude(x=>x.Team2Entry).ThenInclude(x=>x!.Team).Include(x=>x.Phases).ThenInclude(x=>x.Series).ThenInclude(x=>x.ParticipantSources).ThenInclude(x=>x.SourceSeries);
-    private IQueryable<Match> Matches()=>db.Matches.AsNoTracking().AsSplitQuery().Include(x=>x.Phase).Include(x=>x.PhaseGroup).Include(x=>x.Series).Include(x=>x.HomeTeamEntry).ThenInclude(x=>x!.Team).Include(x=>x.AwayTeamEntry).ThenInclude(x=>x!.Team).Include(x=>x.Venue).Include(x=>x.Sets);
+    private IQueryable<Match> Matches()=>db.Matches.AsNoTracking().AsSplitQuery().Include(x=>x.Phase).Include(x=>x.PhaseGroup).Include(x=>x.Series).Include(x=>x.HomeTeamEntry).ThenInclude(x=>x!.Team).ThenInclude(x=>x.Club).Include(x=>x.AwayTeamEntry).ThenInclude(x=>x!.Team).ThenInclude(x=>x.Club).Include(x=>x.Venue).Include(x=>x.Sets);
 }

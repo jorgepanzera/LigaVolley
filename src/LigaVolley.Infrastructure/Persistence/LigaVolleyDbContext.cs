@@ -72,6 +72,9 @@ public sealed class LigaVolleyDbContext(DbContextOptions<LigaVolleyDbContext> op
                 var x when x.Contains("UX_COMPETITION_ROSTER_PLAYER_active_jersey", StringComparison.OrdinalIgnoreCase) => ("competition_roster_duplicate_jersey_number", "Jersey number must be unique among active players."),
                 var x when x.Contains("UQ_MATCH_OFFICIAL_role",StringComparison.OrdinalIgnoreCase)=>("match_official_role_already_assigned","Role is already assigned."),
                 var x when x.Contains("UQ_MATCH_OFFICIAL_referee",StringComparison.OrdinalIgnoreCase)=>("match_official_referee_already_assigned","Referee is already assigned."),
+                var x when x.Contains("UQ_CLUB_name",StringComparison.OrdinalIgnoreCase)=>("club_name_duplicate","A Club with this name already exists."),
+                var x when x.Contains("UQ_TEAM_name_gender",StringComparison.OrdinalIgnoreCase)=>("team_name_duplicate","A Team with this name and gender already exists."),
+                var x when x.Contains("UQ_VENUE_name",StringComparison.OrdinalIgnoreCase)=>("venue_name_duplicate","A Venue with this name already exists."),
                 _ => ("unique_constraint_conflict", "The operation conflicts with an existing resource.")
             };
             throw new ResourceConflictException(

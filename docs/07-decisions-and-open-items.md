@@ -129,6 +129,15 @@ Este documento resume qué decisiones son fuente de verdad y qué aspectos sigue
 - No abre MatchSheet ni inicia Match o Competition.
 - Usa documentos `DEMO/LV-DEMO-*` y es idempotente.
 
+### Admin Master Data y Club Logo v1
+
+- Club, Team y Venue son maestros administrables, sin DELETE físico.
+- Team pertenece obligatoriamente a Club; `Team.ClubId` no cambia después del alta y TeamEntry continúa siendo la participación contextual.
+- Venue no pertenece a Club ni Team y su desactivación no altera Matches históricos.
+- Club puede tener cero o un logo institucional actual; Team no tiene logo propio y lo proyecta desde Club, también en históricos.
+- El binario vive en filesystem configurable y SQL Server conserva storage key, content type y versión. Se aceptan PNG/JPEG/WebP, máximo 2 MB y 2048x2048, normalizados sin agrandar a un máximo de 512x512.
+- La URL pública cambia con la versión. Scorer queda fuera de esta proyección en v1.
+
 ## Pendientes que no deben inventarse
 
 1. Proveedor y esquema de autenticación/autorización, roles, claims y permisos finos.

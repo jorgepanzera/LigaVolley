@@ -1,5 +1,9 @@
 # 02 — Modelo de dominio consolidado
 
+## Admin Master Data v1
+
+`CLUB` representa la institución estable y posee cero o un logo institucional actual. SQL Server conserva únicamente `logo_storage_key`, `logo_content_type` y `logo_version`; el binario reside en storage de Infrastructure. `TEAM` pertenece obligatoriamente a un Club y no cambia de Club luego del alta. TeamEntry continúa siendo la participación contextual. No existen columnas de logo en Team, TeamEntry o Match. `VENUE` permanece independiente de Club y Team.
+
 ## Bloques principales
 
 El modelo se divide conceptualmente en:

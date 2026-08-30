@@ -5,6 +5,8 @@ using LigaVolley.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using LigaVolley.Application.Abstractions.Storage;
+using LigaVolley.Infrastructure.Storage;
 
 namespace LigaVolley.Infrastructure;
 
@@ -35,6 +37,8 @@ public static class DependencyInjection
         services.AddScoped<IMatchSheetRepository, MatchSheetRepository>();
         services.AddScoped<IPublicQueryRepository, PublicQueryRepository>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<LigaVolleyDbContext>());
+        services.Configure<ClubLogoStorageOptions>(options => options.RootPath = configuration["ClubLogoStorage:RootPath"] ?? "App_Data/club-logos");
+        services.AddSingleton<IClubLogoStorage, FileSystemClubLogoStorage>();
         services.AddScoped<Livosur2026Seeder>();
         services.AddScoped<DemoMatchSeeder>();
         return services;

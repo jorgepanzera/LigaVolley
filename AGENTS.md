@@ -128,9 +128,9 @@ Se reutilizan las entidades ya existentes `TEAM_ENTRY` y `MATCH` donde correspon
 
 El modelo debe soportar al menos este recorrido completo:
 
-1. seleccionar/cargar y validar los planteles habilitados;
-2. abrir acta;
-3. asignar oficiales;
+  1. seleccionar/cargar y validar planteles
+2. verificar/asignar oficiales
+3. abrir acta
 4. registrar alineación inicial P1..P6 de cada set;
 5. iniciar set/partido;
 6. registrar puntos;
@@ -191,6 +191,10 @@ La tecnología y el protocolo del Scorer quedaron cerrados con PWA Core v1 y Off
 - No permitir que el frontend determine reglas estructurales que ya pertenecen al `CompetitionFormat` al generar fixture.
 
 ## Fuente de verdad
+
+### Admin Master Data + Club Logo v1
+
+Club, Team y Venue son maestros Admin sin DELETE físico. Team pertenece obligatoriamente a un Club y su ClubId es inmutable luego de crearlo; TeamEntry sigue siendo la participación competitiva. Venue permanece independiente. Club admite un logo institucional actual PNG/JPEG/WebP (máximo 2 MB y 2048x2048), normalizado a 512x512, almacenado fuera de SQL Server. Team sólo proyecta el logo actual del Club, inclusive en históricos. El asset es público, con URL versionada; Scorer no recibe logos en v1.
 
 ### People v1
 

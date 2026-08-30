@@ -1,6 +1,6 @@
 using LigaVolley.Domain.Divisions; using LigaVolley.Domain.People;
 namespace LigaVolley.Application.People;
-public sealed record PagedResult<T>(IReadOnlyList<T> Items,int Page,int PageSize,int TotalCount){public int TotalPages => (int)Math.Ceiling(TotalCount/(double)PageSize);}
+using LigaVolley.Application.Common;
 public sealed record CreatePersonRequest(string? DocumentType,string? DocumentNumber,string FirstName,string LastName,DateOnly? BirthDate,Gender? Gender,string? Email,string? Phone);
 public sealed record UpdatePersonRequest(string? DocumentType,string? DocumentNumber,string FirstName,string LastName,DateOnly? BirthDate,Gender? Gender,string? Email,string? Phone);
 public sealed record PersonSummaryDto(int PersonId,string FirstName,string LastName,DateOnly? BirthDate,string? DocumentType,string? DocumentNumber,bool Active);

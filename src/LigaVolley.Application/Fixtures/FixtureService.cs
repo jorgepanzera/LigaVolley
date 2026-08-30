@@ -5,6 +5,7 @@ using LigaVolley.Domain.Competitions;
 using LigaVolley.Domain.CompetitionFormats;
 using LigaVolley.Domain.Fixtures;
 using LigaVolley.Domain.TeamEntries;
+using LigaVolley.Application.Clubs;
 
 namespace LigaVolley.Application.Fixtures;
 
@@ -60,8 +61,8 @@ public sealed class FixtureService(ICompetitionRepository competitions, ITeamEnt
     {
         FixtureGenerationDto Metadata(FixtureGeneration x) => new(x.FixtureGenerationId, x.RandomSeed, x.GeneratedAt);
         FixtureMatchDto MatchDto(Match x) => new(x.MatchId, x.RoundNumber, x.MatchNumber,
-            new(x.HomeTeamEntryId!.Value, x.HomeTeamEntry!.TeamId, x.HomeTeamEntry.Team.Name, x.HomeTeamEntry.Status),
-            new(x.AwayTeamEntryId!.Value, x.AwayTeamEntry!.TeamId, x.AwayTeamEntry.Team.Name, x.AwayTeamEntry.Status), x.MatchDate, x.VenueId, x.Status);
+            new(x.HomeTeamEntryId!.Value,x.HomeTeamEntry!.TeamId,x.HomeTeamEntry.Team.Name,x.HomeTeamEntry.Status,x.HomeTeamEntry.Team.Club is null?null:ClubService.LogoUrl(x.HomeTeamEntry.Team.Club)),
+            new(x.AwayTeamEntryId!.Value,x.AwayTeamEntry!.TeamId,x.AwayTeamEntry.Team.Name,x.AwayTeamEntry.Status,x.AwayTeamEntry.Team.Club is null?null:ClubService.LogoUrl(x.AwayTeamEntry.Team.Club)),x.MatchDate,x.VenueId,x.Status);
         var phases = competition.Phases.OrderBy(x => x.Sequence).Select(phase =>
         {
             var phaseGeneration = generations.SingleOrDefault(x => x.PhaseId == phase.CompetitionPhaseId && x.PhaseGroupId == null);

@@ -55,9 +55,10 @@ public sealed class CompetitionProgressionEndpointsTests : IClassFixture<LigaVol
             Assert.True(blockedProblem.RootElement.GetProperty("blockers").GetArrayLength() > 0);
         }
 
+        var club=await Create<ClubDto>("/api/admin/clubs",new CreateClubRequest($"Completion Club {suffix}",null));
         for (var i = 1; i <= 2; i++)
         {
-            var team = await Create<TeamDto>("/api/admin/teams", new CreateTeamRequest($"Completion {suffix} {i}", Gender.Female, null));
+            var team = await Create<TeamDto>("/api/admin/teams", new CreateTeamRequest($"Completion {suffix} {i}", Gender.Female, club.ClubId));
             var entry=await Create<TeamEntryDto>($"/api/admin/competitions/{competition.CompetitionId}/entries", new AddTeamEntryRequest(team.TeamId, (short)i));
             (await factory.Client.PatchAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/entries/{entry.TeamEntryId}/status",new ChangeTeamEntryStatusRequest(TeamEntryStatus.Active),Json)).EnsureSuccessStatusCode();
         }

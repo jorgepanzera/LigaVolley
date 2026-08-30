@@ -1354,3 +1354,7 @@ La superficie es GET, anónima y read-only. Publicables: SCHEDULED, IN_PROGRESS,
 - `GET /api/admin/matches/{matchId}/match-sheet`: 200 con `exists=false` cuando aún no existe acta; 404 sólo si no existe el Match.
 
 Competition Schedule Readiness responde si Competition puede pasar de DRAFT a SCHEDULED y no requiere roster, oficiales, MatchDate ni Venue. Match Scorer Readiness exige Match SCHEDULED, roster ACTIVE y seis jugadores ACTIVE por lado y los tres roles oficiales. MatchDate, Venue y Health Card son warnings.
+
+# 24. Admin Master Data + Club Logo v1
+
+`GET/POST /api/admin/clubs`, `GET/PUT /api/admin/clubs/{clubId}`, `PATCH /api/admin/clubs/{clubId}/active`, `PUT/DELETE /api/admin/clubs/{clubId}/logo`; equivalentes de catálogo sin DELETE físico para `/api/admin/teams` y `/api/admin/venues`; y asset `GET /api/public/clubs/{clubId}/logo`. El upload es `multipart/form-data` con campo `file`, admite PNG/JPEG/WebP válidos hasta 2 MB y 2048x2048. Los DTO proyectan URL versionada y nunca el storage key.

@@ -10,7 +10,7 @@ public sealed record PublicSeasonDto(int SeasonId, short Year, string Name);
 public sealed record PublicDivisionDto(int DivisionId,string Name,short LevelOrder,Gender Gender);
 public sealed record PublicCompetitionSummaryDto(int CompetitionId,string Name,PublicSeasonDto Season,PublicDivisionDto Division,CompetitionPeriodType PeriodType,DateOnly? StartDate,DateOnly? EndDate,CompetitionStatus Status);
 public sealed record PublicCompetitionTeamDto(int TeamEntryId,int TeamId,string TeamName);
-public sealed record PublicTeamSummaryDto(int TeamEntryId,string TeamName);
+public sealed record PublicTeamSummaryDto(int TeamEntryId,string TeamName,string? ClubLogoUrl);
 public sealed record PublicVenueDto(int VenueId,string Name);
 public sealed record PublicSetResultDto(short SetNumber,int HomePoints,int AwayPoints);
 public sealed record PublicMatchScoreDto(int HomeSets,int AwaySets,IReadOnlyList<PublicSetResultDto> Sets);
@@ -34,7 +34,7 @@ public sealed record PublicMatchCompetitionDto(int CompetitionId,string Competit
 public sealed record PublicMatchScopeDto(int PhaseId,string PhaseCode,string PhaseName,int? PhaseGroupId,string? PhaseGroupCode,string? PhaseGroupName,int? SeriesId,string? SeriesCode,string? SeriesName);
 public sealed record PublicMatchResultDto(int HomeSets,int AwaySets,int WinnerTeamEntryId,IReadOnlyList<PublicSetResultDto> Sets);
 public sealed record PublicMatchDto(int MatchId,PublicMatchCompetitionDto Competition,PublicMatchScopeDto Scope,PublicTeamSummaryDto HomeTeam,PublicTeamSummaryDto AwayTeam,DateTimeOffset? MatchDate,PublicVenueDto? Venue,MatchStatus Status,short? RoundNumber,short? MatchNumber,PublicMatchResultDto? Result,bool LiveAvailable);
-public sealed record PublicLiveTeamDto(int TeamEntryId,string TeamName,int SetsWon);
+public sealed record PublicLiveTeamDto(int TeamEntryId,string TeamName,int SetsWon,string? ClubLogoUrl);
 public sealed record PublicLiveSetDto(short SetNumber,MatchSetStatus Status,int HomePoints,int AwayPoints,MatchSide? WinnerSide);
 public sealed record PublicCourtPlayerDto(string JerseyNumber,string DisplayName,bool IsLibero);
 public sealed record PublicCourtPositionDto(byte Position,PublicCourtPlayerDto Player);

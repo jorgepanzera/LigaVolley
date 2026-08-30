@@ -16,6 +16,23 @@
   "variable": [{ "key": "runSuffix", "value": "" }],
   "item": [
     {
+      "name": "11 - Master Data",
+      "item": [
+        {"name":"Clubs - Create","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"name\": \"Club {{$randomCompanyName}} {{runSuffix}}\", \"shortName\": \"LV\" }"},"url":"{{baseUrl}}/api/admin/clubs"}},
+        {"name":"Clubs - List paged","request":{"method":"GET","url":"{{baseUrl}}/api/admin/clubs?page=1&pageSize=20&active=true"}},
+        {"name":"Clubs - Update","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"name\": \"Club actualizado {{runSuffix}}\", \"shortName\": \"CA\" }"},"url":"{{baseUrl}}/api/admin/clubs/{{clubId}}"}},
+        {"name":"Clubs - Set active","request":{"method":"PATCH","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"active\": false }"},"url":"{{baseUrl}}/api/admin/clubs/{{clubId}}/active"}},
+        {"name":"Club Logos - Upload or replace","request":{"method":"PUT","body":{"mode":"formdata","formdata":[{"key":"file","type":"file","src":""}]},"url":"{{baseUrl}}/api/admin/clubs/{{clubId}}/logo"}},
+        {"name":"Club Logos - Public read","request":{"method":"GET","url":"{{baseUrl}}/api/public/clubs/{{clubId}}/logo?v=1"}},
+        {"name":"Club Logos - Delete","request":{"method":"DELETE","url":"{{baseUrl}}/api/admin/clubs/{{clubId}}/logo"}},
+        {"name":"Teams - Create","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"name\": \"Team {{runSuffix}}\", \"gender\": \"Female\", \"clubId\": {{clubId}} }"},"url":"{{baseUrl}}/api/admin/teams"}},
+        {"name":"Teams - List paged","request":{"method":"GET","url":"{{baseUrl}}/api/admin/teams?page=1&pageSize=20&clubId={{clubId}}&active=true"}},
+        {"name":"Teams - Update without ClubId","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"name\": \"Team actualizado {{runSuffix}}\", \"gender\": \"Female\" }"},"url":"{{baseUrl}}/api/admin/teams/{{teamId}}"}},
+        {"name":"Venues - Create","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"name\": \"Sede {{runSuffix}}\", \"address\": \"Dirección\" }"},"url":"{{baseUrl}}/api/admin/venues"}},
+        {"name":"Venues - List paged","request":{"method":"GET","url":"{{baseUrl}}/api/admin/venues?page=1&pageSize=20&active=true"}}
+      ]
+    },
+    {
       "name": "10 - Match Sheet / OpenMatchSheet",
       "description": "Bootstrap Scorer, apertura atómica e idempotente y validaciones de convocatoria.",
       "item": [

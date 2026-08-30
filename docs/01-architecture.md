@@ -35,6 +35,8 @@ Admin prepara y supervisa:
 
 Competition Workspace agrupa Resumen, Participantes, Fixture, Planteles y Progresión. Match Workspace agrupa Resumen, Preparación, Oficiales y Acta. Admin no abre el acta ni ejecuta acciones deportivas.
 
+Admin administra Club, Team y Venue. Los logos institucionales de Club se acceden mediante un puerto de Application y una implementación filesystem configurable de Infrastructure; SQL Server conserva sólo metadata y referencia.
+
 ### Scorer
 
 `LigaVolley.Scorer` usa React, TypeScript y Vite como PWA offline-first. Es la única consola operacional del partido.

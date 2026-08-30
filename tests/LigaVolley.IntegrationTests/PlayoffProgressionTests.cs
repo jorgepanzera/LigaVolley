@@ -102,9 +102,10 @@ public sealed class PlayoffProgressionTests : IClassFixture<LigaVolleyApiFactory
             [new(1, TiebreakCriterion.MatchWins, SortDirection.Desc), new(2, TiebreakCriterion.PointRatio, SortDirection.Desc)], []);
         var format = await Create<CompetitionFormatDto>("/api/admin/competition-formats", new CreateCompetitionFormatRequest($"PP_{suffix}", $"Playoff {suffix}", null, 4, 4, definition));
         var competition = await Create<CompetitionDto>("/api/admin/competitions", new CreateCompetitionRequest($"Playoff {suffix}", season.SeasonId, division.DivisionId, CompetitionPeriodType.Annual, null, null, new(CompetitionStructureSourceType.Format, format.CompetitionFormatId, null)));
+        var club=await Create<ClubDto>("/api/admin/clubs",new CreateClubRequest($"Playoff Club {suffix}",null));
         for (var i = 1; i <= 4; i++)
         {
-            var team = await Create<TeamDto>("/api/admin/teams", new CreateTeamRequest($"Playoff {suffix} {i}", Gender.Female, null));
+            var team = await Create<TeamDto>("/api/admin/teams", new CreateTeamRequest($"Playoff {suffix} {i}", Gender.Female, club.ClubId));
             var entry=await Create<TeamEntryDto>($"/api/admin/competitions/{competition.CompetitionId}/entries", new AddTeamEntryRequest(team.TeamId, (short)i));
             (await factory.Client.PatchAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/entries/{entry.TeamEntryId}/status",new ChangeTeamEntryStatusRequest(TeamEntryStatus.Active),Json)).EnsureSuccessStatusCode();
         }

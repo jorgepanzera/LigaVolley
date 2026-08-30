@@ -20,6 +20,10 @@ public sealed class ResourceNotFoundException(string resource, object id)
         "PublicCompetition" => "public_competition_not_found",
         "PublicMatch" => "public_match_not_found",
         "PublicLiveMatch" => "public_live_match_not_available",
+        "Club" => "club_not_found",
+        "ClubLogo" => "club_logo_not_found",
+        "Team" => "team_not_found",
+        "Venue" => "venue_not_found",
         _ => "not_found"
     };
 }

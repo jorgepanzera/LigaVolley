@@ -5,6 +5,7 @@ using LigaVolley.Domain.CompetitionFormats;
 using LigaVolley.Domain.Competitions;
 using LigaVolley.Domain.Fixtures;
 using LigaVolley.Domain.MatchSheets;
+using LigaVolley.Application.Clubs;
 
 namespace LigaVolley.Application.PublicQueries;
 
@@ -69,7 +70,7 @@ public sealed class PublicQueryService(IPublicQueryRepository repository, Standi
         if(m.Status is not (MatchStatus.InProgress or MatchStatus.Suspended or MatchStatus.Finished))throw new ResourceNotFoundException("PublicLiveMatch",matchId);
         var s=await repository.GetMatchSheetAsync(matchId,ct)??throw new ResourceConflictException("public_live_state_inconsistent","The central live state is unavailable."); var current=s.Sets.OrderByDescending(x=>x.SetNumber).FirstOrDefault();
         var home=s.Teams.SingleOrDefault(x=>x.Side==MatchSide.Home);var away=s.Teams.SingleOrDefault(x=>x.Side==MatchSide.Away);if(home is null||away is null)throw new ResourceConflictException("public_live_state_inconsistent","Live teams are inconsistent.");
-        return new(matchId,m.Status,new(home.TeamEntryId,home.TeamEntry.Team.Name,s.HomeSets),new(away.TeamEntryId,away.TeamEntry.Team.Name,s.AwaySets),current?.SetNumber,s.Sets.OrderBy(x=>x.SetNumber).Select(x=>new PublicLiveSetDto(x.SetNumber,x.Status,x.HomePoints,x.AwayPoints,x.WinnerSide)).ToArray(),current?.CurrentServingSide,Court(current,home),Court(current,away),s.LastOperationalUpdateAt,DateTimeOffset.UtcNow);
+        return new(matchId,m.Status,new(home.TeamEntryId,home.TeamEntry.Team.Name,s.HomeSets,m.HomeTeamEntry?.Team.Club is null?null:ClubService.LogoUrl(m.HomeTeamEntry.Team.Club)),new(away.TeamEntryId,away.TeamEntry.Team.Name,s.AwaySets,m.AwayTeamEntry?.Team.Club is null?null:ClubService.LogoUrl(m.AwayTeamEntry.Team.Club)),current?.SetNumber,s.Sets.OrderBy(x=>x.SetNumber).Select(x=>new PublicLiveSetDto(x.SetNumber,x.Status,x.HomePoints,x.AwayPoints,x.WinnerSide)).ToArray(),current?.CurrentServingSide,Court(current,home),Court(current,away),s.LastOperationalUpdateAt,DateTimeOffset.UtcNow);
     }
 
     private async Task<StandingsDto> Canonical(Competition c,CompetitionPhase p,CompetitionPhaseGroup? g,CancellationToken ct){try{return await standings.GetAsync(c.CompetitionId,p.CompetitionPhaseId,g?.PhaseGroupId,ct);}catch(ResourceConflictException ex){throw new ResourceConflictException("public_standings_inconsistent",ex.Message);}}
@@ -79,7 +80,7 @@ public sealed class PublicQueryService(IPublicQueryRepository repository, Standi
     private static PublicCompetitionSummaryDto Summary(Competition c)=>new(c.CompetitionId,c.Name,Season(c),Division(c),c.PeriodType,c.StartDate,c.EndDate,c.Status);
     private static PublicSeasonDto Season(Competition c)=>new(c.SeasonId,c.Season.Year,c.Season.Name);
     private static PublicDivisionDto Division(Competition c)=>new(c.DivisionId,c.Division.Name,c.Division.LevelOrder,c.Division.Gender);
-    private static PublicTeamSummaryDto? Team(Domain.TeamEntries.TeamEntry? x)=>x is null?null:new(x.TeamEntryId,x.Team.Name);
+    private static PublicTeamSummaryDto? Team(Domain.TeamEntries.TeamEntry? x)=>x is null?null:new(x.TeamEntryId,x.Team.Name,x.Team.Club is null?null:ClubService.LogoUrl(x.Team.Club));
     private static PublicVenueDto? Venue(Match m)=>m.Venue is null?null:new(m.Venue.VenueId,m.Venue.Name);
     private static DateTimeOffset? Date(DateTime? value)=>value.HasValue?new DateTimeOffset(DateTime.SpecifyKind(value.Value,DateTimeKind.Utc)):null;
     private static IReadOnlyList<PublicSetResultDto> Sets(Match m)=>m.Sets.OrderBy(x=>x.SetNumber).Select(x=>new PublicSetResultDto(x.SetNumber,x.HomePoints,x.AwayPoints)).ToArray();

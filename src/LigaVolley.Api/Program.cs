@@ -137,6 +137,7 @@ app.MapScorerMatchSheetEndpoints();
 app.MapScorerMatchEngineEndpoints();
 app.MapScorerOfflineSyncEndpoints();
 app.MapPublicQueryEndpoints();
+app.MapPublicClubLogoEndpoint();
 
 app.Run();
 

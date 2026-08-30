@@ -69,7 +69,7 @@ public sealed class MatchAdminServiceTests
     {
         var fixture = Setup(inactiveVenue: true);
         var inactive = await Assert.ThrowsAsync<ResourceConflictException>(() => fixture.Service.ScheduleAsync(51, new(null, 8), default));
-        Assert.Equal("venue_inactive", inactive.Code);
+        Assert.Equal("match_schedule_venue_inactive", inactive.Code);
 
         Set(fixture.Match, nameof(Match.Status), MatchStatus.InProgress);
         var state = await Assert.ThrowsAsync<ResourceConflictException>(() => fixture.Service.ScheduleAsync(51, new(null, null), default));

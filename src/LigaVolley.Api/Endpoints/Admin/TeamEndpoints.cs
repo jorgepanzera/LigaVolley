@@ -10,8 +10,8 @@ internal static class TeamEndpoints
     {
         var group = endpoints.MapGroup("/api/admin/teams").WithTags("Admin Teams");
 
-        // Example: GET /api/admin/teams?clubId=1&gender=Female&active=true
-        group.MapGet("/", async (int? clubId, Gender? gender, bool? active, TeamService service, CancellationToken ct) => Results.Ok(await service.ListAsync(clubId, gender, active, ct)));
+        // GET /api/admin/teams?page=1&pageSize=20&search=first&clubId=1&gender=Female&active=true
+        group.MapGet("/",async(int? page,int? pageSize,string? search,int? clubId,Gender? gender,bool? active,TeamService service,CancellationToken ct)=>{var result=await service.ListAsync(search,clubId,gender,active,page??1,pageSize??20,ct);return Results.Ok(page.HasValue||pageSize.HasValue?result:result.Items);});
 
         // Example: GET /api/admin/teams/1
         group.MapGet("/{id:int}", async (int id, TeamService service, CancellationToken ct) => Results.Ok(await service.GetAsync(id, ct)));

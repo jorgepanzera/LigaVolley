@@ -6,11 +6,11 @@ namespace LigaVolley.Infrastructure.Persistence.Repositories;
 
 internal sealed class ClubRepository(LigaVolleyDbContext db) : IClubRepository
 {
-    public async Task<IReadOnlyList<Club>> ListAsync(bool? active, CancellationToken ct)
+    public async Task<(IReadOnlyList<Club> Items,int Total)> ListAsync(string? search,bool? active,int page,int pageSize,CancellationToken ct)
     {
         var query = db.Clubs.AsNoTracking();
         if (active.HasValue) query = query.Where(x => x.Active == active);
-        return await query.OrderBy(x => x.Name).ToListAsync(ct);
+        if(!string.IsNullOrWhiteSpace(search))query=query.Where(x=>x.Name.Contains(search));var total=await query.CountAsync(ct);return(await query.OrderBy(x=>x.Name).ThenBy(x=>x.ClubId).Skip((page-1)*pageSize).Take(pageSize).ToListAsync(ct),total);
     }
 
     public Task<Club?> GetAsync(int id, bool tracking, CancellationToken ct)

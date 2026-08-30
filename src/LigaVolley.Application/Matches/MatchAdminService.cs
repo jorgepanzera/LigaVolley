@@ -4,6 +4,7 @@ using LigaVolley.Application.Fixtures;
 using LigaVolley.Application.Venues;
 using LigaVolley.Domain.Fixtures;
 using LigaVolley.Domain.Venues;
+using LigaVolley.Application.Clubs;
 
 namespace LigaVolley.Application.Matches;
 
@@ -30,7 +31,7 @@ public sealed class MatchAdminService(IFixtureRepository fixtures, IVenueReposit
             selectedVenue = await venues.GetAsync(venueId, false, ct)
                 ?? throw new ResourceNotFoundException("Venue", venueId);
             if (!selectedVenue.Active)
-                throw new ResourceConflictException("venue_inactive", "An inactive venue cannot be assigned to a match.");
+                throw new ResourceConflictException("match_schedule_venue_inactive", "An inactive venue cannot be assigned to a match.");
         }
 
         match.Schedule(request.MatchDate?.UtcDateTime, request.VenueId);
@@ -56,5 +57,5 @@ public sealed class MatchAdminService(IFixtureRepository fixtures, IVenueReposit
         match.Status);
 
     private static FixtureTeamEntryDto? MapTeam(Domain.TeamEntries.TeamEntry? entry) => entry is null ? null
-        : new(entry.TeamEntryId, entry.TeamId, entry.Team.Name, entry.Status);
+        : new(entry.TeamEntryId,entry.TeamId,entry.Team.Name,entry.Status,entry.Team.Club is null?null:ClubService.LogoUrl(entry.Team.Club));
 }

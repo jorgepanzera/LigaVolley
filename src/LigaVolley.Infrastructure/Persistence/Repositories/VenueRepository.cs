@@ -6,11 +6,11 @@ namespace LigaVolley.Infrastructure.Persistence.Repositories;
 
 internal sealed class VenueRepository(LigaVolleyDbContext db) : IVenueRepository
 {
-    public async Task<IReadOnlyList<Venue>> ListAsync(bool? active, CancellationToken ct)
+    public async Task<(IReadOnlyList<Venue> Items,int Total)> ListAsync(string? search,bool? active,int page,int pageSize,CancellationToken ct)
     {
         var query = db.Venues.AsNoTracking();
         if (active.HasValue) query = query.Where(x => x.Active == active);
-        return await query.OrderBy(x => x.Name).ToListAsync(ct);
+        if(!string.IsNullOrWhiteSpace(search))query=query.Where(x=>x.Name.Contains(search));var total=await query.CountAsync(ct);return(await query.OrderBy(x=>x.Name).ThenBy(x=>x.VenueId).Skip((page-1)*pageSize).Take(pageSize).ToListAsync(ct),total);
     }
 
     public Task<Venue?> GetAsync(int id, bool tracking, CancellationToken ct)
