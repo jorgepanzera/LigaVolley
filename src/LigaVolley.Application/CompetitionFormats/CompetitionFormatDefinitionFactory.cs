@@ -3,7 +3,7 @@ using LigaVolley.Domain.CompetitionFormats;
 
 namespace LigaVolley.Application.CompetitionFormats;
 
-internal static class CompetitionFormatDefinitionFactory
+public static class CompetitionFormatDefinitionFactory
 {
     public static CompetitionFormatValidationDto Validate(short minTeams, short maxTeams, CompetitionFormatDefinitionDto? definition, string? code = null, string? name = null)
     {

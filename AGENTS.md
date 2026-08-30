@@ -235,6 +235,10 @@ Electronic Scoresheet Match Engine v1 está cerrado: Match best-of-5, primero a 
 
 Demo Match Seed está disponible sólo en Development mediante `--seed-demo-match`: reutiliza LIVOSUR 2026, fixture/scheduling existentes, deja un Match SCHEDULED con rosters ACTIVE y tres oficiales, y nunca abre MatchSheet ni inicia el partido. Sus datos se identifican con documentos `DEMO/LV-DEMO-*` y el proceso es idempotente.
 
+### Competition Test Data Reset
+
+La limpieza controlada de datos competitivos de prueba está disponible sólo en Development mediante `--reset-competition-test-data`. Es una operación destructiva, transaccional e idempotente: exige que existan exactamente las Competition preservables 1..24 y que referencien CompetitionFormat 1 o 2; elimina Competition mayores a 24 con todo su grafo deportivo, elimina CompetitionFormat desde 3 y reconstruye completamente los hijos de los formatos raíz 1 y 2 con sus definiciones canónicas. No elimina maestros compartidos ni modifica las estructuras competitivas ya materializadas de Competition 1..24.
+
 ### Admin People & Match Operations v1
 
 Admin People & Match Operations v1 está cerrado: Admin incorpora People y directorios de perfiles, Competition Rosters, Match Workspace, Officials, Match Readiness y supervisión read-only del MatchSheet. Admin prepara y supervisa; Scorer sigue siendo la única consola operacional. Competition Schedule Readiness no exige roster, oficiales, fecha ni Venue. Match Scorer Readiness exige Match SCHEDULED, ambos rosters ACTIVE, seis jugadores ACTIVE disponibles por lado y FIRST_REFEREE, SECOND_REFEREE y SCORER; fecha, Venue y Health Card son warnings.

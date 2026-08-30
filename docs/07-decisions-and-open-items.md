@@ -137,6 +137,14 @@ Este documento resume qué decisiones son fuente de verdad y qué aspectos sigue
 - No abre MatchSheet ni inicia Match o Competition.
 - Usa documentos `DEMO/LV-DEMO-*` y es idempotente.
 
+### Competition Test Data Reset
+
+- Comando exclusivo de Development: `dotnet run --project src/LigaVolley.Api -- --reset-competition-test-data`.
+- Es destructivo, transaccional e idempotente. Antes de borrar verifica que existan Competition 1..24 sin huecos, que todas referencien CompetitionFormat 1 o 2 y que ambos formatos raíz existan.
+- Conserva Competition 1..24 y los maestros compartidos; elimina Competition mayores a 24 y todo su grafo deportivo dependiente.
+- Conserva las raíces CompetitionFormat 1 y 2, elimina sus hijos y los reconstruye canónicamente; elimina formatos desde ID 3.
+- No sincroniza ni recrea fases, grupos o series ya materializados en las Competition preservadas. Cualquier fallo revierte la transacción completa.
+
 ### Logos de Clubs LIVOSUR 2026
 
 En Development, primero se cargan los datos base y luego, mediante un comando separado, los logos aprobados:

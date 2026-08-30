@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.AddScoped<Livosur2026Seeder>();
         services.AddScoped<Livosur2026ClubLogoSeeder>();
         services.AddScoped<DemoMatchSeeder>();
+        services.AddScoped<CompetitionTestDataResetter>();
         return services;
     }
 }

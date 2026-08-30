@@ -485,3 +485,12 @@ La programación (`fecha/hora/sede`) permanece conceptualmente separada de la ge
 ## Proyección Public v1
 
 Public expone fases y grupos ordenados y series playoff con participantes resueltos o su fuente semántica (`SERIES_WINNER`/`SERIES_LOSER` y código de serie). Conserva `seriesWins = initialWins + realMatchWins`; la ventaja inicial nunca crea partidos ficticios. Playoffs se presentan como bracket/series, no como standings, y sólo aparecen partidos realmente materializados.
+
+## Formatos canónicos de Development
+
+El comando de limpieza competitiva reconstruye dos formatos raíz activos:
+
+- `CompetitionFormat 1` (`ROUND_ROBIN`, 6..8 equipos): fase `REGULAR` a dos ruedas con `MIRRORED_HOME_AWAY`; los cuatro primeros clasifican a `SF1`/`SF2`; semifinales con ventaja inicial 1-0 y `winsRequired = 2`; tercer puesto y final a partido único.
+- `CompetitionFormat 2` (`SPLIT_STAGE`, 9..16 equipos): `REGULAR` a una rueda, seguida por `SECOND_STAGE` con grupos `CHAMPIONSHIP` y `RELEGATION`, una rueda y `CarryOverMode.NONE`; `TOP_HALF`/`BOTTOM_HALF` materializan el split y los cuatro primeros de Championship clasifican a playoffs con la misma estructura anterior.
+
+Ambos formatos otorgan 2/1 puntos de tabla para resultados 3-0, 3-1 y 3-2. Los desempates, todos descendentes, son: puntos de tabla, partidos ganados, ratio de sets, ratio de puntos y enfrentamiento directo. Los puestos 1..2 de la Final tienen movimiento de promoción con delta -1; los dos últimos de Regular (formato 1) o Relegation (formato 2) tienen descenso con delta +1.

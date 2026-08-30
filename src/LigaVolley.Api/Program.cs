@@ -31,7 +31,8 @@ var builder = WebApplication.CreateBuilder(args);
 var runLivosurSeed = args.Contains("--seed-livosur-2026", StringComparer.OrdinalIgnoreCase);
 var runLivosurClubLogoSeed = args.Contains("--seed-livosur-2026-club-logos", StringComparer.OrdinalIgnoreCase);
 var runDemoMatchSeed = args.Contains("--seed-demo-match", StringComparer.OrdinalIgnoreCase);
-if (builder.Environment.IsDevelopment() || runLivosurSeed || runLivosurClubLogoSeed || runDemoMatchSeed)
+var resetCompetitionTestData = args.Contains("--reset-competition-test-data", StringComparer.OrdinalIgnoreCase);
+if (builder.Environment.IsDevelopment() || runLivosurSeed || runLivosurClubLogoSeed || runDemoMatchSeed || resetCompetitionTestData)
 {
     builder.Logging.ClearProviders();
     builder.Logging.AddConsole();
@@ -75,8 +76,20 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
-if (new[] { runLivosurSeed, runLivosurClubLogoSeed, runDemoMatchSeed }.Count(x => x) > 1)
+if (new[] { runLivosurSeed, runLivosurClubLogoSeed, runDemoMatchSeed, resetCompetitionTestData }.Count(x => x) > 1)
     throw new InvalidOperationException("Choose only one seed command.");
+
+if (resetCompetitionTestData)
+{
+    if (!app.Environment.IsDevelopment())
+        throw new InvalidOperationException("The competition test data reset can only run in the Development environment.");
+
+    await using var scope = app.Services.CreateAsyncScope();
+    var result = await scope.ServiceProvider.GetRequiredService<CompetitionTestDataResetter>().ResetAsync(true);
+    foreach (var row in result.DeletedRows.Where(x => x.Value > 0))
+        app.Logger.LogInformation("Reset deleted {Rows} rows from {Table}.", row.Value, row.Key);
+    return;
+}
 
 if (runLivosurClubLogoSeed)
 {
