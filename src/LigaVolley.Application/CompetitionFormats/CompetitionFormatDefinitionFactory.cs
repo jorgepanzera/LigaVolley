@@ -5,12 +5,15 @@ namespace LigaVolley.Application.CompetitionFormats;
 
 internal static class CompetitionFormatDefinitionFactory
 {
-    public static CompetitionFormatValidationDto Validate(short minTeams, short maxTeams, CompetitionFormatDefinitionDto? definition)
+    public static CompetitionFormatValidationDto Validate(short minTeams, short maxTeams, CompetitionFormatDefinitionDto? definition, string? code = null, string? name = null)
     {
         var errors = new List<CompetitionFormatValidationErrorDto>();
+        var warnings = new List<CompetitionFormatValidationErrorDto>();
         void Error(string code, string path, string message) => errors.Add(new(code, path, message));
+        void Warning(string code,string path,string message)=>warnings.Add(new(code,path,message,ValidationSeverity.Warning));
+        if(code is not null)Required(code,30,"code",Error);if(name is not null)Required(name,150,"name",Error);
         if (minTeams <= 1 || maxTeams < minTeams) Error("format.invalid_team_range", "minTeams", "MinTeams must be greater than one and MaxTeams cannot be lower than MinTeams.");
-        if (definition is null) { Error("format.definition_required", "definition", "Definition is required."); return new(false, errors); }
+        if (definition is null) { Error("format.definition_required", "definition", "Definition is required."); return new(false, errors,warnings,[]); }
         var phases = definition.Phases ?? [];
         if (phases.Count == 0) Error("format.phase_required", "definition.phases", "At least one phase is required.");
         ValidateCodes(phases.Select(x => x.Code), "definition.phases", "phase", Error);
@@ -30,6 +33,8 @@ internal static class CompetitionFormatDefinitionFactory
             if (phase.PhaseType == PhaseType.Playoff && (phase.FixtureMode != FixtureMode.Playoff || phase.Rounds is not null)) Error("format.invalid_playoff_fixture", path, "Playoff phases require FixtureMode.Playoff and Rounds=null.");
             if (phase.PhaseType != PhaseType.Playoff && (phase.Series?.Count ?? 0) > 0) Error("format.series_phase_mismatch", path + ".series", "Series can only belong to playoff phases.");
             ValidateCodes((phase.Groups ?? []).Select(x => x.Code), path + ".groups", "group", Error);
+            if(!(phase.Groups??[]).OrderBy(x=>x.Sequence).Select(x=>x.Sequence).SequenceEqual(Enumerable.Range(1,(phase.Groups??[]).Count).Select(x=>(short)x)))Error("format.invalid_group_sequence",path+".groups","Group sequences must be contiguous from 1.");
+            if(!(phase.Series??[]).OrderBy(x=>x.Sequence).Select(x=>x.Sequence).SequenceEqual(Enumerable.Range(1,(phase.Series??[]).Count).Select(x=>(short)x)))Error("format.invalid_series_sequence",path+".series","Series sequences must be contiguous from 1.");
             foreach (var (group, g) in (phase.Groups ?? []).Select((x, i) => (x, i)))
             {
                 var gp = $"{path}.groups[{g}]"; Required(group.Code, 30, gp + ".code", Error); Required(group.Name, 100, gp + ".name", Error);
@@ -62,26 +67,36 @@ internal static class CompetitionFormatDefinitionFactory
             if (!range && (rule.FromPosition.HasValue || rule.ToPosition.HasValue)) Error("format.invalid_qualification_positions", path, "Half selections cannot specify positions.");
             if (rule.ToPosition > maxTeams) Error("format.position_out_of_range", path + ".toPosition", "Position exceeds MaxTeams.");
             if (sourcePhase is not null && !GroupExists(sourcePhase, rule.SourceGroupCode)) Error("format.group_not_found", path + ".sourceGroupCode", "Source group was not found in source phase.");
+            if(sourcePhase is not null&&(sourcePhase.Groups?.Count??0)>1&&string.IsNullOrWhiteSpace(rule.SourceGroupCode))Error("format.source_group_required",path+".sourceGroupCode","A standings source group is required when the phase has multiple groups.");
             if (rule.TargetType == QualificationTargetType.Group)
             {
-                if (targetPhase is null || !GroupExists(targetPhase, rule.TargetGroupCode) || rule.TargetSeriesCode is not null || rule.TargetSide is not null) Error("format.invalid_group_target", path, "Group target is inconsistent.");
+                if (targetPhase is null || string.IsNullOrWhiteSpace(rule.TargetGroupCode) || !GroupExists(targetPhase, rule.TargetGroupCode) || rule.TargetSeriesCode is not null || rule.TargetSide is not null) Error("format.invalid_group_target", path, "Group target is inconsistent.");
             }
             else if (!range || rule.FromPosition != rule.ToPosition || rule.TargetGroupCode is not null || rule.TargetSide is not 1 and not 2 || !seriesByCode.TryGetValue(rule.TargetSeriesCode?.Trim() ?? "", out var targetSeries) || targetPhase is null || !(targetPhase.Series ?? []).Contains(targetSeries)) Error("format.invalid_series_target", path, "Series target is inconsistent.");
         }
-        foreach (var group in (definition.ScoringRules ?? []).GroupBy(x => (x.WinnerSets, x.LoserSets))) if (group.Count() > 1) Error("format.duplicate_scoring_rule", "definition.scoringRules", "Duplicate scoring result.");
-        foreach (var (rule, i) in (definition.ScoringRules ?? []).Select((x, i) => (x, i))) if (rule.WinnerSets != 3 || rule.LoserSets > 2 || rule.WinnerTablePoints < 0 || rule.LoserTablePoints < 0) Error("format.invalid_scoring_rule", $"definition.scoringRules[{i}]", "Scoring rule is outside SQL constraints.");
-        if ((definition.TiebreakRules ?? []).GroupBy(x => x.Sequence).Any(x => x.Count() > 1)) Error("format.duplicate_tiebreak_sequence", "definition.tiebreakRules", "Tiebreak sequences must be unique.");
+        var scoring=definition.ScoringRules??[];
+        foreach (var group in scoring.GroupBy(x => (x.WinnerSets, x.LoserSets))) if (group.Count() > 1) Error("format.duplicate_scoring_rule", "definition.scoringRules", "Duplicate scoring result.");
+        foreach (var (rule, i) in scoring.Select((x, i) => (x, i))){if(rule.WinnerSets!=3||rule.LoserSets>2||rule.WinnerTablePoints<0||rule.LoserTablePoints<0)Error("format.invalid_scoring_rule",$"definition.scoringRules[{i}]","Only non-negative 3-0, 3-1 and 3-2 scoring rules are supported.");else if(rule.WinnerTablePoints<=rule.LoserTablePoints)Warning("format.unusual_scoring_points",$"definition.scoringRules[{i}]","Winner table points are not greater than loser table points.");}
+        var requiredResults=new[]{(Winner:(byte)3,Loser:(byte)0),(Winner:(byte)3,Loser:(byte)1),(Winner:(byte)3,Loser:(byte)2)};
+        if(scoring.Count!=3||requiredResults.Any(r=>scoring.Count(x=>x.WinnerSets==r.Winner&&x.LoserSets==r.Loser)!=1))Error("format.scoring_results_required","definition.scoringRules","Exactly one scoring rule for 3-0, 3-1 and 3-2 is required.");
+        var tiebreaks=definition.TiebreakRules??[];
+        if(tiebreaks.GroupBy(x=>x.Sequence).Any(x=>x.Count()>1)||!tiebreaks.OrderBy(x=>x.Sequence).Select(x=>x.Sequence).SequenceEqual(Enumerable.Range(1,tiebreaks.Count).Select(x=>(short)x)))Error("format.invalid_tiebreak_sequence","definition.tiebreakRules","Tiebreak sequences must be contiguous from 1.");
+        if(tiebreaks.GroupBy(x=>x.Criterion).Any(x=>x.Count()>1))Error("format.duplicate_tiebreak_criterion","definition.tiebreakRules","Each tiebreak criterion can appear at most once.");
 
         foreach (var (rule, i) in (definition.MovementRules ?? []).Select((x, i) => (x, i)))
         {
             var path = $"definition.movementRules[{i}]"; phaseByCode.TryGetValue(rule.SourcePhaseCode?.Trim() ?? "", out var phase);
-            if (phase is null || rule.FromPosition <= 0 || rule.ToPosition < rule.FromPosition || (rule.MovementType == MovementType.Promotion ? rule.TargetLevelDelta >= 0 : rule.TargetLevelDelta <= 0)) Error("format.invalid_movement_rule", path, "Movement rule values are inconsistent.");
+            if (phase is null || rule.FromPosition <= 0 || rule.ToPosition < rule.FromPosition || (rule.MovementType == MovementType.Promotion ? rule.TargetLevelDelta != -1 : rule.TargetLevelDelta != 1)) Error("format.invalid_movement_rule", path, "Movement rule values or divisional delta are inconsistent.");
             var hasGroup = phase is not null && GroupExists(phase, rule.SourceGroupCode); var hasSeries = phase is not null && seriesByCode.TryGetValue(rule.SourceSeriesCode?.Trim() ?? "", out var sr) && (phase.Series ?? []).Contains(sr);
             var sourceValid = rule.SourceType switch { MovementSourceType.PhasePosition or MovementSourceType.PhaseLastN => rule.SourceGroupCode is null && rule.SourceSeriesCode is null, MovementSourceType.GroupPosition or MovementSourceType.GroupLastN => hasGroup && rule.SourceSeriesCode is null, MovementSourceType.SeriesResult => rule.SourceGroupCode is null && hasSeries, _ => false };
             if (!sourceValid) Error("format.invalid_movement_source", path, "Movement source does not match its type.");
         }
         DetectCycles(phases, seriesByCode, Error);
-        return new(errors.Count == 0, errors);
+        foreach(var series in allSeries){var qSides=(definition.QualificationRules??[]).Where(x=>x.TargetType==QualificationTargetType.Series&&x.TargetSeriesCode==series.Code).Select(x=>x.TargetSide).ToArray();var sourceSides=(series.ParticipantSources??[]).Select(x=>(byte?)x.TargetSide).ToArray();foreach(byte side in new byte[]{1,2}){var count=qSides.Count(x=>x==side)+sourceSides.Count(x=>x==side);if(count==0)Error("format.unresolved_series_side","definition.phases.series",$"Series '{series.Code}' participant {side} has no source.");if(count>1)Error("format.duplicate_series_side_source","definition.phases.series",$"Series '{series.Code}' participant {side} has more than one source.");}}
+        var deterministicMovements=(definition.MovementRules??[]).GroupBy(x=>new{x.SourceType,x.SourcePhaseCode,x.SourceGroupCode,x.SourceSeriesCode,x.FromPosition,x.ToPosition});foreach(var group in deterministicMovements){if(group.Select(x=>x.MovementType).Distinct().Count()>1)Error("format.conflicting_movement","definition.movementRules","The same deterministic result cannot cause promotion and relegation.");if(group.GroupBy(x=>x.MovementType).Any(x=>x.Count()>1))Error("format.duplicate_movement","definition.movementRules","Duplicate deterministic movement rule.");}
+        var teamCounts=new List<CompetitionFormatTeamCountValidationDto>();
+        if(minTeams>0&&maxTeams>=minTeams&&maxTeams-minTeams<=200)for(short n=minTeams;n<=maxTeams;n++){var issues=new List<CompetitionFormatValidationErrorDto>();foreach(var (rule,i) in (definition.QualificationRules??[]).Select((x,i)=>(x,i)))if(rule.SelectionMode==QualificationSelectionMode.PositionRange&&rule.ToPosition>n)issues.Add(new("format.position_out_of_range_for_team_count",$"definition.qualificationRules[{i}]",$"Position {rule.ToPosition} cannot exist with {n} teams."));teamCounts.Add(new(n,issues.Count==0,issues.Count,issues));errors.AddRange(issues);}
+        return new(errors.Count == 0, errors,warnings,teamCounts);
     }
 
     public static CompetitionFormat Build(string code, string name, string? description, short minTeams, short maxTeams, CompetitionFormatDefinitionDto definition)

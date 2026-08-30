@@ -122,6 +122,8 @@ internal sealed class FakeCompetitionFormatRepository : ICompetitionFormatReposi
         => Task.FromResult<IReadOnlyList<CompetitionFormat>>(formats.Values.Where(x => (!active.HasValue || x.Active == active) && (!teamCount.HasValue || x.MinTeams <= teamCount && teamCount <= x.MaxTeams)).ToArray());
     public Task<CompetitionFormat?> GetAsync(int id, bool tracking, CancellationToken cancellationToken) => Task.FromResult(formats.GetValueOrDefault(id));
     public Task<bool> CodeExistsAsync(string code, int? excludingId, CancellationToken cancellationToken) => Task.FromResult(formats.Any(x => x.Key != excludingId && x.Value.Code == code));
+    public CompetitionFormatUsage Usage { get; set; } = new(0,0);
+    public Task<CompetitionFormatUsage> GetUsageAsync(int id,CancellationToken cancellationToken)=>Task.FromResult(Usage);
     public void Add(CompetitionFormat format) => Added = format;
     public void PrepareReplacement(CompetitionFormat format) { }
 }

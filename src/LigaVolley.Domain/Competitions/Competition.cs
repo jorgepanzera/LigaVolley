@@ -116,8 +116,8 @@ public sealed class CompetitionPhase
     internal CompetitionPhase(FormatPhase source) { FormatPhase = source; Code = source.Code; Name = source.Name; PhaseType = source.PhaseType; PhaseRole = source.PhaseRole; Sequence = source.Sequence; Rounds = source.Rounds; FixtureMode = source.FixtureMode; }
     public int CompetitionPhaseId { get; private set; }
     public int CompetitionId { get; private set; }
-    public int FormatPhaseId { get; private set; }
-    public FormatPhase FormatPhase { get; private set; } = null!;
+    public int? FormatPhaseId { get; private set; }
+    public FormatPhase? FormatPhase { get; private set; }
     public string Code { get; private set; } = string.Empty;
     public string Name { get; private set; } = string.Empty;
     public PhaseType PhaseType { get; private set; }
@@ -152,8 +152,8 @@ public sealed class CompetitionPhaseGroup
     internal CompetitionPhaseGroup(FormatGroup source) { FormatGroup = source; Code = source.Code; Name = source.Name; GroupRole = source.GroupRole; Sequence = source.Sequence; Rounds = source.Rounds; FixtureMode = source.FixtureMode; CarryOverMode = source.CarryOverMode; }
     public int PhaseGroupId { get; private set; }
     public int CompetitionPhaseId { get; private set; }
-    public int FormatGroupId { get; private set; }
-    public FormatGroup FormatGroup { get; private set; } = null!;
+    public int? FormatGroupId { get; private set; }
+    public FormatGroup? FormatGroup { get; private set; }
     public string Code { get; private set; } = string.Empty;
     public string Name { get; private set; } = string.Empty;
     public GroupRole GroupRole { get; private set; }
@@ -192,8 +192,8 @@ public sealed class CompetitionPlayoffSeries
     public int PlayoffSeriesId { get; private set; }
     public int CompetitionId { get; private set; }
     public int CompetitionPhaseId { get; private set; }
-    public int FormatSeriesId { get; private set; }
-    public FormatPlayoffSeries FormatSeries { get; private set; } = null!;
+    public int? FormatSeriesId { get; private set; }
+    public FormatPlayoffSeries? FormatSeries { get; private set; }
     public string Code { get; private set; } = string.Empty;
     public string Name { get; private set; } = string.Empty;
     public short Sequence { get; private set; }

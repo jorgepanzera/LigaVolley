@@ -196,6 +196,10 @@ La tecnología y el protocolo del Scorer quedaron cerrados con PWA Core v1 y Off
 
 Club, Team y Venue son maestros Admin sin DELETE físico. Team pertenece obligatoriamente a un Club y su ClubId es inmutable luego de crearlo; TeamEntry sigue siendo la participación competitiva. Venue permanece independiente. Club admite un logo institucional actual PNG/JPEG/WebP (máximo 2 MB y 2048x2048), normalizado a 512x512, almacenado fuera de SQL Server. Team sólo proyecta el logo actual del Club, inclusive en históricos. El asset es público, con URL versionada; Scorer no recibe logos en v1.
 
+### Competition Format Editor v1
+
+CompetitionFormat se edita y persiste como un único agregado. Los formatos creados o clonados nacen inactivos y sólo pueden usarse en nuevas Competition después de una activación con validación completa. Un formato queda estructuralmente bloqueado cuando lo referencia una Competition fuera de DRAFT; desde entonces sólo Name, Description y Active son editables. Las Competition DRAFT ya instanciadas nunca se sincronizan al modificar su formato. La validación separa errores y warnings y analiza cada cantidad admitida. CarryOverMode distinto de NONE permanece fuera de v1.
+
 ### People v1
 
 People v1 está cerrado: Player/Coach/Referee son perfiles 1:1 opcionales, sin

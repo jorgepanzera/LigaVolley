@@ -38,6 +38,15 @@ public sealed class CompetitionServiceTests
         Assert.Equal(model.Phases.Select(x => x.Code), created.Phases.Select(x => x.Code));
     }
 
+    [Fact]
+    public async Task Create_FromFormatAndCompetition_RejectInactiveFormat()
+    {
+        var fixture=await CreateFixture();fixture.Format.SetActive(false);
+        var direct=await Assert.ThrowsAsync<LigaVolley.Application.Common.ResourceConflictException>(()=>fixture.Service.CreateAsync(Request(new(CompetitionStructureSourceType.Format,0,null)),default));Assert.Equal("competition_format_inactive",direct.Code);
+        var model=new Competition("Model",fixture.Season,fixture.Division,fixture.Format,CompetitionPeriodType.Annual,null,null);fixture.Competitions.Seed(99,model);
+        var based=await Assert.ThrowsAsync<LigaVolley.Application.Common.ResourceConflictException>(()=>fixture.Service.CreateAsync(Request(new(CompetitionStructureSourceType.Competition,null,99)),default));Assert.Equal("competition_format_inactive",based.Code);
+    }
+
     [Theory]
     [InlineData(CompetitionStructureSourceType.Format, null, null)]
     [InlineData(CompetitionStructureSourceType.Format, 1, 1)]
@@ -57,7 +66,7 @@ public sealed class CompetitionServiceTests
         var formatRepo = new FakeCompetitionFormatRepository();
         var formatService = new CompetitionFormatService(formatRepo, new FakeUnitOfWork());
         await formatService.CreateAsync(new("TEST8", "Test 8", null, 8, 8, CompetitionFormatServiceTests.EightTeamDefinition()), default);
-        var format = formatRepo.Added!; formatRepo.Seed(0, format);
+        var format = formatRepo.Added!; format.SetActive(true); formatRepo.Seed(0, format);
         var season = new Season(2026, "2026", null, null); var seasons = new FakeSeasonRepository(); seasons.Seed(1, season);
         var division = new Division("A Female", 1, Gender.Female); var divisions = new FakeDivisionRepository(); divisions.Seed(1, division);
         var competitions = new FakeCompetitionRepository(); var unit = new FakeUnitOfWork();

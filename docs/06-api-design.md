@@ -1355,6 +1355,14 @@ La superficie es GET, anónima y read-only. Publicables: SCHEDULED, IN_PROGRESS,
 
 Competition Schedule Readiness responde si Competition puede pasar de DRAFT a SCHEDULED y no requiere roster, oficiales, MatchDate ni Venue. Match Scorer Readiness exige Match SCHEDULED, roster ACTIVE y seis jugadores ACTIVE por lado y los tres roles oficiales. MatchDate, Venue y Health Card son warnings.
 
+
+
 # 24. Admin Master Data + Club Logo v1
 
 `GET/POST /api/admin/clubs`, `GET/PUT /api/admin/clubs/{clubId}`, `PATCH /api/admin/clubs/{clubId}/active`, `PUT/DELETE /api/admin/clubs/{clubId}/logo`; equivalentes de catálogo sin DELETE físico para `/api/admin/teams` y `/api/admin/venues`; y asset `GET /api/public/clubs/{clubId}/logo`. El upload es `multipart/form-data` con campo `file`, admite PNG/JPEG/WebP válidos hasta 2 MB y 2048x2048. Los DTO proyectan URL versionada y nunca el storage key.
+
+# 25. Competition Format Editor v1
+
+Se conservan `GET/POST /api/admin/competition-formats`, `GET/PUT /api/admin/competition-formats/{id}`, `POST /{id}/clone`, `PATCH /{id}/active` y `POST /validate`. List y Detail incluyen `used`, `isStructurallyLocked`, `usedByDraftCompetitionCount` y `usedByOperationalCompetitionCount`. Validation devuelve `isValid`, `errors`, `warnings` y `teamCounts`, con `code`, `path`, `message` y `severity`.
+
+Create/Clone responden 201 y nacen inactivos. Update estructural bloqueado responde 409 `competition_format_structurally_locked`; Code duplicado responde 409 `competition_format_code_conflict`. Crear Competition con formato inactivo, tanto FROM_FORMAT como FROM_COMPETITION, responde 409 `competition_format_inactive`.

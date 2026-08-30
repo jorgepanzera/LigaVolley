@@ -40,7 +40,7 @@ public sealed class StandingsEndpointsTests : IClassFixture<LigaVolleyApiFactory
             [new("REGULAR","Regular",PhaseType.RoundRobin,PhaseRole.Regular,1,1,FixtureMode.BalancedRandom,[],[])],[],
             [new(3,0,2,1),new(3,1,2,1),new(3,2,2,1)],
             [new(1,TiebreakCriterion.TablePoints,SortDirection.Desc),new(2,TiebreakCriterion.MatchWins,SortDirection.Desc)],[]);
-        var format=await Create<CompetitionFormatDto>("/api/admin/competition-formats",new CreateCompetitionFormatRequest($"ST_{suffix}",$"Standings {suffix}",null,2,2,definition));
+        var format=await Create<CompetitionFormatDto>("/api/admin/competition-formats",new CreateCompetitionFormatRequest($"ST_{suffix}",$"Standings {suffix}",null,2,2,definition));await factory.Client.PatchAsJsonAsync($"/api/admin/competition-formats/{format.CompetitionFormatId}/active",new{active=true},JsonOptions);
         var competition=await Create<CompetitionDto>("/api/admin/competitions",new CreateCompetitionRequest($"Standings {suffix}",season.SeasonId,division.DivisionId,CompetitionPeriodType.Annual,null,null,new(CompetitionStructureSourceType.Format,format.CompetitionFormatId,null)));
         var club=await Create<ClubDto>("/api/admin/clubs",new CreateClubRequest($"Standings Club {suffix}",null));
         for(var i=1;i<=2;i++)

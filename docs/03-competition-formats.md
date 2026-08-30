@@ -1,5 +1,7 @@
 # 03 — Competiciones y formatos parametrizables
 
+
+
 ## Objetivo
 
 Definir la estructura parametrizable de una Competition, su instanciación operativa, la generación incremental del fixture y las reglas de progresión y cierre sin trasladar decisiones estructurales al frontend.
@@ -144,6 +146,19 @@ Conceptualmente:
 La regla debe poder indicar que sólo se aplica cuando existe una divisional destino válida.
 
 Las reglas funcionales finas de ascensos entre Apertura/Clausura o temporadas continúan sujetas a definición explícita cuando corresponda.
+
+
+## Competition Format Editor v1
+
+El editor Admin trabaja localmente, sin autosave, sobre el agregado completo: fases, grupos, QualificationRules, PlayoffSeries y sus fuentes, scoring, desempates y movimientos. `validate` no persiste; Create, Update y Activate ejecutan el mismo evaluador server-side. Los errores bloquean y los warnings sólo requieren confirmación de UI.
+
+Un formato nuevo o clonado nace `Active=false`. Active significa disponible para nuevas Competition. FROM_FORMAT y FROM_COMPETITION rechazan el formato reutilizado cuando está inactivo. Desactivar no altera competiciones existentes.
+
+`Used`, `IsStructurallyLocked` y los conteos son derivados. El bloqueo aparece si existe una Competition no DRAFT que referencia el formato. En ese caso Code, rango y definición son inmutables; Name, Description y Active continúan editables. Las estructuras de Competition, incluso DRAFT, son snapshots independientes y nunca se sincronizan desde el formato.
+
+La validación exige scoring exactamente para 3-0, 3-1 y 3-2; tiebreaks sin repetidos y con secuencia contigua; CarryOver NONE; fuentes de ambos lados de cada serie únicas, resolubles y acíclicas; movimientos de un nivel y sin consecuencias contradictorias. Devuelve un resultado por cada N entre MinTeams y MaxTeams. El mínimo persistido continúa siendo dos equipos por `CK_COMPETITION_FORMAT_team_range`.
+
+Fuera de v1 permanecen CarryOver ALL/QUALIFIED_ONLY, versionado, sincronización hacia Competition DRAFT, localía configurable de playoffs, nuevas reglas HEAD_TO_HEAD y automatización de futuras inscripciones.
 
 ## Creación de una Competition
 

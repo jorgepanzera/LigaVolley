@@ -50,6 +50,11 @@ public sealed class CompetitionFormat
     }
 
     public void SetActive(bool active) => Active = active;
+    public void UpdateDescriptiveMetadata(string name,string? description)
+    {
+        Name = Required(name, 150, nameof(Name));
+        Description = Optional(description, 500, nameof(Description));
+    }
     public void ReplaceWith(CompetitionFormat replacement)
     {
         UpdateMetadata(replacement.Code, replacement.Name, replacement.Description, replacement.MinTeams, replacement.MaxTeams);

@@ -1,4 +1,5 @@
 using LigaVolley.Application.CompetitionFormats;
+using LigaVolley.Application.Common;
 using LigaVolley.Domain.CompetitionFormats;
 
 namespace LigaVolley.Application.Tests;
@@ -46,10 +47,35 @@ public sealed class CompetitionFormatServiceTests
     {
         var repository = new FakeCompetitionFormatRepository(); var unit = new FakeUnitOfWork(); var service = new CompetitionFormatService(repository, unit);
         var created = await service.CreateAsync(new("RR8", "Eight", null, 8, 8, EightTeamDefinition()), default);
-        Assert.Equal("RR8", created.Code); Assert.Equal(1, unit.SaveCount);
+        Assert.Equal("RR8", created.Code); Assert.False(created.Active); Assert.Equal(1, unit.SaveCount);
         repository.Seed(1, repository.Added!);
         var clone = await service.CloneAsync(1, new("RR8_V2", "Eight v2", null), default);
-        Assert.Equal("RR8_V2", clone.Code); Assert.NotSame(repository.Added, repository.GetAsync(1, false, default).Result);
+        Assert.Equal("RR8_V2", clone.Code); Assert.False(clone.Active); Assert.NotSame(repository.Added, repository.GetAsync(1, false, default).Result);
+    }
+
+    [Fact]
+    public async Task Validate_SeparatesUnusualScoringWarningFromErrors()
+    {
+        var definition=EightTeamDefinition();definition=definition with{ScoringRules=[new(3,0,1,1),new(3,1,3,0),new(3,2,2,1)]};
+        var result=await Service().ValidateAsync(new(8,8,definition));
+        Assert.True(result.IsValid);Assert.Contains(result.Warnings,x=>x.Code=="format.unusual_scoring_points");
+    }
+
+    [Fact]
+    public async Task OperationalUsage_BlocksStructureButAllowsDescriptiveMetadata()
+    {
+        var repository=new FakeCompetitionFormatRepository();var service=new CompetitionFormatService(repository,new FakeUnitOfWork());await service.CreateAsync(new("LOCK","Locked",null,8,8,EightTeamDefinition()),default);repository.Seed(1,repository.Added!);repository.Usage=new(0,1);
+        var metadata=await service.UpdateAsync(1,new("LOCK","Renamed","Description",8,8,EightTeamDefinition()),default);
+        Assert.Equal("Renamed",metadata.Name);Assert.True(metadata.IsStructurallyLocked);
+        await Assert.ThrowsAsync<ResourceConflictException>(()=>service.UpdateAsync(1,new("LOCK2","Renamed",null,8,8,EightTeamDefinition()),default));
+    }
+
+    [Fact]
+    public async Task Validation_CoversEveryTeamCountAndRejectsMissingScoringResult()
+    {
+        var definition=EightTeamDefinition() with{ScoringRules=[new(3,0,3,0),new(3,1,3,0)]};
+        var result=await Service().ValidateAsync(new(7,9,definition));
+        Assert.Equal(new short[]{7,8,9},result.TeamCounts.Select(x=>x.TeamCount));Assert.Contains(result.Errors,x=>x.Code=="format.scoring_results_required");
     }
 
     private static CompetitionFormatService Service() => new(new FakeCompetitionFormatRepository(), new FakeUnitOfWork());

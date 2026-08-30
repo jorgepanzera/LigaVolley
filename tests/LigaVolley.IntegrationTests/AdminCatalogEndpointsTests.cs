@@ -88,7 +88,7 @@ public sealed class AdminCatalogEndpointsTests : IClassFixture<LigaVolleyApiFact
         var seasonResponse=await factory.Client.PostAsJsonAsync("/api/admin/seasons",new CreateSeasonRequest(2043,$"Fixture {suffix}",null,null));seasonResponse.EnsureSuccessStatusCode();var season=(await seasonResponse.Content.ReadFromJsonAsync<SeasonDto>(JsonOptions))!;
         var divisionResponse=await factory.Client.PostAsJsonAsync("/api/admin/divisions",new CreateDivisionRequest($"Fixture {suffix}",43,Gender.Female),JsonOptions);divisionResponse.EnsureSuccessStatusCode();var division=(await divisionResponse.Content.ReadFromJsonAsync<DivisionDto>(JsonOptions))!;
         var definition=new CompetitionFormatDefinitionDto([new("REGULAR","Regular",PhaseType.RoundRobin,PhaseRole.Regular,1,1,FixtureMode.BalancedRandom,[],[])],[],[],[],[]);
-        var formatResponse=await factory.Client.PostAsJsonAsync("/api/admin/competition-formats",new CreateCompetitionFormatRequest($"FIX_{suffix}",$"Fixture {suffix}",null,5,5,definition));formatResponse.EnsureSuccessStatusCode();var format=(await formatResponse.Content.ReadFromJsonAsync<CompetitionFormatDto>(JsonOptions))!;
+        var formatResponse=await factory.Client.PostAsJsonAsync("/api/admin/competition-formats",new CreateCompetitionFormatRequest($"FIX_{suffix}",$"Fixture {suffix}",null,5,5,definition));formatResponse.EnsureSuccessStatusCode();var format=(await formatResponse.Content.ReadFromJsonAsync<CompetitionFormatDto>(JsonOptions))!;(await factory.Client.PatchAsJsonAsync($"/api/admin/competition-formats/{format.CompetitionFormatId}/active",new SetActiveRequest(true),JsonOptions)).EnsureSuccessStatusCode();
         var competitionResponse=await factory.Client.PostAsJsonAsync("/api/admin/competitions",new CreateCompetitionRequest($"Fixture {suffix}",season.SeasonId,division.DivisionId,CompetitionPeriodType.Annual,null,null,new(CompetitionStructureSourceType.Format,format.CompetitionFormatId,null)),JsonOptions);competitionResponse.EnsureSuccessStatusCode();var competition=(await competitionResponse.Content.ReadFromJsonAsync<CompetitionDto>(JsonOptions))!;
         var fixtureClubResponse=await factory.Client.PostAsJsonAsync("/api/admin/clubs",new CreateClubRequest($"Fixture Club {suffix}",null),JsonOptions);fixtureClubResponse.EnsureSuccessStatusCode();var fixtureClub=(await fixtureClubResponse.Content.ReadFromJsonAsync<ClubDto>(JsonOptions))!;for(var i=1;i<=5;i++){var teamResponse=await factory.Client.PostAsJsonAsync("/api/admin/teams",new CreateTeamRequest($"Fixture {suffix} {i}",Gender.Female,fixtureClub.ClubId),JsonOptions);teamResponse.EnsureSuccessStatusCode();var team=(await teamResponse.Content.ReadFromJsonAsync<TeamDto>(JsonOptions))!;var entryResponse=await factory.Client.PostAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/entries",new AddTeamEntryRequest(team.TeamId,null));entryResponse.EnsureSuccessStatusCode();var entry=(await entryResponse.Content.ReadFromJsonAsync<TeamEntryDto>(JsonOptions))!;(await factory.Client.PatchAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/entries/{entry.TeamEntryId}/status",new ChangeTeamEntryStatusRequest(TeamEntryStatus.Active),JsonOptions)).EnsureSuccessStatusCode();}
         var generate=await factory.Client.PostAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/fixture/generate",new GenerateFixtureRequest(12345));Assert.Equal(HttpStatusCode.OK,generate.StatusCode);var response=(await generate.Content.ReadFromJsonAsync<GenerateFixtureResponse>(JsonOptions))!;Assert.Equal(10,response.MatchesCreated);
@@ -108,7 +108,7 @@ public sealed class AdminCatalogEndpointsTests : IClassFixture<LigaVolleyApiFact
         var seasonResponse=await factory.Client.PostAsJsonAsync("/api/admin/seasons",new CreateSeasonRequest(2042,$"Entry {suffix}",null,null)); seasonResponse.EnsureSuccessStatusCode(); var season=(await seasonResponse.Content.ReadFromJsonAsync<SeasonDto>(JsonOptions))!;
         var divisionResponse=await factory.Client.PostAsJsonAsync("/api/admin/divisions",new CreateDivisionRequest($"Entry {suffix}",42,Gender.Female),JsonOptions); divisionResponse.EnsureSuccessStatusCode(); var division=(await divisionResponse.Content.ReadFromJsonAsync<DivisionDto>(JsonOptions))!;
         var definition=new CompetitionFormatDefinitionDto([new("REGULAR","Regular",PhaseType.RoundRobin,PhaseRole.Regular,1,1,FixtureMode.BalancedRandom,[],[])],[],[],[],[]);
-        var formatResponse=await factory.Client.PostAsJsonAsync("/api/admin/competition-formats",new CreateCompetitionFormatRequest($"ENTRY_{suffix}",$"Entry {suffix}",null,2,2,definition)); formatResponse.EnsureSuccessStatusCode(); var format=(await formatResponse.Content.ReadFromJsonAsync<CompetitionFormatDto>(JsonOptions))!;
+        var formatResponse=await factory.Client.PostAsJsonAsync("/api/admin/competition-formats",new CreateCompetitionFormatRequest($"ENTRY_{suffix}",$"Entry {suffix}",null,2,2,definition)); formatResponse.EnsureSuccessStatusCode(); var format=(await formatResponse.Content.ReadFromJsonAsync<CompetitionFormatDto>(JsonOptions))!;(await factory.Client.PatchAsJsonAsync($"/api/admin/competition-formats/{format.CompetitionFormatId}/active",new SetActiveRequest(true),JsonOptions)).EnsureSuccessStatusCode();
         var competitionResponse=await factory.Client.PostAsJsonAsync("/api/admin/competitions",new CreateCompetitionRequest($"Entry {suffix}",season.SeasonId,division.DivisionId,CompetitionPeriodType.Annual,null,null,new(CompetitionStructureSourceType.Format,format.CompetitionFormatId,null)),JsonOptions); competitionResponse.EnsureSuccessStatusCode(); var competition=(await competitionResponse.Content.ReadFromJsonAsync<CompetitionDto>(JsonOptions))!;
         var entryClubResponse=await factory.Client.PostAsJsonAsync("/api/admin/clubs",new CreateClubRequest($"Entry Club {suffix}",null),JsonOptions);entryClubResponse.EnsureSuccessStatusCode();var entryClub=(await entryClubResponse.Content.ReadFromJsonAsync<ClubDto>(JsonOptions))!;var teamResponse=await factory.Client.PostAsJsonAsync("/api/admin/teams",new CreateTeamRequest($"Entry {suffix}",Gender.Female,entryClub.ClubId),JsonOptions); teamResponse.EnsureSuccessStatusCode(); var team=(await teamResponse.Content.ReadFromJsonAsync<TeamDto>(JsonOptions))!;
         var add=await factory.Client.PostAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/entries",new AddTeamEntryRequest(team.TeamId,1)); Assert.Equal(HttpStatusCode.Created,add.StatusCode); var entry=(await add.Content.ReadFromJsonAsync<TeamEntryDto>(JsonOptions))!;
@@ -156,6 +156,7 @@ public sealed class AdminCatalogEndpointsTests : IClassFixture<LigaVolleyApiFact
         var formatResponse = await factory.Client.PostAsJsonAsync("/api/admin/competition-formats", new CreateCompetitionFormatRequest($"CF_{suffix}", $"Format {suffix}", null, 4, 8, definition));
         formatResponse.EnsureSuccessStatusCode();
         var format = (await formatResponse.Content.ReadFromJsonAsync<CompetitionFormatDto>(JsonOptions))!;
+        (await factory.Client.PatchAsJsonAsync($"/api/admin/competition-formats/{format.CompetitionFormatId}/active",new SetActiveRequest(true),JsonOptions)).EnsureSuccessStatusCode();
 
         var fromFormatResponse = await factory.Client.PostAsJsonAsync("/api/admin/competitions", new CreateCompetitionRequest($"Opening {suffix}", season.SeasonId, division.DivisionId, CompetitionPeriodType.Opening, null, null, new(CompetitionStructureSourceType.Format, format.CompetitionFormatId, null)), JsonOptions);
         Assert.Equal(HttpStatusCode.Created, fromFormatResponse.StatusCode);
@@ -176,26 +177,30 @@ public sealed class AdminCatalogEndpointsTests : IClassFixture<LigaVolleyApiFact
     [Fact]
     public async Task CompetitionFormatEndpoints_ProvideAggregateLifecycle()
     {
+        var suffix=Guid.NewGuid().ToString("N")[..8];
         var definition = new CompetitionFormatDefinitionDto(
-            [new("REGULAR", "Regular", PhaseType.RoundRobin, PhaseRole.Regular, 1, 2, FixtureMode.MirroredHomeAway, [], [])], [], [], [], []);
+            [new("REGULAR", "Regular", PhaseType.RoundRobin, PhaseRole.Regular, 1, 2, FixtureMode.MirroredHomeAway, [], [])], [], [new(3,0,3,0),new(3,1,3,0),new(3,2,2,1)], [new(1,TiebreakCriterion.TablePoints,SortDirection.Desc)], []);
         var validation = await factory.Client.PostAsJsonAsync("/api/admin/competition-formats/validate", new ValidateCompetitionFormatRequest(8, 8, definition));
         validation.EnsureSuccessStatusCode();
         Assert.True((await validation.Content.ReadFromJsonAsync<CompetitionFormatValidationDto>(JsonOptions))!.IsValid);
 
-        var create = await factory.Client.PostAsJsonAsync("/api/admin/competition-formats", new CreateCompetitionFormatRequest("INT_RR8", "Integration RR8", null, 8, 8, definition));
+        var create = await factory.Client.PostAsJsonAsync("/api/admin/competition-formats", new CreateCompetitionFormatRequest($"INT_RR8_{suffix}", "Integration RR8", null, 8, 8, definition));
         Assert.Equal(HttpStatusCode.Created, create.StatusCode);
         var created = (await create.Content.ReadFromJsonAsync<CompetitionFormatDto>(JsonOptions))!;
         Assert.Single(created.Definition.Phases);
-        Assert.Equal("INT_RR8", (await factory.Client.GetFromJsonAsync<CompetitionFormatDto>($"/api/admin/competition-formats/{created.CompetitionFormatId}", JsonOptions))!.Code);
+        Assert.False(created.Active);
+        Assert.Equal($"INT_RR8_{suffix}", (await factory.Client.GetFromJsonAsync<CompetitionFormatDto>($"/api/admin/competition-formats/{created.CompetitionFormatId}", JsonOptions))!.Code);
         var list = await factory.Client.GetFromJsonAsync<CompetitionFormatSummaryDto[]>("/api/admin/competition-formats?active=true&teamCount=8", JsonOptions);
-        Assert.Contains(list!, x => x.CompetitionFormatId == created.CompetitionFormatId);
+        Assert.DoesNotContain(list!, x => x.CompetitionFormatId == created.CompetitionFormatId);
+        var activate=await factory.Client.PatchAsJsonAsync($"/api/admin/competition-formats/{created.CompetitionFormatId}/active",new SetActiveRequest(true));activate.EnsureSuccessStatusCode();
 
-        var update = await factory.Client.PutAsJsonAsync($"/api/admin/competition-formats/{created.CompetitionFormatId}", new UpdateCompetitionFormatRequest("INT_RR8", "Updated RR8", "updated", 8, 10, definition));
+        var update = await factory.Client.PutAsJsonAsync($"/api/admin/competition-formats/{created.CompetitionFormatId}", new UpdateCompetitionFormatRequest($"INT_RR8_{suffix}", "Updated RR8", "updated", 8, 10, definition));
         update.EnsureSuccessStatusCode();
-        var cloneResponse = await factory.Client.PostAsJsonAsync($"/api/admin/competition-formats/{created.CompetitionFormatId}/clone", new CloneCompetitionFormatRequest("INT_RR8_CLONE", "Clone", null));
+        var cloneResponse = await factory.Client.PostAsJsonAsync($"/api/admin/competition-formats/{created.CompetitionFormatId}/clone", new CloneCompetitionFormatRequest($"INT_RR8_CLONE_{suffix}", "Clone", null));
         Assert.Equal(HttpStatusCode.Created, cloneResponse.StatusCode);
         var clone = (await cloneResponse.Content.ReadFromJsonAsync<CompetitionFormatDto>(JsonOptions))!;
         Assert.NotEqual(created.CompetitionFormatId, clone.CompetitionFormatId);
+        Assert.False(clone.Active);
 
         var deactivate = await factory.Client.PatchAsJsonAsync($"/api/admin/competition-formats/{created.CompetitionFormatId}/active", new SetActiveRequest(false));
         deactivate.EnsureSuccessStatusCode();

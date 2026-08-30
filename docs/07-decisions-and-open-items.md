@@ -36,6 +36,14 @@ Este documento resume qué decisiones son fuente de verdad y qué aspectos sigue
 - El fixture posterior se genera incrementalmente cuando los participantes reales están resueltos; no se crean por defecto partidos con participantes nulos.
 - La regeneración se rechaza si algún Match afectado está IN_PROGRESS o FINISHED.
 
+### Competition Format Editor v1
+
+- CompetitionFormat es un agregado editable sin autosave; Create y Clone nacen inactivos y Activate revalida todo.
+- Active controla únicamente su disponibilidad para nuevas Competition, incluyendo FROM_COMPETITION.
+- Uso y bloqueo son derivados. Una Competition fuera de DRAFT bloquea la estructura; sólo Name, Description y Active siguen editables.
+- Modificar un formato nunca sincroniza estructuras ya instanciadas, tampoco en Competition DRAFT.
+- La validación separa errores/warnings y simula cada cantidad entre MinTeams y MaxTeams.
+
 ### Progresión y cierre
 
 - El cierre de una fase de liga/grupos usa `completion-preview` y `CompletePhase`; es transaccional e idempotente.

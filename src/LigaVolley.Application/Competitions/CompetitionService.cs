@@ -56,19 +56,22 @@ public sealed class CompetitionService(
         {
             if (!source.CompetitionFormatId.HasValue || source.SourceCompetitionId.HasValue)
                 throw new DomainValidationException("FROM_FORMAT requires CompetitionFormatId and forbids SourceCompetitionId.");
-            return await formats.GetAsync(source.CompetitionFormatId.Value, true, ct)
-                ?? throw new ResourceNotFoundException("CompetitionFormat", source.CompetitionFormatId.Value);
+            var format=await formats.GetAsync(source.CompetitionFormatId.Value,true,ct)??throw new ResourceNotFoundException("CompetitionFormat",source.CompetitionFormatId.Value);
+            EnsureActive(format);return format;
         }
         if (source.Type == CompetitionStructureSourceType.Competition)
         {
             if (!source.SourceCompetitionId.HasValue || source.CompetitionFormatId.HasValue)
                 throw new DomainValidationException("FROM_COMPETITION requires SourceCompetitionId and forbids CompetitionFormatId.");
             var model = await Required(source.SourceCompetitionId.Value, false, ct);
-            return await formats.GetAsync(model.CompetitionFormatId, true, ct)
-                ?? throw new ResourceNotFoundException("CompetitionFormat", model.CompetitionFormatId);
+            var format=await formats.GetAsync(model.CompetitionFormatId,true,ct)??throw new ResourceNotFoundException("CompetitionFormat",model.CompetitionFormatId);
+            EnsureActive(format);return format;
         }
         throw new DomainValidationException("Structure source type is invalid.");
     }
+
+    private static void EnsureActive(CompetitionFormat format)
+    {if(!format.Active)throw new ResourceConflictException("competition_format_inactive","The competition format is inactive and cannot be used for a new competition.");}
 
     private async Task<Competition> Required(int id, bool tracking, CancellationToken ct)
         => await competitions.GetAsync(id, tracking, ct) ?? throw new ResourceNotFoundException("Competition", id);

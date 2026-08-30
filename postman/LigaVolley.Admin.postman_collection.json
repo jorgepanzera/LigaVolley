@@ -16,6 +16,19 @@
   "variable": [{ "key": "runSuffix", "value": "" }],
   "item": [
     {
+      "name": "Competition Format Editor v1",
+      "item": [
+        {"name":"List","request":{"method":"GET","url":"{{baseUrl}}/api/admin/competition-formats"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+        {"name":"Detail","request":{"method":"GET","url":"{{baseUrl}}/api/admin/competition-formats/{{formatId}}"}},
+        {"name":"Validate valid","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"code\":\"EDITOR_{{runSuffix}}\",\"name\":\"Editor\",\"minTeams\":2,\"maxTeams\":2,\"definition\":{\"phases\":[{\"code\":\"REGULAR\",\"name\":\"Regular\",\"phaseType\":\"RoundRobin\",\"phaseRole\":\"Regular\",\"sequence\":1,\"rounds\":1,\"fixtureMode\":\"BalancedRandom\",\"groups\":[],\"series\":[]}],\"qualificationRules\":[],\"scoringRules\":[{\"winnerSets\":3,\"loserSets\":0,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":1,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":2,\"winnerTablePoints\":2,\"loserTablePoints\":1}],\"tiebreakRules\":[{\"sequence\":1,\"criterion\":\"TablePoints\",\"sortDirection\":\"Desc\"}],\"movementRules\":[]}}"},"url":"{{baseUrl}}/api/admin/competition-formats/validate"}},
+        {"name":"Validate invalid","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"code\":\"\",\"name\":\"\",\"minTeams\":1,\"maxTeams\":0,\"definition\":{\"phases\":[],\"qualificationRules\":[],\"scoringRules\":[],\"tiebreakRules\":[],\"movementRules\":[]}}"},"url":"{{baseUrl}}/api/admin/competition-formats/validate"}},
+        {"name":"Activate","request":{"method":"PATCH","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"active\":true}"},"url":"{{baseUrl}}/api/admin/competition-formats/{{formatId}}/active"}},
+        {"name":"Deactivate","request":{"method":"PATCH","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"active\":false}"},"url":"{{baseUrl}}/api/admin/competition-formats/{{formatId}}/active"}},
+        {"name":"Clone","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"code\":\"EDITOR_CLONE_{{runSuffix}}\",\"name\":\"Editor clone\",\"description\":null}"},"url":"{{baseUrl}}/api/admin/competition-formats/{{formatId}}/clone"}},
+        {"name":"Structural lock conflict","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"code\":\"LOCKED_CHANGED\",\"name\":\"Locked\",\"description\":null,\"minTeams\":2,\"maxTeams\":2,\"definition\":{\"phases\":[],\"qualificationRules\":[],\"scoringRules\":[],\"tiebreakRules\":[],\"movementRules\":[]}}"},"url":"{{baseUrl}}/api/admin/competition-formats/{{lockedFormatId}}"}}
+      ]
+    },
+    {
       "name": "11 - Master Data",
       "item": [
         {"name":"Clubs - Create","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"name\": \"Club {{$randomCompanyName}} {{runSuffix}}\", \"shortName\": \"LV\" }"},"url":"{{baseUrl}}/api/admin/clubs"}},
@@ -127,7 +140,7 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [{ \"code\": \"REGULAR\", \"name\": \"Regular\", \"phaseType\": \"RoundRobin\", \"phaseRole\": \"Regular\", \"sequence\": 1, \"rounds\": 1, \"fixtureMode\": \"BalancedRandom\", \"groups\": [], \"series\": [] }],\n    \"qualificationRules\": [], \"scoringRules\": [], \"tiebreakRules\": [], \"movementRules\": []\n  }\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"PM_{{runSuffix}}\", \"name\": \"Postman\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [{ \"code\": \"REGULAR\", \"name\": \"Regular\", \"phaseType\": \"RoundRobin\", \"phaseRole\": \"Regular\", \"sequence\": 1, \"rounds\": 1, \"fixtureMode\": \"BalancedRandom\", \"groups\": [], \"series\": [] }],\n    \"qualificationRules\": [], \"scoringRules\": [{\"winnerSets\":3,\"loserSets\":0,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":1,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":2,\"winnerTablePoints\":2,\"loserTablePoints\":1}], \"tiebreakRules\": [{\"sequence\":1,\"criterion\":\"TablePoints\",\"sortDirection\":\"Desc\"}], \"movementRules\": []\n  }\n}" },
             "url": "{{baseUrl}}/api/admin/competition-formats/validate"
           },
           "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Formato válido', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().isValid).to.be.true; });"] } }]
@@ -137,7 +150,7 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"code\": \"PM_{{runSuffix}}\",\n  \"name\": \"Postman {{runSuffix}}\",\n  \"description\": \"Formato de prueba\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [{ \"code\": \"REGULAR\", \"name\": \"Regular\", \"phaseType\": \"RoundRobin\", \"phaseRole\": \"Regular\", \"sequence\": 1, \"rounds\": 1, \"fixtureMode\": \"BalancedRandom\", \"groups\": [], \"series\": [] }],\n    \"qualificationRules\": [], \"scoringRules\": [], \"tiebreakRules\": [], \"movementRules\": []\n  }\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"PM_{{runSuffix}}\",\n  \"name\": \"Postman {{runSuffix}}\",\n  \"description\": \"Formato de prueba\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [{ \"code\": \"REGULAR\", \"name\": \"Regular\", \"phaseType\": \"RoundRobin\", \"phaseRole\": \"Regular\", \"sequence\": 1, \"rounds\": 1, \"fixtureMode\": \"BalancedRandom\", \"groups\": [], \"series\": [] }],\n    \"qualificationRules\": [], \"scoringRules\": [{\"winnerSets\":3,\"loserSets\":0,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":1,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":2,\"winnerTablePoints\":2,\"loserTablePoints\":1}], \"tiebreakRules\": [{\"sequence\":1,\"criterion\":\"TablePoints\",\"sortDirection\":\"Desc\"}], \"movementRules\": []\n  }\n}" },
             "url": "{{baseUrl}}/api/admin/competition-formats"
           },
           "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
@@ -145,6 +158,7 @@
             "if (pm.response.code === 201) pm.environment.set('formatId', pm.response.json().competitionFormatId);"
           ] } }]
         },
+        {"name":"Activar formato","request":{"method":"PATCH","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"active\": true }"},"url":"{{baseUrl}}/api/admin/competition-formats/{{formatId}}/active"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200 Active',()=>pm.response.to.have.status(200));"]}}]},
         {
           "name": "Crear competición",
           "request": {

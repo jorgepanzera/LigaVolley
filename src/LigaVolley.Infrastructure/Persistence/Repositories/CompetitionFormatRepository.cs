@@ -23,6 +23,11 @@ internal sealed class CompetitionFormatRepository(LigaVolleyDbContext db) : ICom
 
     public Task<bool> CodeExistsAsync(string code, int? excludingId, CancellationToken ct)
         => db.CompetitionFormats.AnyAsync(x => x.Code == code && (!excludingId.HasValue || x.CompetitionFormatId != excludingId), ct);
+    public async Task<CompetitionFormatUsage> GetUsageAsync(int id,CancellationToken ct)
+    {
+        var counts=await db.Competitions.Where(x=>x.CompetitionFormatId==id).GroupBy(x=>x.Status==Domain.Competitions.CompetitionStatus.Draft).Select(x=>new{x.Key,Count=x.Count()}).ToListAsync(ct);
+        return new(counts.SingleOrDefault(x=>x.Key)?.Count??0,counts.SingleOrDefault(x=>!x.Key)?.Count??0);
+    }
     public void Add(CompetitionFormat format) => db.CompetitionFormats.Add(format);
 
     public void PrepareReplacement(CompetitionFormat format)

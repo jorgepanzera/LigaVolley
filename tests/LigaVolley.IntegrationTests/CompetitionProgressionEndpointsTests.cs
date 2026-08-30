@@ -40,7 +40,7 @@ public sealed class CompetitionProgressionEndpointsTests : IClassFixture<LigaVol
         var definition = new CompetitionFormatDefinitionDto([phase], [],
             [new(3, 0, 2, 1), new(3, 1, 2, 1), new(3, 2, 2, 1)],
             [new(1, TiebreakCriterion.MatchWins, SortDirection.Desc)], [movement]);
-        var format = await Create<CompetitionFormatDto>("/api/admin/competition-formats", new CreateCompetitionFormatRequest($"CC_{suffix}", $"Completion {suffix}", null, 2, 2, definition));
+        var format = await Create<CompetitionFormatDto>("/api/admin/competition-formats", new CreateCompetitionFormatRequest($"CC_{suffix}", $"Completion {suffix}", null, 2, 2, definition));await factory.Client.PatchAsJsonAsync($"/api/admin/competition-formats/{format.CompetitionFormatId}/active",new{active=true},Json);
         var competition = await Create<CompetitionDto>("/api/admin/competitions", new CreateCompetitionRequest($"Completion {suffix}", season.SeasonId,
             sourceDivision.DivisionId, CompetitionPeriodType.Annual, null, null, new(CompetitionStructureSourceType.Format, format.CompetitionFormatId, null)));
 
