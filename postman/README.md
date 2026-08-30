@@ -1,51 +1,57 @@
 # Postman
 
+## Archivos
+
+- `LigaVolley.API.postman_collection.json`: colección única del backend.
+- `LigaVolley.Local.postman_environment.json`: configuración del despliegue local.
+
+La colección está organizada primero por superficie HTTP y luego por módulo
+funcional. Admin, Scorer y Public permanecen juntos porque comparten datos y
+participan en recorridos deportivos transversales.
+
 ## Importación
 
-1. Importar `LigaVolley.Admin.postman_collection.json` en Postman.
+1. Importar `LigaVolley.API.postman_collection.json`.
 2. Importar `LigaVolley.Local.postman_environment.json`.
 3. Seleccionar el environment **LigaVolley Local**.
-4. Iniciar la API en `http://localhost:5195`:
+4. Iniciar la API:
 
    ```powershell
    dotnet run --project src/LigaVolley.Api --launch-profile http
    ```
 
-## Uso
+El environment representa un despliegue y contiene únicamente `baseUrl`. Los
+IDs y UUID generados durante una corrida se guardan como variables de colección.
+Para comenzar una corrida limpia, usar **Reset all** sobre los valores actuales
+de las variables de colección; no es necesario modificar ni reimportar el
+environment.
 
-La carpeta **07 - People** crea una Person y recorre búsqueda, edición,
-activación, Health/League Card y los tres perfiles, conservando IDs en el environment.
+## Estructura
 
-La carpeta **01 - Catálogos y competición** debe ejecutarse primero. Los scripts
-de test guardan en el environment los IDs devueltos por la API. Después pueden
-ejecutarse las carpetas restantes o requests individuales.
+- `00 - Setup y diagnóstico`: instrucciones de preparación de la ejecución.
+- `01 - Admin`: maestros, personas, formatos, competiciones y preparación de partidos.
+- `02 - Scorer`: apertura, Match Engine, reemplazo de oficiales y Offline Sync.
+- `03 - Public`: consultas anónimas y assets públicos.
+- `04 - Recorridos end-to-end`: secuencias transversales deliberadas.
+- `90 - Casos de error y contratos`: respuestas negativas y Problem Details.
 
-La carpeta **04 - Standings** contiene la consulta de fase regular, la consulta
-por grupo y un caso de grupo inválido. Para la consulta exitosa por grupo deben
-definirse `competitionId`, `phaseId` y `phaseGroupId` con datos ya materializados
-por la futura progresión deportiva o preparados para pruebas.
+La numeración se usa solamente en el primer nivel. Dentro de cada superficie las
+carpetas siguen el dominio, no el orden histórico en que fueron implementados
+los slices.
 
-Para una corrida completamente nueva, borrar la variable de colección
-`runSuffix` o volver a importar la colección. La temporada de prueba usa el año
-2090; si ese año ya existe en la base, eliminar los datos de prueba o cambiar el
-valor antes de ejecutar la carpeta.
+## Ejecución y dependencias
 
-La carpeta **05 - Phase Completion** contiene los cinco recorridos del slice.
-Configurar `completionCompetitionId`/`completionPhaseId` con una fase
-`IN_PROGRESS` cuyos partidos estén `FINISHED`, y
-`blockedCompetitionId`/`blockedPhaseId` con una fase que tenga partidos no
-resueltos o `CANCELLED`. Ejecutar el cierre exitoso antes del cierre repetido;
-este último verifica `AlreadyCompleted = true`. El preview bloqueado permanece
-informativo (`200`, `CanComplete = false`) y el POST bloqueado espera `409` con
-`phase_cannot_complete`.
+`04 - Recorridos end-to-end / Preparar competición desde cero` crea los datos
+básicos y conserva sus IDs. Los módulos restantes pueden ejecutarse de forma
+individual cuando sus variables requeridas ya tengan valor.
 
-Los requests incluyen aserciones básicas de código HTTP, contratos de error y
-resultados relevantes. Las colecciones son una ayuda de exploración y smoke
-testing; los tests automatizados de integración siguen siendo la prueba de
-regresión principal.
+Algunos escenarios avanzados requieren un estado deportivo específico que no se
+puede inferir de un ID cualquiera. Entre ellos están Phase Completion,
+Competition Completion, el bloqueo estructural de formatos, MatchSheet, Match
+Engine y Offline Sync. Sus variables están declaradas en la colección con valor
+vacío para hacer visible esa precondición.
 
-La carpeta **06 - Competition Progression y Completion** utiliza
-`completionCompetitionId` para una Competition `IN_PROGRESS` con todas sus
-fases/series resueltas y `blockedCompetitionId` para un escenario incompleto.
-Ejecutar el cierre exitoso antes del cierre repetido. Los movimientos son
-resultados derivados: los requests no crean inscripciones futuras.
+Los requests repetidos son intencionales cuando comprueban idempotencia,
+conflictos o variantes de un mismo endpoint. Los tests automatizados de
+integración siguen siendo la regresión principal; Postman funciona como catálogo
+ejecutable, smoke test y herramienta de exploración.
