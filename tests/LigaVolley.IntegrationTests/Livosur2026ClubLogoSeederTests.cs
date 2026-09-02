@@ -6,6 +6,7 @@ using LigaVolley.Infrastructure.Persistence;
 using LigaVolley.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
@@ -95,6 +96,29 @@ public sealed class Livosur2026ClubLogoSeederTests(LigaVolleyApiFactory factory)
     }
 
     [Fact]
+    public async Task MisnamedImage_UsesDetectedContentType_AndLogsWarning()
+    {
+        var clubName = $"Logo misnamed {Guid.NewGuid():N}";
+        var package = CreatePackage((clubName, SourceAsset("ACJ.jpg"), null, ".png"));
+        var logger = new CapturingLogger<Livosur2026ClubLogoSeeder>();
+        try
+        {
+            await using var scope = factory.Services.CreateAsyncScope();
+            var db = scope.ServiceProvider.GetRequiredService<LigaVolleyDbContext>();
+            var club = new Club(clubName, null); db.Clubs.Add(club); await db.SaveChangesAsync();
+
+            var result = await CreateSeeder(scope, package, logger).SeedAsync();
+            db.ChangeTracker.Clear();
+            var updated = await db.Clubs.SingleAsync(x => x.ClubId == club.ClubId);
+
+            Assert.Equal(1, result.Applied); Assert.Equal(0, result.Errors);
+            Assert.Equal("image/jpeg", updated.LogoContentType);
+            Assert.Contains(logger.Entries, x => x.Level == LogLevel.Warning && x.Message.Contains("extension does not match", StringComparison.Ordinal));
+        }
+        finally { Directory.Delete(package, true); }
+    }
+
+    [Fact]
     public async Task ApprovedDataset_Processes98Clubs_AndRerunIsFullyIdempotent()
     {
         await using var scope = factory.Services.CreateAsyncScope();
@@ -106,25 +130,31 @@ public sealed class Livosur2026ClubLogoSeederTests(LigaVolleyApiFactory factory)
         Assert.Equal(98, second.AlreadyCurrent); Assert.Equal(0, second.Applied); Assert.Equal(0, second.Replaced); Assert.Equal(0, second.Errors);
     }
 
-    private static Livosur2026ClubLogoSeeder CreateSeeder(AsyncServiceScope scope, string package) => new(
+    private static Livosur2026ClubLogoSeeder CreateSeeder(
+        AsyncServiceScope scope,
+        string package,
+        ILogger<Livosur2026ClubLogoSeeder>? logger = null) => new(
         scope.ServiceProvider.GetRequiredService<LigaVolleyDbContext>(),
         scope.ServiceProvider.GetRequiredService<ClubService>(),
         scope.ServiceProvider.GetRequiredService<IClubLogoStorage>(),
         Options.Create(new Livosur2026ClubLogoSeedOptions { Path = package }),
-        NullLogger<Livosur2026ClubLogoSeeder>.Instance);
+        logger ?? NullLogger<Livosur2026ClubLogoSeeder>.Instance);
 
-    private static string CreatePackage(params (string ClubName, string Asset, string? Hash)[] rows)
+    private static string CreatePackage(params (string ClubName, string Asset, string? Hash, string Extension)[] rows)
     {
         var root = Path.Combine(Path.GetTempPath(), $"ligavolley-logo-seed-{Guid.NewGuid():N}"); var images = Path.Combine(root, "images"); Directory.CreateDirectory(images);
         var manifest = new List<string> { "club_name,file_name,selection,source_status,sha256" };
         for (var index = 0; index < rows.Length; index++)
         {
-            var name = $"asset-{index}.jpg"; var target = Path.Combine(images, name); File.Copy(rows[index].Asset, target);
+            var name = $"asset-{index}{rows[index].Extension}"; var target = Path.Combine(images, name); File.Copy(rows[index].Asset, target);
             var hash = rows[index].Hash ?? Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(target))).ToLowerInvariant();
             manifest.Add($"{rows[index].ClubName},images/{name},AUTOMATIC,SINGLE,{hash}");
         }
         File.WriteAllLines(Path.Combine(root, "manifest.csv"), manifest); return root;
     }
+
+    private static string CreatePackage(params (string ClubName, string Asset, string? Hash)[] rows) =>
+        CreatePackage(rows.Select(x => (x.ClubName, x.Asset, x.Hash, ".jpg")).ToArray());
 
     private static string SourceAsset(string name)
     {
@@ -137,5 +167,14 @@ public sealed class Livosur2026ClubLogoSeederTests(LigaVolleyApiFactory factory)
     {
         await using var asset = await scope.ServiceProvider.GetRequiredService<IClubLogoStorage>().OpenReadAsync(key, default) ?? throw new InvalidOperationException();
         return Convert.ToHexString(await SHA256.HashDataAsync(asset.Content)).ToLowerInvariant();
+    }
+
+    private sealed class CapturingLogger<T> : ILogger<T>
+    {
+        public List<(LogLevel Level, string Message)> Entries { get; } = [];
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => true;
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+            Entries.Add((logLevel, formatter(state, exception)));
     }
 }

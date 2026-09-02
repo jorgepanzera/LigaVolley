@@ -154,7 +154,7 @@ dotnet run --project src/LigaVolley.Api -- --seed-livosur-2026
 dotnet run --project src/LigaVolley.Api -- --seed-livosur-2026-club-logos
 ```
 
-El segundo comando sólo procesa `seed-assets/club-logos/manifest.csv` y sus imágenes. No crea Clubs ni otros datos: omite los Clubs inexistentes, valida el SHA-256 del paquete y es idempotente respecto de la versión y el archivo normalizado almacenado. La ubicación puede sobrescribirse con `Seed:Livosur2026ClubLogos:Path`.
+El segundo comando sólo procesa `seed-assets/club-logos/manifest.csv` y sus imágenes. No crea Clubs ni otros datos: omite los Clubs inexistentes, valida el SHA-256 del paquete y es idempotente respecto de la versión y el archivo normalizado almacenado. El formato real se detecta por contenido con ImageSharp; si no coincide con la extensión se registra una advertencia y se utiliza el content type real, manteniendo estricta la validación del storage. La ubicación puede sobrescribirse con `Seed:Livosur2026ClubLogos:Path`.
 
 ### Admin Master Data y Club Logo v1
 
