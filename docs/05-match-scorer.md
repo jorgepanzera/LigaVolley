@@ -115,7 +115,7 @@ El Service Worker precachea exclusivamente App Shell y assets. No cachea `/api/s
 
 La interfaz es una consola horizontal: marcador dominante, HOME fijo a la izquierda, AWAY fijo a la derecha, cancha enfrentada P1..P6, saque/servidor, puntos y sets. Los únicos controles deportivos primarios son `+ PUNTO HOME` y `+ PUNTO AWAY`; existe una protección breve contra doble toque.
 
-PrepareSet permite completar P1→P6 con avance automático, reemplazar una selección con dos toques, copiar la alineación inicial del set anterior y rotarla sólo mientras está READY. El saque inicial se selecciona por lado y el servidor se deriva de P1.
+PrepareSet permite completar P1→P6 con avance automático, reemplazar una selección con dos toques, copiar la alineación inicial del set anterior y rotarla sólo mientras está READY. El saque inicial se selecciona por lado y el servidor se deriva de P1. Al iniciar, la consola persiste automáticamente las alineaciones válidas que todavía tengan cambios locales; los botones de guardado explícito permanecen disponibles, pero no son un prerrequisito operativo.
 
 El tracking de sustituciones y líbero es opcional y estable por MatchSheet. Cada equipo decide por set si usa líbero, cuál y qué plazas lógicas cubre. El motor deriva el estado pre-saque y las entradas/salidas naturales; no hay botones primarios de entrada/salida. Una sustitución cambia al regular vigente de la plaza, por lo que el líbero lo cubre y posteriormente lo restaura.
 

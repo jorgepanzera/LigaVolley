@@ -25,18 +25,44 @@ export function SetPreparation({
       side: 'HOME',
       position: 0,
     }),
-    [serving, setServing] = useState<Side>();
-  useEffect(
-    () => setDrafts({ HOME: [...set.lineups.HOME], AWAY: [...set.lineups.AWAY] }),
-    [set.setNumber],
-  );
+    [serving, setServing] = useState<Side>(),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState('');
+  useEffect(() => {
+    setDrafts({ HOME: [...set.lineups.HOME], AWAY: [...set.lineups.AWAY] });
+    setPlans(structuredClone(set.liberoPlans));
+    setServing(undefined);
+    setError('');
+  }, [set.setNumber]);
   const select = (id: number) => {
     const next = { ...drafts, [editing.side]: [...drafts[editing.side]] };
     next[editing.side][editing.position] = id;
     setDrafts(next);
     if (editing.position < 5) setEditing({ ...editing, position: editing.position + 1 });
   };
-  const save = async (side: Side) => onSave(side, drafts[side], plans[side]);
+  const save = async (side: Side) => {
+    setError('');
+    try {
+      await onSave(side, drafts[side], plans[side]);
+    } catch (cause) {
+      setError(commandError(cause));
+    }
+  };
+  const start = async () => {
+    if (!serving) return;
+    setBusy(true);
+    setError('');
+    try {
+      for (const side of ['HOME', 'AWAY'] as Side[])
+        if (!sameLineupConfiguration(set, side, drafts[side], plans[side]))
+          await onSave(side, drafts[side], plans[side]);
+      await onStart(serving);
+    } catch (cause) {
+      setError(commandError(cause));
+    } finally {
+      setBusy(false);
+    }
+  };
   const complete =
     drafts.HOME.length === 6 &&
     drafts.AWAY.length === 6 &&
@@ -126,8 +152,9 @@ export function SetPreparation({
         {!complete ? (
           <p>Completa seis jugadores distintos para: {missingDrafts.join(' y ')}.</p>
         ) : !persistedComplete ? (
-          <p>Guarda la alineación de: {missingSaved.join(' y ')}.</p>
+          <p>Se guardará automáticamente al iniciar: {missingSaved.join(' y ')}.</p>
         ) : null}
+          {error && <p className="prep-error">{error}</p>}
           <h3>¿Quién comienza sacando?</h3>
           <div>
             <button
@@ -145,10 +172,10 @@ export function SetPreparation({
           </div>
           <button
             className="start-set"
-            disabled={!serving || !complete || !persistedComplete}
-            onClick={() => serving && void onStart(serving)}
+            disabled={!serving || !complete || busy}
+            onClick={() => void start()}
           >
-            Iniciar Set {set.setNumber}
+            {busy ? 'Guardando…' : `Iniciar Set ${set.setNumber}`}
           </button>
       </footer>
     </section>
@@ -229,7 +256,7 @@ function LiberoConfiguration({
           ))}
         </select>
       </label>
-      {plan.enabled && (
+      {plan.enabled ? (
         <div>
           <span>Plazas cubiertas</span>
           {lineup.map((_, i) => (
@@ -249,7 +276,37 @@ function LiberoConfiguration({
             </button>
           ))}
         </div>
+      ) : (
+        <div>
+          <span>Plazas cubiertas</span>
+          <small>No aplica sin líbero.</small>
+        </div>
       )}
     </div>
   );
+}
+
+function sameLineupConfiguration(
+  set: SetState,
+  side: Side,
+  lineup: number[],
+  plan: LiberoPlan,
+) {
+  const savedPlan = set.liberoPlans[side];
+  return (
+    set.lineups[side].length === lineup.length &&
+    set.lineups[side].every((id, index) => id === lineup[index]) &&
+    savedPlan.enabled === plan.enabled &&
+    savedPlan.liberoMatchPlayerId === plan.liberoMatchPlayerId &&
+    savedPlan.logicalPositions.length === plan.logicalPositions.length &&
+    savedPlan.logicalPositions.every((position, index) => position === plan.logicalPositions[index])
+  );
+}
+
+function commandError(cause: unknown) {
+  if (cause instanceof Error && cause.message === 'ambiguous_libero_plan')
+    return 'El plan de líbero puede requerir dos reemplazos simultáneos. Revisa las plazas cubiertas.';
+  if (cause instanceof Error && cause.message === 'invalid_libero_plan')
+    return 'Selecciona un líbero y al menos una plaza válida, o elige Ninguno.';
+  return 'No se pudo guardar e iniciar el set. Revisa las alineaciones e inténtalo nuevamente.';
 }
