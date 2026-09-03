@@ -4,6 +4,11 @@ using LigaVolley.Application.Clubs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Webp;
 
 namespace LigaVolley.Infrastructure.Persistence.Seed;
 
@@ -64,7 +69,12 @@ public sealed class Livosur2026ClubLogoSeeder(
                 var assetPath = ResolveAsset(packageRoot, row.FileName);
                 if (!File.Exists(assetPath)) throw new InvalidDataException("Asset file was not found.");
                 await VerifySha256Async(assetPath, row.Sha256, ct);
-                var contentType = ContentType(assetPath);
+                var contentType = await DetectContentTypeAsync(assetPath, ct);
+                var extensionContentType = ContentTypeFromExtension(assetPath);
+                if (!string.Equals(extensionContentType, contentType, StringComparison.OrdinalIgnoreCase))
+                    logger.LogWarning(
+                        "Club logo seed asset extension does not match its image format. Club={Club}; File={File}; ExtensionContentType={ExtensionContentType}; ActualContentType={ActualContentType}",
+                        row.ClubName, row.FileName, extensionContentType ?? "unsupported", contentType);
 
                 if (club.LogoStorageKey is not null)
                 {
@@ -129,12 +139,34 @@ public sealed class Livosur2026ClubLogoSeeder(
             throw new InvalidDataException($"Asset SHA-256 mismatch. Expected {expected}, got {actual}.");
     }
 
-    private static string ContentType(string path) => Path.GetExtension(path).ToLowerInvariant() switch
+    private static async Task<string> DetectContentTypeAsync(string path, CancellationToken ct)
+    {
+        await using var stream = File.OpenRead(path);
+        IImageFormat? format;
+        try
+        {
+            format = await Image.DetectFormatAsync(stream, ct);
+        }
+        catch (UnknownImageFormatException ex)
+        {
+            throw new InvalidDataException("Asset file is not a supported image.", ex);
+        }
+
+        return format switch
+        {
+            PngFormat => "image/png",
+            JpegFormat => "image/jpeg",
+            WebpFormat => "image/webp",
+            _ => throw new InvalidDataException("Asset image format is not supported.")
+        };
+    }
+
+    private static string? ContentTypeFromExtension(string path) => Path.GetExtension(path).ToLowerInvariant() switch
     {
         ".png" => "image/png",
         ".jpg" or ".jpeg" => "image/jpeg",
         ".webp" => "image/webp",
-        _ => throw new InvalidDataException("Asset file format is not supported.")
+        _ => null
     };
 
     private sealed record ManifestRow(string ClubName, string FileName, string Sha256);

@@ -63,10 +63,9 @@ async function prepareAndStart(page: Page) {
   const home = page.locator('.prep-grid article').nth(0),
     away = page.locator('.prep-grid article').nth(1);
   for (let i = 0; i < 6; i++) await home.getByRole('button', { name: new RegExp(`H${i}`) }).click();
-  await home.getByRole('button', { name: 'Guardar HOME' }).click();
   await away.locator('.lineup-slots button').first().click();
   for (let i = 0; i < 6; i++) await away.getByRole('button', { name: new RegExp(`A${i}`) }).click();
-  await away.getByRole('button', { name: 'Guardar AWAY' }).click();
+  await expect(page.getByText('No aplica sin líbero.')).toHaveCount(2);
   await page.getByRole('button', { name: 'HOME SACA' }).click();
   await page.getByRole('button', { name: 'Iniciar Set 1' }).click();
   await expect(page.getByRole('button', { name: /PUNTO HOME/ })).toBeEnabled();
