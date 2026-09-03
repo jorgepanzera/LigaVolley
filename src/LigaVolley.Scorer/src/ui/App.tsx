@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } fr
 import { createScorerController } from '../application/composition';
 import type { ViewState } from '../application/scorerController';
 import type { Side } from '../domain/types';
+import type { OpenMatchContext, OpenTeamContext } from '../api/scorerApi';
 import { currentSet } from '../domain/matchEngine';
 import { Court } from './console/Court';
 import { ScoreBoard } from './console/ScoreBoard';
@@ -37,6 +38,7 @@ export default function App() {
       removeEventListener('offline', refresh);
     };
   }, [controller]);
+  if (view.opening) return <OpeningView context={view.opening} onOpen={(request) => void controller.open(request)} />;
   if (!view.state || !view.bootstrap)
     return (
       <main className="loading">
@@ -315,6 +317,35 @@ export default function App() {
       )}
     </main>
   );
+}
+type TeamSelection = { competitionRosterPlayerIds: number[]; captainCompetitionRosterPlayerId?: number; liberoCompetitionRosterPlayerIds: number[]; competitionRosterStaffIds: number[] };
+function selection(context: OpenTeamContext): TeamSelection {
+  const players = context.players.slice(0, 6);
+  return { competitionRosterPlayerIds: players.map((x) => x.competitionRosterPlayerId), captainCompetitionRosterPlayerId: players[0]?.competitionRosterPlayerId, liberoCompetitionRosterPlayerIds: [], competitionRosterStaffIds: [] };
+}
+function OpeningView({ context, onOpen }: { context: OpenMatchContext; onOpen: (request: { home: TeamSelection; away: TeamSelection; trackSubstitutions: boolean; trackLiberoReplacements: boolean }) => void }) {
+  const [home, setHome] = useState(() => selection(context.home));
+  const [away, setAway] = useState(() => selection(context.away));
+  const [trackSubstitutions, setTrackSubstitutions] = useState(true);
+  const [trackLiberoReplacements, setTrackLiberoReplacements] = useState(true);
+  return <main className="loading opening-view"><h1>Abrir acta</h1><p>{context.home.teamName} vs {context.away.teamName}</p>{context.warnings.map((warning) => <p key={warning}>{warning}</p>)}<OpeningTeam context={context.home} value={home} onChange={setHome} /><OpeningTeam context={context.away} value={away} onChange={setAway} /><label><input type="checkbox" checked={trackSubstitutions} onChange={(e) => setTrackSubstitutions(e.target.checked)} /> Registrar sustituciones</label><label><input type="checkbox" checked={trackLiberoReplacements} onChange={(e) => setTrackLiberoReplacements(e.target.checked)} /> Registrar reemplazos de líbero</label><button disabled={home.competitionRosterPlayerIds.length < 6 || away.competitionRosterPlayerIds.length < 6} onClick={() => onOpen({ home, away, trackSubstitutions, trackLiberoReplacements })}>Abrir acta</button></main>;
+}
+function OpeningTeam({ context, value, onChange }: { context: OpenTeamContext; value: TeamSelection; onChange: (value: TeamSelection) => void }) {
+  const toggle = (id: number) => {
+    const selected = value.competitionRosterPlayerIds.includes(id);
+    const competitionRosterPlayerIds = selected
+      ? value.competitionRosterPlayerIds.filter((x) => x !== id)
+      : [...value.competitionRosterPlayerIds, id];
+    onChange({
+      ...value,
+      competitionRosterPlayerIds,
+      captainCompetitionRosterPlayerId:
+        selected && value.captainCompetitionRosterPlayerId === id
+          ? competitionRosterPlayerIds[0]
+          : value.captainCompetitionRosterPlayerId,
+    });
+  };
+  return <section><h2>{context.teamName}</h2>{context.players.map((player) => <label key={player.competitionRosterPlayerId}><input type="checkbox" checked={value.competitionRosterPlayerIds.includes(player.competitionRosterPlayerId)} onChange={() => toggle(player.competitionRosterPlayerId)} /> {player.displayName}</label>)}</section>;
 }
 function ClosedConsole({
   view,

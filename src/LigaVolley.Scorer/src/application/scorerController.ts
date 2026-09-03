@@ -1,8 +1,9 @@
 import type { ScorerDatabase } from '../persistence/database';
 import { deviceId } from '../persistence/database';
 import { MatchRepository } from '../persistence/matchRepository';
-import { scorerApi } from '../api/scorerApi';
+import { ApiProblem, scorerApi, type OpenMatchContext, type OpenMatchRequest } from '../api/scorerApi';
 import { SyncService } from '../sync/syncService';
+import { reconcile } from '../sync/reconciliationService';
 import type {
   LiberoPlan,
   LocalEvent,
@@ -17,6 +18,7 @@ export interface ViewState {
   pendingEventCount: number;
   state?: MatchState;
   bootstrap?: ServerSheetSnapshot;
+  opening?: OpenMatchContext;
   events: LocalEvent[];
   matchId?: number;
   lastAcceptedSequence: number;
@@ -58,13 +60,36 @@ export class ScorerController {
     this.emit();
     await this.repo.resetSyncing();
     let local = await this.repo.active(matchId);
-    if (!local) {
-      try {
+    try {
+      if (local) {
+        const server = await this.api.sheet(matchId);
+        await reconcile(this.database, matchId, server, server.session.lastAcceptedSequence);
+        local = await this.repo.active(matchId);
+      } else {
         const server = await this.api.sheet(matchId);
         await this.repo.bootstrap(matchId, server, await deviceId(this.database));
         local = await this.repo.active(matchId);
-      } catch {
-        this.view = { ...this.view, runtime: 'OFFLINE', error: 'offline_no_local_match' };
+      }
+    } catch (error) {
+      if (!local && isMissingSheet(error)) {
+        try {
+          const opening = await this.api.openContext(matchId);
+          if (opening.existingMatchSheet) {
+            const server = await this.api.sheet(matchId);
+            await this.repo.bootstrap(matchId, server, await deviceId(this.database));
+            local = await this.repo.active(matchId);
+          } else {
+            this.view = { ...this.view, runtime: 'READY', opening };
+            this.emit();
+            return;
+          }
+        } catch (contextError) {
+          this.view = { ...this.view, runtime: 'OFFLINE', error: errorCode(contextError) };
+          this.emit();
+          return;
+        }
+      } else {
+        this.view = { ...this.view, runtime: 'OFFLINE', error: errorCode(error) };
         this.emit();
         return;
       }
@@ -72,6 +97,18 @@ export class ScorerController {
     this.view.storagePersisted = await requestPersistentStorage();
     await this.refresh();
     if (local) void this.syncService.sync(matchId);
+  }
+  async open(request: Omit<OpenMatchRequest, 'deviceId' | 'clientRequestId'>) {
+    if (!this.view.matchId || !this.view.opening) throw new Error('opening_context_missing');
+    const device = await deviceId(this.database);
+    const response = await this.api.open(this.view.matchId, {
+      ...request,
+      deviceId: device,
+      clientRequestId: crypto.randomUUID(),
+    });
+    await this.repo.bootstrap(this.view.matchId, response.matchSheet, device);
+    this.view = { ...this.view, opening: undefined };
+    await this.refresh();
   }
   async refresh() {
     if (!this.view.matchId) return;
@@ -194,6 +231,12 @@ export class ScorerController {
     );
     await this.refresh();
   }
+}
+function isMissingSheet(error: unknown): error is ApiProblem {
+  return error instanceof ApiProblem && error.status === 404 && error.code === 'match_sheet_not_found';
+}
+function errorCode(error: unknown) {
+  return error instanceof ApiProblem ? error.code : 'offline_no_local_match';
 }
 const DexieMin = -Number.MAX_SAFE_INTEGER,
   DexieMax = Number.MAX_SAFE_INTEGER;

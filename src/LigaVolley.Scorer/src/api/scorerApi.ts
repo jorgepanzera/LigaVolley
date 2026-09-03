@@ -39,6 +39,31 @@ export class ApiProblem extends Error {
     super(message);
   }
 }
+export interface OpenMatchContext {
+  match: { matchId: number; status: string; homeTeamEntryId: number; awayTeamEntryId: number };
+  competition: { competitionId: number; competitionName: string; season: string; division: string; phase: string };
+  home: OpenTeamContext;
+  away: OpenTeamContext;
+  matchOfficials: Array<{ role: string; displayName: string }>;
+  warnings: string[];
+  existingMatchSheet?: { matchSheetId: number; sheetUuid: string; status: string; openedAt: string };
+}
+export interface OpenTeamContext {
+  teamEntryId: number;
+  teamName: string;
+  competitionRosterId: number;
+  rosterStatus: string;
+  players: Array<{ competitionRosterPlayerId: number; displayName: string; jerseyNumber?: number; role: string }>;
+  staff: Array<{ competitionRosterStaffId: number; displayName: string }>;
+}
+export interface OpenMatchRequest {
+  clientRequestId: string;
+  deviceId: string;
+  home: { competitionRosterPlayerIds: number[]; captainCompetitionRosterPlayerId?: number; liberoCompetitionRosterPlayerIds: number[]; competitionRosterStaffIds: number[] };
+  away: { competitionRosterPlayerIds: number[]; captainCompetitionRosterPlayerId?: number; liberoCompetitionRosterPlayerIds: number[]; competitionRosterStaffIds: number[] };
+  trackSubstitutions?: boolean;
+  trackLiberoReplacements?: boolean;
+}
 async function call<T>(url: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
@@ -65,6 +90,12 @@ export interface SyncResponse {
 }
 export const scorerApi = {
   sheet: (matchId: number) => call<ServerSheetSnapshot>(`/api/scorer/matches/${matchId}/sheet`),
+  openContext: (matchId: number) => call<OpenMatchContext>(`/api/scorer/matches/${matchId}/open-context`),
+  open: (matchId: number, body: OpenMatchRequest) =>
+    call<{ alreadyOpen: boolean; matchSheet: ServerSheetSnapshot }>(`/api/scorer/matches/${matchId}/open`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
   sync: (
     matchId: number,
     body: { sheetUuid: string; sessionUuid: string; deviceId: string; events: LocalEvent[] },
