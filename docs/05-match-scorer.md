@@ -133,6 +133,12 @@ OFFLINE no interrumpe ni deshabilita una acción deportiva válida y muestra pen
 
 El comportamiento real de `CorrectLastPoint` permite corregir inmediatamente el punto que terminó automáticamente un set: el motor reconstruye el set como IN_PROGRESS y revierte el set ganado. No existe corrección arbitraria desde el historial.
 
+### Court & Bench Visual Refinement v2.1
+
+En READY e IN_PROGRESS la cancha se representa como una única superficie indoor: zona libre teal profunda alrededor de un rectángulo de juego naranja/terracota, con líneas blanco cálido, líneas de ataque y red central neutra visibles. HOME y AWAY se distinguen mediante nombres, orientación y acentos teal/violeta en fichas, bancos y acciones, nunca coloreando cada mitad del piso. Las fichas oscuras tienen elevación y contraste sobre la superficie sin sustituirla visualmente. El servidor se identifica con un icono vectorial genérico de pelota de volleyball y el texto `SAQUE`, tanto en su ficha como en el scoreboard.
+
+Durante el juego, BANCO HOME ocupa el lateral izquierdo y BANCO AWAY el derecho; ambos tienen scroll interno y contienen únicamente jugadores fuera de cancha. En PrepareSet esas columnas laterales contienen los convocados todavía disponibles, manteniendo la misma geometría P1..P6. Ante falta de ancho se compactan primero los laterales, preservando cancha, marcador y acciones de punto.
+
 ## Consumo Public Live v1
 
 `GET /api/public/matches/{id}/live` lee exclusivamente el último estado operacional central persistido y reutiliza la derivación canónica de cancha. `LastUpdatedAt` proviene de `MATCH_SHEET.last_operational_update_at` y `ServerTime` del servidor que responde. PENDING, SCHEDULED y CANCELLED no tienen live; IN_PROGRESS, SUSPENDED y FINISHED sí. Public no simula pendientes locales ni ejecuta MatchEngine.

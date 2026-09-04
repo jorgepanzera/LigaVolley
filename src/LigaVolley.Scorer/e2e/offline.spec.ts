@@ -105,8 +105,9 @@ test('la consola actualiza localmente y protege el doble toque breve', async ({ 
 });
 
 for (const viewport of [
+  { width: 1920, height: 1080 },
   { width: 1440, height: 900 },
-  { width: 1280, height: 800 },
+  { width: 1366, height: 768 },
   { width: 1024, height: 768 },
 ]) {
   test(`mantiene consola, cancha y puntos utilizables a ${viewport.width}x${viewport.height}`, async ({
@@ -117,6 +118,16 @@ for (const viewport of [
     await prepareAndStart(page);
     await expect(page.locator('.scoreboard')).toBeInViewport();
     await expect(page.locator('.court')).toBeInViewport();
+    await expect(page.locator('.net')).toBeVisible();
+    await expect(page.locator('.bench-side.home')).toBeInViewport();
+    await expect(page.locator('.bench-side.away')).toBeInViewport();
+    const floor = await page.locator('.match-floor').boundingBox();
+    const homeBench = await page.locator('.bench-side.home').boundingBox();
+    const court = await page.locator('.court').boundingBox();
+    const awayBench = await page.locator('.bench-side.away').boundingBox();
+    expect(homeBench!.x).toBeLessThan(court!.x);
+    expect(awayBench!.x).toBeGreaterThan(court!.x + court!.width);
+    expect(floor!.height).toBeGreaterThanOrEqual(330);
     await expect(page.getByRole('button', { name: /PUNTO HOME/ })).toBeInViewport();
     await expect(page.getByRole('button', { name: /PUNTO AWAY/ })).toBeInViewport();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(

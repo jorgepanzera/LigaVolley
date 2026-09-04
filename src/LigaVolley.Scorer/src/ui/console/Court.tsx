@@ -1,6 +1,7 @@
 import { effectivePlayers, logicalAtPhysical, regularPlayers } from '../../domain/matchEngine';
 import type { ServerSheetSnapshot, SetState, Side } from '../../domain/types';
 import { player, shortName, team } from './model';
+import { VolleyballIcon } from './VolleyballIcon';
 const layout: { HOME: number[]; AWAY: number[] } = {
   HOME: [4, 3, 2, 5, 6, 1],
   AWAY: [2, 3, 4, 1, 6, 5],
@@ -60,7 +61,11 @@ function TeamCourt({
             >
               <span className="position-label">
                 P{physical}
-                {serving && <b> ● S</b>}
+                {serving && (
+                  <b className="serve-badge">
+                    <VolleyballIcon /> SAQUE
+                  </b>
+                )}
               </span>
               <strong>
                 {isLibero ? 'L ' : ''}#{shown?.jerseyNumber ?? '—'}

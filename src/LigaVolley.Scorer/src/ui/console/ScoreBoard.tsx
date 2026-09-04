@@ -2,6 +2,7 @@ import type { SetState, Side } from '../../domain/types';
 import { serverPlayer } from '../../domain/matchEngine';
 import { player, shortName, team } from './model';
 import type { ServerSheetSnapshot } from '../../domain/types';
+import { VolleyballIcon } from './VolleyballIcon';
 export function ScoreBoard({
   set,
   homeSets,
@@ -62,7 +63,9 @@ function TeamScore({
       <div className="serve-line">
         {serving ? (
           <>
-            <b>● SAQUE</b>
+            <b>
+              <VolleyballIcon /> SAQUE
+            </b>
             <span>
               #{server?.jerseyNumber ?? '—'} {shortName(server?.displayName)} · P1
             </span>

@@ -91,21 +91,31 @@ export function SetPreparation({
         {(['HOME', 'AWAY'] as Side[]).map((side) => (
           <article key={side}>
             <h3>{team(snapshot, side)?.teamName}</h3>
-            <div className="lineup-slots">
-              {courtOrder[side].map((i) => (
-                <button
-                  className={editing.side === side && editing.position === i ? 'active' : ''}
-                  onClick={() => setEditing({ side, position: i })}
-                  key={i}
-                >
-                  <small>P{i + 1}</small>
-                  <b>
-                    #
-                    {team(snapshot, side)?.players.find((x) => x.matchPlayerId === drafts[side][i])
-                      ?.jerseyNumber ?? '—'}
-                  </b>
-                </button>
-              ))}
+            <div className="prep-team-layout">
+              <div className="lineup-slots">
+                {courtOrder[side].map((i) => (
+                  <button
+                    className={editing.side === side && editing.position === i ? 'active' : ''}
+                    onClick={() => setEditing({ side, position: i })}
+                    key={i}
+                  >
+                    <small>P{i + 1}</small>
+                    <b>
+                      #
+                      {team(snapshot, side)?.players.find(
+                        (x) => x.matchPlayerId === drafts[side][i],
+                      )?.jerseyNumber ?? '—'}
+                    </b>
+                  </button>
+                ))}
+              </div>
+              <PlayerGrid
+                snapshot={snapshot}
+                side={side}
+                occupied={drafts[side]}
+                onSelect={select}
+                active={editing.side === side}
+              />
             </div>
             <div className="prep-tools">
               {previous && (
@@ -123,13 +133,6 @@ export function SetPreparation({
                 Rotar ↻
               </button>
             </div>
-            <PlayerGrid
-              snapshot={snapshot}
-              side={side}
-              occupied={drafts[side]}
-              onSelect={select}
-              active={editing.side === side}
-            />
             {trackLibero && (
               <LiberoConfiguration
                 snapshot={snapshot}

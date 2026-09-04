@@ -395,12 +395,15 @@ function MatchWorkspace({
         awaySets={state.awaySets}
         snapshot={snapshot}
       />
-      <Court
-        set={set}
-        snapshot={snapshot}
-        onPosition={(side, logical) => trackSubs && !blocked && onPosition(side, logical)}
-      />
-      <BenchRow snapshot={snapshot} set={set} />
+      <section className="match-floor">
+        <BenchSide side="HOME" snapshot={snapshot} set={set} />
+        <Court
+          set={set}
+          snapshot={snapshot}
+          onPosition={(side, logical) => trackSubs && !blocked && onPosition(side, logical)}
+        />
+        <BenchSide side="AWAY" snapshot={snapshot} set={set} />
+      </section>
       <section className="point-actions">
         <button
           className="point-button home"
@@ -456,34 +459,35 @@ function MatchWorkspace({
   );
 }
 
-function BenchRow({ snapshot, set }: { snapshot: ServerSheetSnapshot; set: SetState }) {
+function BenchSide({
+  side,
+  snapshot,
+  set,
+}: {
+  side: Side;
+  snapshot: ServerSheetSnapshot;
+  set: SetState;
+}) {
+  const playing = new Set(effectivePlayers(set, side));
+  const players = team(snapshot, side)?.players.filter((x) => !playing.has(x.matchPlayerId)) ?? [];
   return (
-    <section className="bench-row">
-      {(['HOME', 'AWAY'] as Side[]).map((side) => {
-        const playing = new Set(effectivePlayers(set, side));
-        const players =
-          team(snapshot, side)?.players.filter((x) => !playing.has(x.matchPlayerId)) ?? [];
-        return (
-          <article className={side.toLowerCase()} key={side}>
-            <header>
-              <b>Banco {side}</b>
-              <span>{players.length} disponibles</span>
-            </header>
-            <div>
-              {players.map((p) => (
-                <span className="bench-player" key={p.matchPlayerId}>
-                  <b>#{p.jerseyNumber}</b>
-                  {p.displayName}
-                  {team(snapshot, side)?.liberos.some(
-                    (x) => x.matchPlayerId === p.matchPlayerId,
-                  ) && <em>L</em>}
-                </span>
-              ))}
-            </div>
-          </article>
-        );
-      })}
-    </section>
+    <aside className={`bench-side ${side.toLowerCase()}`}>
+      <header>
+        <b>Banco {side}</b>
+        <span>{players.length}</span>
+      </header>
+      <div className="bench-list">
+        {players.map((p) => (
+          <span className="bench-player" title={p.displayName} key={p.matchPlayerId}>
+            <b>#{p.jerseyNumber}</b>
+            <span>{p.displayName}</span>
+            {team(snapshot, side)?.liberos.some((x) => x.matchPlayerId === p.matchPlayerId) && (
+              <em>L</em>
+            )}
+          </span>
+        ))}
+      </div>
+    </aside>
   );
 }
 

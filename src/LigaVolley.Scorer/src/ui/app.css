@@ -31,6 +31,15 @@
   --space-5: 24px;
   --header: 72px;
   --sidebar: 92px;
+  --court-free-zone: #075856;
+  --court-playing-surface: #b75e3e;
+  --court-playing-surface-shade: #a95136;
+  --court-player: #101d2a;
+  --court-line: #fff3d6cc;
+  --court-attack-line: #fff3d6a3;
+  --court-net: #d2d7dda8;
+  --bench-surface: #0a1625;
+  --serve-accent: #f5d765;
 }
 * {
   box-sizing: border-box;
@@ -161,7 +170,7 @@ button:disabled {
 .console-workspace {
   grid-column: 2;
   padding: 14px 20px 24px;
-  max-width: 1480px;
+  max-width: 1760px;
   width: 100%;
   margin: auto;
 }
@@ -1240,4 +1249,289 @@ button:disabled {
 }
 .substitution-confirm button {
   grid-column: 1 / -1;
+}
+
+/* Scorer UX/UI v2.1: cancha dominante y bancos laterales. */
+.match-floor {
+  display: grid;
+  grid-template-columns: clamp(118px, 12vw, 176px) minmax(0, 1fr) clamp(118px, 12vw, 176px);
+  gap: 10px;
+  height: clamp(350px, 47vh, 540px);
+  margin-top: 12px;
+}
+.match-floor .court {
+  margin: 0;
+  min-width: 0;
+}
+.court {
+  grid-template-columns: 1fr 22px 1fr;
+  padding: clamp(14px, 1.4vw, 24px);
+  border-color: #16817e;
+  background: var(--court-free-zone);
+  box-shadow: inset 0 0 28px #001a1a66;
+}
+.team-court {
+  position: relative;
+  padding: 12px 16px 16px;
+  background: linear-gradient(
+    180deg,
+    var(--court-playing-surface),
+    var(--court-playing-surface-shade)
+  );
+  border-block: 2px solid var(--court-line);
+}
+.team-court.away {
+  background: linear-gradient(
+    180deg,
+    var(--court-playing-surface),
+    var(--court-playing-surface-shade)
+  );
+  border-right: 2px solid var(--court-line);
+}
+.team-court.home {
+  border-left: 2px solid var(--court-line);
+}
+.team-court::after {
+  content: '';
+  position: absolute;
+  inset: 48% 10px auto;
+  border-top: 2px solid var(--court-attack-line);
+  pointer-events: none;
+}
+.positions {
+  position: relative;
+  z-index: 1;
+  height: calc(100% - 26px);
+  align-items: center;
+  gap: clamp(10px, 1.3vw, 22px);
+}
+.court-position {
+  min-height: 84px;
+  max-height: 116px;
+  align-self: center;
+  border-color: #39d7c8a8;
+  border-radius: 9px;
+  background: var(--court-player);
+  box-shadow: 0 8px 18px #29110870;
+}
+.away .court-position {
+  border-color: #b5a1ffad;
+  background: var(--court-player);
+}
+.court-position strong {
+  font-size: clamp(22px, 2vw, 30px);
+}
+.serve-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--serve-accent);
+  font-size: 9px;
+}
+.volleyball-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  fill: #f5f1dc;
+  stroke: #243349;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.serve-line b {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--serve-accent);
+}
+.serve-line .volleyball-icon {
+  width: 18px;
+  height: 18px;
+}
+.net {
+  position: relative;
+  z-index: 2;
+  margin-block: -5px;
+  border-inline: 3px solid var(--court-net);
+  border-radius: 2px;
+  background: repeating-linear-gradient(0deg, #313943 0 7px, #d8dee64d 7px 8px);
+  box-shadow: 0 5px 12px #0008;
+}
+.net::after {
+  content: '';
+  position: absolute;
+  inset: 0 5px;
+  background: repeating-linear-gradient(90deg, transparent 0 6px, #d8e4f226 6px 7px);
+}
+.net span {
+  position: relative;
+  z-index: 1;
+  color: #dbe7f0a6;
+}
+.bench-side {
+  min-width: 0;
+  padding: 10px 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bench-surface);
+  overflow: hidden;
+}
+.bench-side header {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+.bench-side.home header b {
+  color: var(--home);
+}
+.bench-side.away header b {
+  color: var(--away);
+}
+.bench-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: calc(100% - 34px);
+  padding-top: 8px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.bench-player {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  width: 100%;
+  padding: 7px;
+}
+.bench-player > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prep-team-layout {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.34fr) minmax(0, 1fr);
+  gap: 10px;
+  min-height: 270px;
+}
+.prep-grid > article:first-child .player-grid {
+  order: 1;
+}
+.prep-grid > article:first-child .lineup-slots {
+  order: 2;
+}
+.prep-grid > article:last-child .prep-team-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(110px, 0.34fr);
+}
+.prep-grid > article:last-child .lineup-slots {
+  order: 1;
+}
+.prep-grid > article:last-child .player-grid {
+  order: 2;
+}
+.prep-grid {
+  position: relative;
+  gap: 6px;
+}
+.prep-grid::after {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  top: 58px;
+  left: 50%;
+  width: 12px;
+  height: 270px;
+  transform: translateX(-50%);
+  border-inline: 2px solid var(--court-net);
+  background: repeating-linear-gradient(0deg, #313943 0 7px, #d8dee64d 7px 8px),
+    repeating-linear-gradient(90deg, transparent 0 5px, #d8dee638 5px 6px);
+  pointer-events: none;
+}
+.lineup-slots {
+  position: relative;
+  align-content: center;
+  gap: clamp(8px, 1vw, 16px);
+  isolation: isolate;
+  background: var(--court-free-zone);
+  border-color: #16817e;
+  padding: 24px 18px;
+}
+.prep-grid > article:last-child .lineup-slots {
+  background: var(--court-free-zone);
+}
+.lineup-slots::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 12px;
+  border: 2px solid var(--court-line);
+  background: linear-gradient(
+    180deg,
+    var(--court-playing-surface),
+    var(--court-playing-surface-shade)
+  );
+}
+.lineup-slots::after {
+  content: '';
+  position: absolute;
+  inset: 50% 12px auto;
+  border-top: 2px solid var(--court-attack-line);
+  pointer-events: none;
+}
+.lineup-slots button {
+  position: relative;
+  z-index: 1;
+  min-height: 78px;
+  background: var(--court-player);
+  border-color: #39d7c8a8;
+  box-shadow: 0 7px 15px #29110866;
+}
+.prep-grid > article:last-child .lineup-slots button {
+  background: var(--court-player);
+  border-color: #b5a1ffad;
+}
+.player-grid {
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 270px;
+  padding-right: 3px;
+}
+.player-grid button {
+  min-width: 0;
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .match-floor {
+    grid-template-columns: 102px minmax(0, 1fr) 102px;
+    height: 350px;
+    gap: 6px;
+  }
+  .team-court {
+    padding-inline: 8px;
+  }
+  .positions {
+    gap: 6px;
+  }
+  .court-position {
+    padding: 7px;
+  }
+  .bench-player {
+    padding: 6px 4px;
+  }
+  .bench-player > span {
+    font-size: 10px;
+  }
+  .prep-team-layout {
+    grid-template-columns: 100px minmax(0, 1fr);
+  }
+  .prep-grid > article:last-child .prep-team-layout {
+    grid-template-columns: minmax(0, 1fr) 100px;
+  }
 }
