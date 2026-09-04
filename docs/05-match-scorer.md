@@ -121,6 +121,18 @@ El tracking de sustituciones y líbero es opcional y estable por MatchSheet. Cad
 
 Timeout, CorrectLastPoint con reconstrucción, historial de consulta, revisión y CloseMatch explícito completan el recorrido. El cierre puede persistirse offline y la reentrada recupera primero los cinco stores IndexedDB; `navigator.storage.persist()` es una mejora progresiva, nunca un bloqueo.
 
+## Scorer UX/UI v2
+
+La aplicación se presenta como una consola deportiva dark, con header de contexto/sync y sidebar secundaria para Partido, Historial, Acta y Más. HOME permanece a la izquierda y AWAY a la derecha en apertura, preparación y juego. El layout prioriza marcador, cancha efectiva enfrentada, banco, puntos, acciones secundarias y resultados anteriores, en ese orden.
+
+OpenMatchSheet usa paneles simétricos y exige que el scorer seleccione convocados, escriba dorsales y marque exactamente un capitán por lado. Antes de PrepareSet se muestra el marcador inicial y una cancha pendiente. READY reutiliza la geometría P1..P6 del partido, retira de disponibles a cada jugador asignado y conserva selección rápida, copia, rotación, saque inicial y plan de líbero.
+
+Durante IN_PROGRESS, la cancha consume las derivaciones del MatchEngine y el banco excluye a los seis jugadores efectivos. Punto HOME/AWAY es la acción dominante; timeout, sustitución confirmada y CorrectLastPoint se resuelven en overlays. Historial, acta, oficiales y sesión son consultas en drawers. Los eventos corregidos se conservan y se etiquetan. Al finalizar un set desaparecen las mutaciones y se ofrece preparar el siguiente; a tres sets se ofrece revisar y cerrar; CLOSED queda sólo para consulta.
+
+OFFLINE no interrumpe ni deshabilita una acción deportiva válida y muestra pendientes discretamente. SYNCING tampoco bloquea. BLOCKED conserva visible el partido bajo un overlay, impide todas las mutaciones y ofrece reconciliación o takeover; takeover no modifica estado deportivo. El diseño se orienta a notebook/tablet landscape, ideal entre 1280 y 1440 px y funcional desde 1024x768, donde el sidebar queda sólo con iconos y se compacta la información secundaria.
+
+El comportamiento real de `CorrectLastPoint` permite corregir inmediatamente el punto que terminó automáticamente un set: el motor reconstruye el set como IN_PROGRESS y revierte el set ganado. No existe corrección arbitraria desde el historial.
+
 ## Consumo Public Live v1
 
 `GET /api/public/matches/{id}/live` lee exclusivamente el último estado operacional central persistido y reutiliza la derivación canónica de cancha. `LastUpdatedAt` proviene de `MATCH_SHEET.last_operational_update_at` y `ServerTime` del servidor que responde. PENDING, SCHEDULED y CANCELLED no tienen live; IN_PROGRESS, SUSPENDED y FINISHED sí. Public no simula pendientes locales ni ejecuta MatchEngine.

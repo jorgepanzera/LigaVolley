@@ -12,9 +12,9 @@ export function SyncStatusIndicator({
     runtime === 'SYNCING'
       ? 'Sincronizando'
       : runtime === 'OFFLINE'
-        ? `Offline · ${pending} pendientes`
+        ? `Sin conexión · ${pending} pendientes`
         : runtime === 'BLOCKED'
-          ? 'Sesión bloqueada'
+          ? 'Bloqueado'
           : runtime === 'CLOSED' && pending
             ? `Cerrado · ${pending} pendientes`
             : 'Sincronizado';

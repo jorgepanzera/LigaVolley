@@ -1,7 +1,12 @@
 import type { ScorerDatabase } from '../persistence/database';
 import { deviceId } from '../persistence/database';
 import { MatchRepository } from '../persistence/matchRepository';
-import { ApiProblem, scorerApi, type OpenMatchContext, type OpenMatchRequest } from '../api/scorerApi';
+import {
+  ApiProblem,
+  scorerApi,
+  type OpenMatchContext,
+  type OpenMatchRequest,
+} from '../api/scorerApi';
 import { SyncService } from '../sync/syncService';
 import { reconcile } from '../sync/reconciliationService';
 import type {
@@ -233,7 +238,9 @@ export class ScorerController {
   }
 }
 function isMissingSheet(error: unknown): error is ApiProblem {
-  return error instanceof ApiProblem && error.status === 404 && error.code === 'match_sheet_not_found';
+  return (
+    error instanceof ApiProblem && error.status === 404 && error.code === 'match_sheet_not_found'
+  );
 }
 function errorCode(error: unknown) {
   return error instanceof ApiProblem ? error.code : 'offline_no_local_match';

@@ -4,22 +4,22 @@
 
 -- Player 1287 -> Roberta Ratzke (SETTER)
 UPDATE [dbo].[PERSON]
-SET [first_name] = N'Roberta', [last_name] = N'Ratzke'
+SET [first_name] = N'Ratzke', [last_name] = N'Roberta'
 WHERE [person_id] = 1629;
 
 -- Player 1288 -> Ana Cristina de Souza (OUTSIDE_HITTER)
 UPDATE [dbo].[PERSON]
-SET [first_name] = N'Ana Cristina', [last_name] = N'de Souza'
+SET [first_name] = N'de Souza', [last_name] = N'Ana Cristina'
 WHERE [person_id] = 1630;
 
 -- Player 1289 -> Diana Duarte (MIDDLE_BLOCKER)
 UPDATE [dbo].[PERSON]
-SET [first_name] = N'Diana', [last_name] = N'Duarte'
+SET [first_name] = N'Duarte', [last_name] = N'Diana'
 WHERE [person_id] = 1631;
 
 -- Player 1290 -> Rosamaria Montibeller (OPPOSITE)
 UPDATE [dbo].[PERSON]
-SET [first_name] = N'Rosamaria', [last_name] = N'Montibeller'
+SET [first_name] = N'Montibeller', [last_name] = N'Rosamaria'
 WHERE [person_id] = 1632;
 
 -- Player 1291 -> Júlia Bergmann (OUTSIDE_HITTER)
@@ -29,17 +29,17 @@ WHERE [person_id] = 1633;
 
 -- Player 1292 -> Thaisa Menezes (MIDDLE_BLOCKER)
 UPDATE [dbo].[PERSON]
-SET [first_name] = N'Thaisa', [last_name] = N'Menezes'
+SET [first_name] = N'Menezes', [last_name] = N'Thaisa'
 WHERE [person_id] = 1634;
 
 -- Player 1293 -> Nyeme Costa (LIBERO)
 UPDATE [dbo].[PERSON]
-SET [first_name] = N'Nyeme', [last_name] = N'Costa'
+SET [first_name] = N'Costa', [last_name] = N'Nyeme'
 WHERE [person_id] = 1635;
 
 -- Player 1294 -> Gabriela Guimarães (OUTSIDE_HITTER)
 UPDATE [dbo].[PERSON]
-SET [first_name] = N'Gabriela', [last_name] = N'Guimarães'
+SET [first_name] = N'Guimarães', [last_name] = N'Gabi'
 WHERE [person_id] = 1636;
 
 

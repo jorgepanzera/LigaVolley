@@ -63,11 +63,17 @@ async function prepareAndStart(page: Page) {
   const home = page.locator('.prep-grid article').nth(0),
     away = page.locator('.prep-grid article').nth(1);
   for (let i = 0; i < 6; i++) await home.getByRole('button', { name: new RegExp(`H${i}`) }).click();
-  await away.locator('.lineup-slots button').first().click();
+  await away.locator('.lineup-slots button').filter({ hasText: 'P1' }).click();
   for (let i = 0; i < 6; i++) await away.getByRole('button', { name: new RegExp(`A${i}`) }).click();
   await expect(page.getByText('No aplica sin líbero.')).toHaveCount(2);
   await page.getByRole('button', { name: 'HOME SACA' }).click();
   await page.getByRole('button', { name: 'Iniciar Set 1' }).click();
+  await expect
+    .poll(async () => ({
+      points: await page.getByRole('button', { name: /PUNTO HOME/ }).count(),
+      errors: await page.locator('.prep-error').allTextContents(),
+    }))
+    .toEqual({ points: 1, errors: [] });
   await expect(page.getByRole('button', { name: /PUNTO HOME/ })).toBeEnabled();
 }
 test('PrepareSet, puntos, timeout, corrección y reentrada offline conservan IndexedDB', async ({
@@ -82,12 +88,12 @@ test('PrepareSet, puntos, timeout, corrección y reentrada offline conservan Ind
   await page.getByRole('button', { name: /Corregir último punto/ }).click();
   await page.getByRole('button', { name: 'Corregir', exact: true }).click();
   await expect(page.locator('.team-score.away > strong')).toHaveText('0');
-  await page.getByRole('button', { name: /Timeout HOME/ }).click();
-  await page.getByRole('button', { name: 'Registrar timeout' }).click();
+  await page.getByRole('button', { name: /Timeout/ }).click();
+  await page.getByRole('button', { name: 'Timeout HOME', exact: true }).click();
   await page.reload();
   await expect(page.locator('.team-score.away > strong')).toHaveText('0');
-  await expect(page.getByRole('button', { name: /Timeout HOME 1\/2/ })).toBeVisible();
-  await expect(page.getByText(/Offline/).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Timeout 1\/2/ })).toBeVisible();
+  await expect(page.getByText(/Sin conexión/).first()).toBeVisible();
 });
 test('la consola actualiza localmente y protege el doble toque breve', async ({ page }) => {
   await bootstrap(page);
@@ -97,3 +103,24 @@ test('la consola actualiza localmente y protege el doble toque breve', async ({ 
   await expect(page.locator('.team-score.home > strong')).toHaveText('1');
   await expect(point).toBeDisabled();
 });
+
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 1280, height: 800 },
+  { width: 1024, height: 768 },
+]) {
+  test(`mantiene consola, cancha y puntos utilizables a ${viewport.width}x${viewport.height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await bootstrap(page);
+    await prepareAndStart(page);
+    await expect(page.locator('.scoreboard')).toBeInViewport();
+    await expect(page.locator('.court')).toBeInViewport();
+    await expect(page.getByRole('button', { name: /PUNTO HOME/ })).toBeInViewport();
+    await expect(page.getByRole('button', { name: /PUNTO AWAY/ })).toBeInViewport();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  });
+}

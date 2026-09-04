@@ -169,6 +169,8 @@ Scorer contempla funcionamiento offline/intermitente y sincronización posterior
 
 Scorer Console UI v1 está cerrada: la consola mantiene HOME a la izquierda y AWAY a la derecha, muestra marcador/cancha P1..P6 y usa los puntos como acción primaria. PrepareSet permite carga rápida, copiar y rotar la alineación inicial. Los flags de tracking son estables por partido. El uso de líbero se decide por equipo y set mediante un líbero activo y plazas lógicas; sus entradas/salidas naturales y el estado pre-saque se derivan automáticamente. P1 es elegible al recibir, pero el líbero nunca sirve. Un plan que pudiera requerir dos reemplazos simultáneos se rechaza en READY. Timeout, corrección del último punto, revisión, cierre offline y recuperación IndexedDB forman parte del recorrido cerrado.
 
+Scorer UX/UI v2 está cerrada: un shell persistente de consola deportiva mantiene HOME a la izquierda y AWAY a la derecha, con marcador y cancha efectiva P1..P6 como centro visual. En juego, el banco muestra sólo jugadores fuera de cancha; los puntos son las acciones dominantes y los sets anteriores quedan al pie. Sidebar, drawers y modals concentran consultas y decisiones secundarias. Offline conserva las acciones deportivas válidas, SYNCING no bloquea y BLOCKED deshabilita toda mutación sin ocultar el estado. Apertura, set pendiente, READY, set en curso, fin de set, partido decidido y CLOSED tienen estados visuales explícitos. El objetivo responsive principal es landscape desde 1024x768.
+
 La tecnología y el protocolo del Scorer quedaron cerrados con PWA Core v1 y Offline Sync: React/TypeScript/Vite, Dexie/IndexedDB, cola local secuenciada, snapshot canónico + replay y takeover.
 
 ## Reglas de implementación para Codex

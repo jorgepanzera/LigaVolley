@@ -129,6 +129,7 @@ export interface ServerSheetSnapshot {
     division: string;
     phase: string;
   };
+  officials?: Array<{ role: string; displayName: string }>;
   home: {
     teamName: string;
     players: Array<{

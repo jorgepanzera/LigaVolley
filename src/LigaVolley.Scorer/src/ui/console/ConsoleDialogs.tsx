@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { LocalEvent, ServerSheetSnapshot, SetState, Side } from '../../domain/types';
 import { effectivePlayers, regularPlayers, serverPlayer } from '../../domain/matchEngine';
 import { player, shortName, team } from './model';
@@ -18,6 +19,8 @@ export function PlayerActionSheet({
   onClose: () => void;
   onSubstitute: (outId: number, inId: number) => void;
 }) {
+  useEscape(onClose);
+  const [candidate, setCandidate] = useState<number>();
   const regular = regularPlayers(set, side)[logical],
     effective = effectivePlayers(set, side)[logical],
     current = player(snapshot, side, effective),
@@ -51,14 +54,32 @@ export function PlayerActionSheet({
             <div className="selector-list">
               {available.map((p) => (
                 <button
+                  className={candidate === p.matchPlayerId ? 'selected' : ''}
                   key={p.matchPlayerId}
-                  onClick={() => onSubstitute(regular, p.matchPlayerId)}
+                  onClick={() => setCandidate(p.matchPlayerId)}
                 >
                   <b>#{p.jerseyNumber}</b>
                   {p.displayName}
                 </button>
               ))}
             </div>
+            {candidate && (
+              <div className="substitution-confirm">
+                <small>SALE</small>
+                <b>
+                  #{under?.jerseyNumber} {under?.displayName}
+                </b>
+                <span>→</span>
+                <small>ENTRA</small>
+                <b>
+                  #{player(snapshot, side, candidate)?.jerseyNumber}{' '}
+                  {player(snapshot, side, candidate)?.displayName}
+                </b>
+                <button onClick={() => onSubstitute(regular, candidate)}>
+                  Confirmar sustitución
+                </button>
+              </div>
+            )}
           </>
         )}
         {!trackSubstitutions && <p>Sustituciones no registradas</p>}
@@ -76,29 +97,49 @@ export function ConfirmDialog({
 }: {
   title: string;
   children: React.ReactNode;
-  confirmLabel: string;
-  onConfirm: () => void;
+  confirmLabel?: string;
+  onConfirm?: () => void;
   onClose: () => void;
   danger?: boolean;
 }) {
+  useEscape(onClose);
   return (
-    <div className="backdrop">
-      <div className="dialog">
+    <div className="backdrop" onMouseDown={onClose}>
+      <div
+        className="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <h2>{title}</h2>
         {children}
-        <footer>
-          <button onClick={onClose}>Cancelar</button>
-          <button className={danger ? 'danger' : ''} onClick={onConfirm}>
-            {confirmLabel}
-          </button>
-        </footer>
+        {confirmLabel && onConfirm && (
+          <footer>
+            <button onClick={onClose}>Cancelar</button>
+            <button className={danger ? 'danger' : ''} onClick={onConfirm}>
+              {confirmLabel}
+            </button>
+          </footer>
+        )}
       </div>
     </div>
   );
 }
 export function HistoryDrawer({ events, onClose }: { events: LocalEvent[]; onClose: () => void }) {
+  useEscape(onClose);
+  const correctedPoint = events
+    .map(
+      (event) =>
+        event.type === 'POINT' &&
+        events.some(
+          (candidate) =>
+            candidate.sequence > event.sequence && candidate.type === 'CORRECT_LAST_POINT',
+        ),
+    )
+    .lastIndexOf(true);
   return (
-    <div className="backdrop" onMouseDown={onClose}>
+    <div className="drawer-backdrop" onMouseDown={onClose}>
       <aside className="history" onMouseDown={(e) => e.stopPropagation()}>
         <button className="close" onClick={onClose}>
           ×
@@ -108,9 +149,15 @@ export function HistoryDrawer({ events, onClose }: { events: LocalEvent[]; onClo
         {events.length === 0 ? (
           <p>Sin acciones todavía.</p>
         ) : (
-          events.map((event) => (
-            <article key={event.eventUuid}>
-              <b>{eventLabel(event)}</b>
+          [...events].reverse().map((event) => (
+            <article
+              className={events.indexOf(event) === correctedPoint ? 'corrected' : ''}
+              key={event.eventUuid}
+            >
+              <b>
+                {eventLabel(event)}
+                {events.indexOf(event) === correctedPoint && <small> CORREGIDO</small>}
+              </b>
               <time>
                 {new Date(event.occurredAt).toLocaleTimeString([], {
                   hour: '2-digit',
@@ -159,6 +206,7 @@ export function MatchReview({
   onHistory: () => void;
   onConfirmClose: () => void;
 }) {
+  useEscape(onClose);
   const winner = homeSets > awaySets ? 'HOME' : 'AWAY';
   return (
     <div className="backdrop">
@@ -198,6 +246,14 @@ export function MatchReview({
       </section>
     </div>
   );
+}
+
+function useEscape(onClose: () => void) {
+  useEffect(() => {
+    const close = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
+    addEventListener('keydown', close);
+    return () => removeEventListener('keydown', close);
+  }, [onClose]);
 }
 export function CorrectPreview({
   set,

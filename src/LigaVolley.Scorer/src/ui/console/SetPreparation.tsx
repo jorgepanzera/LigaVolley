@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { LiberoPlan, ServerSheetSnapshot, SetState, Side } from '../../domain/types';
 import { team } from './model';
+const courtOrder: Record<Side, number[]> = { HOME: [3, 2, 1, 4, 5, 0], AWAY: [1, 2, 3, 0, 5, 4] };
 export function SetPreparation({
   set,
   previous,
@@ -91,7 +92,7 @@ export function SetPreparation({
           <article key={side}>
             <h3>{team(snapshot, side)?.teamName}</h3>
             <div className="lineup-slots">
-              {Array.from({ length: 6 }, (_, i) => (
+              {courtOrder[side].map((i) => (
                 <button
                   className={editing.side === side && editing.position === i ? 'active' : ''}
                   onClick={() => setEditing({ side, position: i })}
@@ -154,29 +155,29 @@ export function SetPreparation({
         ) : !persistedComplete ? (
           <p>Se guardará automáticamente al iniciar: {missingSaved.join(' y ')}.</p>
         ) : null}
-          {error && <p className="prep-error">{error}</p>}
-          <h3>¿Quién comienza sacando?</h3>
-          <div>
-            <button
-              className={serving === 'HOME' ? 'selected' : ''}
-              onClick={() => setServing('HOME')}
-            >
-              HOME SACA
-            </button>
-            <button
-              className={serving === 'AWAY' ? 'selected' : ''}
-              onClick={() => setServing('AWAY')}
-            >
-              AWAY SACA
-            </button>
-          </div>
+        {error && <p className="prep-error">{error}</p>}
+        <h3>¿Quién comienza sacando?</h3>
+        <div>
           <button
-            className="start-set"
-            disabled={!serving || !complete || busy}
-            onClick={() => void start()}
+            className={serving === 'HOME' ? 'selected' : ''}
+            onClick={() => setServing('HOME')}
           >
-            {busy ? 'Guardando…' : `Iniciar Set ${set.setNumber}`}
+            HOME SACA
           </button>
+          <button
+            className={serving === 'AWAY' ? 'selected' : ''}
+            onClick={() => setServing('AWAY')}
+          >
+            AWAY SACA
+          </button>
+        </div>
+        <button
+          className="start-set"
+          disabled={!serving || !complete || busy}
+          onClick={() => void start()}
+        >
+          {busy ? 'Guardando…' : `Iniciar Set ${set.setNumber}`}
+        </button>
       </footer>
     </section>
   );
@@ -198,19 +199,17 @@ function PlayerGrid({
   return (
     <div className="player-grid">
       {team(snapshot, side)
-        ?.players.filter((x) => !liberoIds.has(x.matchPlayerId))
+        ?.players.filter(
+          (x) => !liberoIds.has(x.matchPlayerId) && !occupied.includes(x.matchPlayerId),
+        )
         .map((p) => (
           <button
             disabled={!active}
-            className={occupied.includes(p.matchPlayerId) ? 'occupied' : ''}
             onClick={() => onSelect(p.matchPlayerId)}
             key={p.matchPlayerId}
           >
             <b>#{p.jerseyNumber ?? '—'}</b>
             <span>{p.displayName}</span>
-            {occupied.includes(p.matchPlayerId) && (
-              <small>P{occupied.indexOf(p.matchPlayerId) + 1}</small>
-            )}
           </button>
         ))}
     </div>
@@ -286,12 +285,7 @@ function LiberoConfiguration({
   );
 }
 
-function sameLineupConfiguration(
-  set: SetState,
-  side: Side,
-  lineup: number[],
-  plan: LiberoPlan,
-) {
+function sameLineupConfiguration(set: SetState, side: Side, lineup: number[], plan: LiberoPlan) {
   const savedPlan = set.liberoPlans[side];
   return (
     set.lineups[side].length === lineup.length &&

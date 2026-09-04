@@ -7,19 +7,85 @@ import { MatchRepository } from '../persistence/matchRepository';
 import { ScorerController } from './scorerController';
 
 const snapshot = (matchId = 1): ServerSheetSnapshot => ({
-  sheet: { matchSheetId: 1, sheetUuid: 'sheet', status: 'OPEN', openedAt: new Date().toISOString() },
+  sheet: {
+    matchSheetId: 1,
+    sheetUuid: 'sheet',
+    status: 'OPEN',
+    openedAt: new Date().toISOString(),
+  },
   match: { matchId, status: 'SCHEDULED', homeTeamEntryId: 1, awayTeamEntryId: 2 },
-  home: { teamName: 'HOME', players: Array.from({ length: 6 }, (_, i) => ({ matchPlayerId: i + 1, jerseyNumber: i + 1, isMatchCaptain: i === 0, displayName: `H${i}` })), liberos: [] },
-  away: { teamName: 'AWAY', players: Array.from({ length: 6 }, (_, i) => ({ matchPlayerId: i + 11, jerseyNumber: i + 1, isMatchCaptain: i === 0, displayName: `A${i}` })), liberos: [] },
-  session: { sessionUuid: 'session', deviceId: 'device', status: 'ACTIVE', lastAcceptedSequence: 0, startedAt: new Date().toISOString() },
-  currentState: { homeSets: 0, awaySets: 0, homePoints: 0, awayPoints: 0, homeRotationOffset: 0, awayRotationOffset: 0, homeTimeouts: 0, awayTimeouts: 0 },
+  home: {
+    teamName: 'HOME',
+    players: Array.from({ length: 6 }, (_, i) => ({
+      matchPlayerId: i + 1,
+      jerseyNumber: i + 1,
+      isMatchCaptain: i === 0,
+      displayName: `H${i}`,
+    })),
+    liberos: [],
+  },
+  away: {
+    teamName: 'AWAY',
+    players: Array.from({ length: 6 }, (_, i) => ({
+      matchPlayerId: i + 11,
+      jerseyNumber: i + 1,
+      isMatchCaptain: i === 0,
+      displayName: `A${i}`,
+    })),
+    liberos: [],
+  },
+  session: {
+    sessionUuid: 'session',
+    deviceId: 'device',
+    status: 'ACTIVE',
+    lastAcceptedSequence: 0,
+    startedAt: new Date().toISOString(),
+  },
+  currentState: {
+    homeSets: 0,
+    awaySets: 0,
+    homePoints: 0,
+    awayPoints: 0,
+    homeRotationOffset: 0,
+    awayRotationOffset: 0,
+    homeTimeouts: 0,
+    awayTimeouts: 0,
+  },
 });
 
 const context: OpenMatchContext = {
   match: { matchId: 1, status: 'SCHEDULED', homeTeamEntryId: 1, awayTeamEntryId: 2 },
-  competition: { competitionId: 1, competitionName: 'Demo', season: '2026', division: 'Female', phase: 'Regular' },
-  home: { teamEntryId: 1, teamName: 'HOME', competitionRosterId: 1, rosterStatus: 'ACTIVE', players: Array.from({ length: 6 }, (_, i) => ({ competitionRosterPlayerId: i + 1, displayName: `H${i}`, role: 'Setter' })), staff: [] },
-  away: { teamEntryId: 2, teamName: 'AWAY', competitionRosterId: 2, rosterStatus: 'ACTIVE', players: Array.from({ length: 6 }, (_, i) => ({ competitionRosterPlayerId: i + 11, displayName: `A${i}`, role: 'Setter' })), staff: [] },
+  competition: {
+    competitionId: 1,
+    competitionName: 'Demo',
+    season: '2026',
+    division: 'Female',
+    phase: 'Regular',
+  },
+  home: {
+    teamEntryId: 1,
+    teamName: 'HOME',
+    competitionRosterId: 1,
+    rosterStatus: 'ACTIVE',
+    players: Array.from({ length: 6 }, (_, i) => ({
+      competitionRosterPlayerId: i + 1,
+      displayName: `H${i}`,
+      role: 'Setter',
+    })),
+    staff: [],
+  },
+  away: {
+    teamEntryId: 2,
+    teamName: 'AWAY',
+    competitionRosterId: 2,
+    rosterStatus: 'ACTIVE',
+    players: Array.from({ length: 6 }, (_, i) => ({
+      competitionRosterPlayerId: i + 11,
+      displayName: `A${i}`,
+      role: 'Setter',
+    })),
+    staff: [],
+  },
   matchOfficials: [],
   warnings: [],
 };
@@ -44,7 +110,10 @@ describe('ScorerController bootstrap', () => {
 
   it('falls back to opening when the sheet is specifically missing', async () => {
     database = new ScorerDatabase(`controller-${crypto.randomUUID()}`);
-    const client = api({ sheet: vi.fn().mockRejectedValue(new ApiProblem(404, 'match_sheet_not_found', 'missing')), openContext: vi.fn().mockResolvedValue(context) });
+    const client = api({
+      sheet: vi.fn().mockRejectedValue(new ApiProblem(404, 'match_sheet_not_found', 'missing')),
+      openContext: vi.fn().mockResolvedValue(context),
+    });
     const controller = new ScorerController(database, client);
 
     await controller.start(1);
@@ -57,7 +126,9 @@ describe('ScorerController bootstrap', () => {
 
   it('keeps other 404 responses terminal', async () => {
     database = new ScorerDatabase(`controller-${crypto.randomUUID()}`);
-    const client = api({ sheet: vi.fn().mockRejectedValue(new ApiProblem(404, 'match_not_found', 'missing')) });
+    const client = api({
+      sheet: vi.fn().mockRejectedValue(new ApiProblem(404, 'match_not_found', 'missing')),
+    });
     const controller = new ScorerController(database, client);
 
     await controller.start(1);
@@ -69,7 +140,9 @@ describe('ScorerController bootstrap', () => {
 
   it('keeps conflicts terminal instead of opening automatically', async () => {
     database = new ScorerDatabase(`controller-${crypto.randomUUID()}`);
-    const client = api({ sheet: vi.fn().mockRejectedValue(new ApiProblem(409, 'match_not_scheduled', 'conflict')) });
+    const client = api({
+      sheet: vi.fn().mockRejectedValue(new ApiProblem(409, 'match_not_scheduled', 'conflict')),
+    });
     const controller = new ScorerController(database, client);
 
     await controller.start(1);
@@ -80,11 +153,36 @@ describe('ScorerController bootstrap', () => {
 
   it('persists the canonical response after confirming opening', async () => {
     database = new ScorerDatabase(`controller-${crypto.randomUUID()}`);
-    const client = api({ sheet: vi.fn().mockRejectedValue(new ApiProblem(404, 'match_sheet_not_found', 'missing')), openContext: vi.fn().mockResolvedValue(context), open: vi.fn().mockResolvedValue({ alreadyOpen: false, matchSheet: snapshot() }) });
+    const client = api({
+      sheet: vi.fn().mockRejectedValue(new ApiProblem(404, 'match_sheet_not_found', 'missing')),
+      openContext: vi.fn().mockResolvedValue(context),
+      open: vi.fn().mockResolvedValue({ alreadyOpen: false, matchSheet: snapshot() }),
+    });
     const controller = new ScorerController(database, client);
     await controller.start(1);
 
-    await controller.open({ home: { players: [1, 2, 3, 4, 5, 6].map((id,i)=>({competitionRosterPlayerId:id,jerseyNumber:i+1,isMatchCaptain:i===0})), liberoCompetitionRosterPlayerIds: [], competitionRosterStaffIds: [] }, away: { players: [11, 12, 13, 14, 15, 16].map((id,i)=>({competitionRosterPlayerId:id,jerseyNumber:i+1,isMatchCaptain:i===0})), liberoCompetitionRosterPlayerIds: [], competitionRosterStaffIds: [] }, trackSubstitutions: true, trackLiberoReplacements: true });
+    await controller.open({
+      home: {
+        players: [1, 2, 3, 4, 5, 6].map((id, i) => ({
+          competitionRosterPlayerId: id,
+          jerseyNumber: i + 1,
+          isMatchCaptain: i === 0,
+        })),
+        liberoCompetitionRosterPlayerIds: [],
+        competitionRosterStaffIds: [],
+      },
+      away: {
+        players: [11, 12, 13, 14, 15, 16].map((id, i) => ({
+          competitionRosterPlayerId: id,
+          jerseyNumber: i + 1,
+          isMatchCaptain: i === 0,
+        })),
+        liberoCompetitionRosterPlayerIds: [],
+        competitionRosterStaffIds: [],
+      },
+      trackSubstitutions: true,
+      trackLiberoReplacements: true,
+    });
 
     expect(await database.matchSheets.get(1)).toBeTruthy();
     expect(controller.view.opening).toBeUndefined();
@@ -96,7 +194,12 @@ describe('ScorerController bootstrap', () => {
     const repo = new MatchRepository(database);
     await repo.bootstrap(1, snapshot(), 'device');
     await repo.mutate(1, { type: 'PREPARE_SET', payload: {} });
-    const client = api({ sheet: vi.fn().mockRejectedValue(new ApiProblem(0, 'sync_temporarily_unavailable', 'offline')), sync: vi.fn().mockRejectedValue(new ApiProblem(0, 'sync_temporarily_unavailable', 'offline')) });
+    const client = api({
+      sheet: vi
+        .fn()
+        .mockRejectedValue(new ApiProblem(0, 'sync_temporarily_unavailable', 'offline')),
+      sync: vi.fn().mockRejectedValue(new ApiProblem(0, 'sync_temporarily_unavailable', 'offline')),
+    });
     const controller = new ScorerController(database, client);
 
     await controller.start(1);

@@ -41,12 +41,23 @@ export class ApiProblem extends Error {
 }
 export interface OpenMatchContext {
   match: { matchId: number; status: string; homeTeamEntryId: number; awayTeamEntryId: number };
-  competition: { competitionId: number; competitionName: string; season: string; division: string; phase: string };
+  competition: {
+    competitionId: number;
+    competitionName: string;
+    season: string;
+    division: string;
+    phase: string;
+  };
   home: OpenTeamContext;
   away: OpenTeamContext;
   matchOfficials: Array<{ role: string; displayName: string }>;
   warnings: string[];
-  existingMatchSheet?: { matchSheetId: number; sheetUuid: string; status: string; openedAt: string };
+  existingMatchSheet?: {
+    matchSheetId: number;
+    sheetUuid: string;
+    status: string;
+    openedAt: string;
+  };
 }
 export interface OpenTeamContext {
   teamEntryId: number;
@@ -65,7 +76,11 @@ export interface OpenMatchRequest {
   trackLiberoReplacements?: boolean;
 }
 export interface OpenTeamSelection {
-  players: Array<{ competitionRosterPlayerId: number; jerseyNumber?: number; isMatchCaptain: boolean }>;
+  players: Array<{
+    competitionRosterPlayerId: number;
+    jerseyNumber?: number;
+    isMatchCaptain: boolean;
+  }>;
   liberoCompetitionRosterPlayerIds: number[];
   competitionRosterStaffIds: number[];
 }
@@ -95,12 +110,16 @@ export interface SyncResponse {
 }
 export const scorerApi = {
   sheet: (matchId: number) => call<ServerSheetSnapshot>(`/api/scorer/matches/${matchId}/sheet`),
-  openContext: (matchId: number) => call<OpenMatchContext>(`/api/scorer/matches/${matchId}/open-context`),
+  openContext: (matchId: number) =>
+    call<OpenMatchContext>(`/api/scorer/matches/${matchId}/open-context`),
   open: (matchId: number, body: OpenMatchRequest) =>
-    call<{ alreadyOpen: boolean; matchSheet: ServerSheetSnapshot }>(`/api/scorer/matches/${matchId}/open`, {
-      method: 'POST',
-      body: JSON.stringify(body),
-    }),
+    call<{ alreadyOpen: boolean; matchSheet: ServerSheetSnapshot }>(
+      `/api/scorer/matches/${matchId}/open`,
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      },
+    ),
   sync: (
     matchId: number,
     body: { sheetUuid: string; sessionUuid: string; deviceId: string; events: LocalEvent[] },

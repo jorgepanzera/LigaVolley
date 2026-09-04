@@ -197,3 +197,9 @@ Una contradicción real debe resolverse documentalmente antes de cambiar el cód
 ## Decisión cerrada: MATCH-SPECIFIC JERSEY NUMBER & CAPTAIN
 
 El dorsal y el capitán son contextuales al partido. `MATCH_PLAYER` es su única autoridad; `CompetitionRosterPlayer` no contiene ni determina esos valores. La apertura exige dorsal 1..99 único por lado y exactamente un capitán por lado.
+
+## Decisión cerrada: Scorer UX/UI v2
+
+Scorer usa un Match Console Shell persistente con HOME fijo a la izquierda, AWAY fijo a la derecha y jerarquía marcador → cancha → banco → puntos → acciones secundarias → sets anteriores. La cancha muestra los seis jugadores efectivos P1..P6 derivados por MatchEngine y el banco sólo quienes están fuera de ella. Los puntos son las únicas acciones deportivas dominantes.
+
+Sidebar y drawers alojan Historial, Acta, oficiales, sesión y detalles secundarios; timeout, sustitución, corrección, cierre y takeover requieren modal u overlay deliberado. Offline y SYNCING mantienen habilitadas las acciones que permita el estado deportivo; BLOCKED conserva la consulta y bloquea toda mutación. Fin de set, partido decidido y CLOSED son estados explícitos. El objetivo responsive es landscape desde 1024x768, con sidebar compacta bajo 1100 px. No se cambian contratos HTTP, MatchEngine, los cinco stores Dexie ni el protocolo de sync/takeover por motivos visuales.
