@@ -175,7 +175,7 @@ public sealed class DemoMatchSeeder(
         if (roster.Status == CompetitionRosterStatus.Closed) throw new DemoMatchSeedException($"Roster for TeamEntry {entry.TeamEntryId} is CLOSED.");
         for (var i = 0; i < players.Count; i++)
             if (roster.Players.All(x => x.PlayerId != players[i].PlayerId))
-                roster.AddPlayer(players[i], (short)(i + 1), i == players.Count - 1 ? PlayerRole.Libero : PlayerRole.Setter);
+                roster.AddPlayer(players[i], i == players.Count - 1 ? PlayerRole.Libero : PlayerRole.Setter);
         if (roster.Staff.All(x => x.CoachId != coach.CoachId)) roster.AddStaff(coach);
         if (roster.Status == CompetitionRosterStatus.Draft) roster.Activate();
         await db.SaveChangesAsync(ct);

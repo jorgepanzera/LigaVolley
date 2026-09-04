@@ -9,8 +9,8 @@ import { ScorerController } from './scorerController';
 const snapshot = (matchId = 1): ServerSheetSnapshot => ({
   sheet: { matchSheetId: 1, sheetUuid: 'sheet', status: 'OPEN', openedAt: new Date().toISOString() },
   match: { matchId, status: 'SCHEDULED', homeTeamEntryId: 1, awayTeamEntryId: 2 },
-  home: { teamName: 'HOME', players: Array.from({ length: 6 }, (_, i) => ({ matchPlayerId: i + 1, displayName: `H${i}` })), liberos: [] },
-  away: { teamName: 'AWAY', players: Array.from({ length: 6 }, (_, i) => ({ matchPlayerId: i + 11, displayName: `A${i}` })), liberos: [] },
+  home: { teamName: 'HOME', players: Array.from({ length: 6 }, (_, i) => ({ matchPlayerId: i + 1, jerseyNumber: i + 1, isMatchCaptain: i === 0, displayName: `H${i}` })), liberos: [] },
+  away: { teamName: 'AWAY', players: Array.from({ length: 6 }, (_, i) => ({ matchPlayerId: i + 11, jerseyNumber: i + 1, isMatchCaptain: i === 0, displayName: `A${i}` })), liberos: [] },
   session: { sessionUuid: 'session', deviceId: 'device', status: 'ACTIVE', lastAcceptedSequence: 0, startedAt: new Date().toISOString() },
   currentState: { homeSets: 0, awaySets: 0, homePoints: 0, awayPoints: 0, homeRotationOffset: 0, awayRotationOffset: 0, homeTimeouts: 0, awayTimeouts: 0 },
 });
@@ -84,7 +84,7 @@ describe('ScorerController bootstrap', () => {
     const controller = new ScorerController(database, client);
     await controller.start(1);
 
-    await controller.open({ home: { competitionRosterPlayerIds: [1, 2, 3, 4, 5, 6], liberoCompetitionRosterPlayerIds: [], competitionRosterStaffIds: [] }, away: { competitionRosterPlayerIds: [11, 12, 13, 14, 15, 16], liberoCompetitionRosterPlayerIds: [], competitionRosterStaffIds: [] }, trackSubstitutions: true, trackLiberoReplacements: true });
+    await controller.open({ home: { players: [1, 2, 3, 4, 5, 6].map((id,i)=>({competitionRosterPlayerId:id,jerseyNumber:i+1,isMatchCaptain:i===0})), liberoCompetitionRosterPlayerIds: [], competitionRosterStaffIds: [] }, away: { players: [11, 12, 13, 14, 15, 16].map((id,i)=>({competitionRosterPlayerId:id,jerseyNumber:i+1,isMatchCaptain:i===0})), liberoCompetitionRosterPlayerIds: [], competitionRosterStaffIds: [] }, trackSubstitutions: true, trackLiberoReplacements: true });
 
     expect(await database.matchSheets.get(1)).toBeTruthy();
     expect(controller.view.opening).toBeUndefined();

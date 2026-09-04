@@ -134,6 +134,7 @@ export interface ServerSheetSnapshot {
     players: Array<{
       matchPlayerId: number;
       jerseyNumber?: number;
+      isMatchCaptain: boolean;
       displayName: string;
       role?: string;
     }>;
@@ -144,6 +145,7 @@ export interface ServerSheetSnapshot {
     players: Array<{
       matchPlayerId: number;
       jerseyNumber?: number;
+      isMatchCaptain: boolean;
       displayName: string;
       role?: string;
     }>;

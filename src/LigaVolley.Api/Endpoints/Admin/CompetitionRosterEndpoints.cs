@@ -11,10 +11,10 @@ internal static class CompetitionRosterEndpoints
  // Body: { "status": "Active" }
  g.MapPatch("/status",async(int competitionId,int teamEntryId,ChangeCompetitionRosterStatusRequest r,CompetitionRosterService s,CancellationToken ct)=>Results.Ok(await s.ChangeStatusAsync(competitionId,teamEntryId,r,ct))).Produces<CompetitionRosterDto>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
  // Example: POST /api/admin/competitions/1/entries/2/roster/players
- // Body: { "playerId": 10, "jerseyNumber": 7, "role": "Setter" }
+ // Body: { "playerId": 10, "role": "Setter" }
  g.MapPost("/players",async(int competitionId,int teamEntryId,AddCompetitionRosterPlayerRequest r,CompetitionRosterService s,CancellationToken ct)=>Results.Ok(await s.AddPlayerAsync(competitionId,teamEntryId,r,ct))).Produces<CompetitionRosterDto>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
  // Example: PUT /api/admin/competitions/1/entries/2/roster/players/3
- // Body: { "jerseyNumber": 8, "role": "OutsideHitter" }
+ // Body: { "role": "OutsideHitter" }
  g.MapPut("/players/{rosterPlayerId:int}",async(int competitionId,int teamEntryId,int rosterPlayerId,UpdateCompetitionRosterPlayerRequest r,CompetitionRosterService s,CancellationToken ct)=>Results.Ok(await s.UpdatePlayerAsync(competitionId,teamEntryId,rosterPlayerId,r,ct))).Produces<CompetitionRosterDto>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
  // Example: PATCH /api/admin/competitions/1/entries/2/roster/players/3/status
  // Body: { "status": "Inactive" }

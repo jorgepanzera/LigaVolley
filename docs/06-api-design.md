@@ -32,7 +32,7 @@ Este documento incorpora contratos detallados para:
 
 El agregado se expone bajo `/api/admin/competitions/{competitionId}/entries/{teamEntryId}/roster`: `GET`, `POST`, `PATCH /status`, `POST /players`, `PUT /players/{rosterPlayerId}`, `PATCH /players/{rosterPlayerId}/status`, `POST /staff` y `PATCH /staff/{rosterStaffId}/status`. Las respuestas usan los DTOs específicos de Admin, enums JSON expresivos y `ProblemDetails` con `code`; creación devuelve 201, mutaciones 200, faltantes 404 y conflictos 409.
 
-Los códigos estables incluyen `competition_roster_not_found`, `competition_roster_already_exists`, `competition_roster_closed`, `competition_roster_invalid_transition`, límites/duplicados de player/staff/libero/dorsal, mismatch de TeamEntry y Competition no editable.
+Los códigos estables incluyen `competition_roster_not_found`, `competition_roster_already_exists`, `competition_roster_closed`, `competition_roster_invalid_transition`, límites/duplicados de player/staff/libero, mismatch de TeamEntry y Competition no editable.
 
 ### Admin
 
@@ -1273,7 +1273,7 @@ Admin: `GET/POST /api/admin/matches/{matchId}/officials` y `PUT/DELETE /api/admi
 - `POST /api/scorer/matches/{matchId}/open`: 201 al crear; 200 idempotente; 400 para selección inválida; 404 para Match; 409 para estado persistido incompatible.
 - `GET /api/scorer/matches/{matchId}/sheet`: recupera el bootstrap persistido para reentrada.
 
-El request sólo contiene `clientRequestId`, `deviceId` y selecciones por IDs de miembros del roster. TeamEntry, equipos, dorsales, roster, sede y oficiales se resuelven server-side. El response incluye UUID de sheet/session/team/player/staff/libero, estado inicial uniforme y Health Card informativa.
+El request contiene `clientRequestId`, `deviceId` y selecciones de miembros con `competitionRosterPlayerId`, `jerseyNumber` e `isMatchCaptain`. TeamEntry, equipos, roster, sede y oficiales se resuelven server-side. El response incluye UUID de sheet/session/team/player/staff/libero, estado inicial uniforme y Health Card informativa.
 
 # 21. Electronic Scoresheet Match Engine
 
@@ -1366,3 +1366,7 @@ Competition Schedule Readiness responde si Competition puede pasar de DRAFT a SC
 Se conservan `GET/POST /api/admin/competition-formats`, `GET/PUT /api/admin/competition-formats/{id}`, `POST /{id}/clone`, `PATCH /{id}/active` y `POST /validate`. List y Detail incluyen `used`, `isStructurallyLocked`, `usedByDraftCompetitionCount` y `usedByOperationalCompetitionCount`. Validation devuelve `isValid`, `errors`, `warnings` y `teamCounts`, con `code`, `path`, `message` y `severity`.
 
 Create/Clone responden 201 y nacen inactivos. Update estructural bloqueado responde 409 `competition_format_structurally_locked`; Code duplicado responde 409 `competition_format_code_conflict`. Crear Competition con formato inactivo, tanto FROM_FORMAT como FROM_COMPETITION, responde 409 `competition_format_inactive`.
+
+## OpenMatchSheet: dorsal y capitán por partido
+
+`POST /api/scorer/matches/{matchId}/open` recibe `home.players` y `away.players`; cada elemento incluye `competitionRosterPlayerId`, `jerseyNumber` e `isMatchCaptain`. El servidor no resuelve dorsal ni capitán desde el roster. `open-context` no proyecta esos atributos como datos del roster.

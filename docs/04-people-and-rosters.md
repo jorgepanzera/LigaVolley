@@ -52,7 +52,7 @@ Representa el rol deportivo del jugador dentro de un contexto competitivo/plante
 
 Cada `TEAM_ENTRY` admite como máximo un `COMPETITION_ROSTER`, creado explícitamente en `DRAFT`. El flujo administrativo es `DRAFT -> ACTIVE -> CLOSED`; no hay mínimos para activar y `ACTIVE` continúa editable mientras la Competition sea operativa. `CLOSED` conserva su consulta histórica y rechaza toda modificación.
 
-Se admiten hasta 15 jugadores `ACTIVE`, dos técnicos `ACTIVE` y dos jugadores `ACTIVE` con rol `LIBERO`. Los miembros `INACTIVE` se conservan, no cuentan para los máximos y se reactivan sobre la misma inscripción. Player y Coach son únicos por roster; el dorsal es contextual y único entre jugadores activos. No se infiere rango reglamentario para el dorsal.
+Se admiten hasta 15 jugadores `ACTIVE`, dos técnicos `ACTIVE` y dos jugadores `ACTIVE` con rol `LIBERO`. Los miembros `INACTIVE` se conservan, no cuentan para los máximos y se reactivan sobre la misma inscripción. Player y Coach son únicos por roster; el roster no contiene dorsal ni capitanía.
 
 `PLAYER_ROLE` es contextual y admite `SETTER`, `OUTSIDE_HITTER`, `MIDDLE_BLOCKER`, `OPPOSITE` y `LIBERO`. Health Card se deriva con la lógica de People y es únicamente una advertencia, nunca bloquea una operación de roster. No existe DELETE físico ni publicación pública de planteles en v1.
 
@@ -69,3 +69,7 @@ Al abrir el acta, el Scorer selecciona únicamente miembros ACTIVE de cada roste
 ## Admin People & Rosters UI v1
 
 Admin ofrece Personas y directorios paginados de Player, Coach y Referee sobre la misma raíz PERSON. Competition Workspace agrega Planteles y el detalle usa exclusivamente la API de roster existente. Visitar la vista no crea un roster. Los miembros INACTIVE permanecen históricos, CLOSED es read-only y los cambios posteriores no alteran una convocatoria ya materializada.
+
+## Dorsal y capitanía
+
+`PlayerRole` pertenece al contexto de `CompetitionRosterPlayer`. `JerseyNumber` e `IsCaptain` no pertenecen al roster: el Scorer los define por partido durante `OpenMatchSheet` y se almacenan como `MATCH_PLAYER.jersey_number` e `MATCH_PLAYER.is_match_captain`.

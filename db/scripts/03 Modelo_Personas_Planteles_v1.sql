@@ -195,9 +195,7 @@ CREATE TABLE dbo.COMPETITION_ROSTER_PLAYER
     competition_roster_player_id INT IDENTITY(1,1) NOT NULL,
     competition_roster_id        INT NOT NULL,
     player_id                    INT NOT NULL,
-    jersey_number                TINYINT NOT NULL,
     primary_player_role_id       INT NULL,
-    is_captain                   BIT NOT NULL CONSTRAINT DF_COMPETITION_ROSTER_PLAYER_captain DEFAULT (0),
     valid_from                   DATE NULL,
     valid_to                     DATE NULL,
     status                       VARCHAR(20) NOT NULL CONSTRAINT DF_COMPETITION_ROSTER_PLAYER_status DEFAULT ('ACTIVE'),
@@ -210,8 +208,6 @@ CREATE TABLE dbo.COMPETITION_ROSTER_PLAYER
     CONSTRAINT FK_COMPETITION_ROSTER_PLAYER_ROLE
         FOREIGN KEY (primary_player_role_id) REFERENCES dbo.PLAYER_ROLE (player_role_id),
     CONSTRAINT UQ_COMPETITION_ROSTER_PLAYER_player UNIQUE (competition_roster_id, player_id),
-    CONSTRAINT UQ_COMPETITION_ROSTER_PLAYER_jersey UNIQUE (competition_roster_id, jersey_number),
-    CONSTRAINT CK_COMPETITION_ROSTER_PLAYER_jersey CHECK (jersey_number BETWEEN 1 AND 99),
     CONSTRAINT CK_COMPETITION_ROSTER_PLAYER_status CHECK
         (status IN ('ACTIVE','INACTIVE','SUSPENDED','WITHDRAWN')),
     CONSTRAINT CK_COMPETITION_ROSTER_PLAYER_dates CHECK
@@ -317,12 +313,4 @@ BEGIN
         THROW 50002, 'Un plantel no puede tener más de 2 técnicos activos.', 1;
     END;
 END;
-GO
-
-/* ============================================================================
-   9. REGLA DE CAPITÁN
-   ============================================================================ */
-CREATE UNIQUE INDEX UX_COMPETITION_ROSTER_PLAYER_captain
-ON dbo.COMPETITION_ROSTER_PLAYER (competition_roster_id)
-WHERE is_captain = 1 AND status = 'ACTIVE';
 GO

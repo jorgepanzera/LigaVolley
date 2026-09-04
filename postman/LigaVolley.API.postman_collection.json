@@ -1390,13 +1390,13 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"playerId\": {{playerId}},\n  \"jerseyNumber\": 7,\n  \"role\": \"Setter\"\n}"
+                  "raw": "{\n  \"playerId\": {{playerId}},\n  \"role\": \"Setter\"\n}"
                 },
                 "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries/{{teamEntryId}}/roster/players"
               }
             },
             {
-              "name": "Cambiar rol y dorsal",
+              "name": "Cambiar rol",
               "request": {
                 "method": "PUT",
                 "header": [
@@ -1407,7 +1407,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"jerseyNumber\": 8,\n  \"role\": \"Libero\"\n}"
+                  "raw": "{\n  \"role\": \"Libero\"\n}"
                 },
                 "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/entries/{{teamEntryId}}/roster/players/{{rosterPlayerId}}"
               }
@@ -1997,7 +1997,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"clientRequestId\": \"{{$guid}}\",\n  \"deviceId\": \"scorer-tablet-07\",\n  \"home\": { \"competitionRosterPlayerIds\": [{{homeRosterPlayerIds}}], \"captainCompetitionRosterPlayerId\": {{homeCaptainRosterPlayerId}}, \"liberoCompetitionRosterPlayerIds\": [{{homeLiberoRosterPlayerIds}}], \"competitionRosterStaffIds\": [{{homeRosterStaffIds}}] },\n  \"away\": { \"competitionRosterPlayerIds\": [{{awayRosterPlayerIds}}], \"captainCompetitionRosterPlayerId\": {{awayCaptainRosterPlayerId}}, \"liberoCompetitionRosterPlayerIds\": [{{awayLiberoRosterPlayerIds}}], \"competitionRosterStaffIds\": [{{awayRosterStaffIds}}] }\n}"
+                  "raw": "{\n  \"clientRequestId\": \"{{$guid}}\",\n  \"deviceId\": \"scorer-tablet-07\",\n  \"home\": { \"players\": [{\"competitionRosterPlayerId\":101,\"jerseyNumber\":4,\"isMatchCaptain\":true},{\"competitionRosterPlayerId\":102,\"jerseyNumber\":8,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":103,\"jerseyNumber\":12,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":104,\"jerseyNumber\":14,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":105,\"jerseyNumber\":18,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":106,\"jerseyNumber\":21,\"isMatchCaptain\":false}], \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] },\n  \"away\": { \"players\": [{\"competitionRosterPlayerId\":201,\"jerseyNumber\":3,\"isMatchCaptain\":true},{\"competitionRosterPlayerId\":202,\"jerseyNumber\":5,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":203,\"jerseyNumber\":7,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":204,\"jerseyNumber\":9,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":205,\"jerseyNumber\":11,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":206,\"jerseyNumber\":15,\"isMatchCaptain\":false}], \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] }\n}"
                 },
                 "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/open"
               },
@@ -2025,7 +2025,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"clientRequestId\": \"{{$guid}}\", \"deviceId\": \"retry-device\",\n  \"home\": { \"competitionRosterPlayerIds\": [{{homeRosterPlayerIds}}], \"captainCompetitionRosterPlayerId\": null, \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] },\n  \"away\": { \"competitionRosterPlayerIds\": [{{awayRosterPlayerIds}}], \"captainCompetitionRosterPlayerId\": null, \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] }\n}"
+                  "raw": "{\n  \"clientRequestId\": \"{{$guid}}\", \"deviceId\": \"retry-device\",\n  \"home\": { \"players\": [{\"competitionRosterPlayerId\":101,\"jerseyNumber\":1,\"isMatchCaptain\":true},{\"competitionRosterPlayerId\":102,\"jerseyNumber\":2,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":103,\"jerseyNumber\":3,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":104,\"jerseyNumber\":4,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":105,\"jerseyNumber\":5,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":106,\"jerseyNumber\":6,\"isMatchCaptain\":false}], \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] },\n  \"away\": { \"players\": [{\"competitionRosterPlayerId\":201,\"jerseyNumber\":1,\"isMatchCaptain\":true},{\"competitionRosterPlayerId\":202,\"jerseyNumber\":2,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":203,\"jerseyNumber\":3,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":204,\"jerseyNumber\":4,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":205,\"jerseyNumber\":5,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":206,\"jerseyNumber\":6,\"isMatchCaptain\":false}], \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] }\n}"
                 },
                 "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/open"
               },
@@ -2060,7 +2060,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{ \"clientRequestId\": \"{{$guid}}\", \"deviceId\": \"tablet\", \"home\": { \"competitionRosterPlayerIds\": [1,2,3,4,5], \"captainCompetitionRosterPlayerId\": null, \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] }, \"away\": { \"competitionRosterPlayerIds\": [{{awayRosterPlayerIds}}], \"captainCompetitionRosterPlayerId\": null, \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] } }"
+                  "raw": "{ \"clientRequestId\": \"{{$guid}}\", \"deviceId\": \"tablet\", \"home\": { \"players\": [{\"competitionRosterPlayerId\":101,\"jerseyNumber\":1,\"isMatchCaptain\":true}], \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] }, \"away\": { \"players\": [{\"competitionRosterPlayerId\":201,\"jerseyNumber\":1,\"isMatchCaptain\":true},{\"competitionRosterPlayerId\":202,\"jerseyNumber\":2,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":203,\"jerseyNumber\":3,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":204,\"jerseyNumber\":4,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":205,\"jerseyNumber\":5,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":206,\"jerseyNumber\":6,\"isMatchCaptain\":false}], \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] } }"
                 },
                 "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/open"
               }
@@ -2077,7 +2077,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{ \"clientRequestId\": \"{{$guid}}\", \"deviceId\": \"tablet\", \"home\": { \"competitionRosterPlayerIds\": [1,1,2,3,4,5], \"captainCompetitionRosterPlayerId\": null, \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] }, \"away\": { \"competitionRosterPlayerIds\": [{{awayRosterPlayerIds}}], \"captainCompetitionRosterPlayerId\": null, \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] } }"
+                  "raw": "{ \"clientRequestId\": \"{{$guid}}\", \"deviceId\": \"tablet\", \"home\": { \"players\": [{\"competitionRosterPlayerId\":101,\"jerseyNumber\":4,\"isMatchCaptain\":true},{\"competitionRosterPlayerId\":102,\"jerseyNumber\":4,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":103,\"jerseyNumber\":3,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":104,\"jerseyNumber\":5,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":105,\"jerseyNumber\":6,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":106,\"jerseyNumber\":7,\"isMatchCaptain\":false}], \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] }, \"away\": { \"players\": [{\"competitionRosterPlayerId\":201,\"jerseyNumber\":1,\"isMatchCaptain\":true},{\"competitionRosterPlayerId\":202,\"jerseyNumber\":2,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":203,\"jerseyNumber\":3,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":204,\"jerseyNumber\":4,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":205,\"jerseyNumber\":5,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":206,\"jerseyNumber\":6,\"isMatchCaptain\":false}], \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] } }"
                 },
                 "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/open"
               }
@@ -2094,7 +2094,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{ \"clientRequestId\": \"{{$guid}}\", \"deviceId\": \"tablet\", \"home\": { \"competitionRosterPlayerIds\": [{{homeRosterPlayerIds}}], \"captainCompetitionRosterPlayerId\": 999999, \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] }, \"away\": { \"competitionRosterPlayerIds\": [{{awayRosterPlayerIds}}], \"captainCompetitionRosterPlayerId\": null, \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] } }"
+                  "raw": "{ \"clientRequestId\": \"{{$guid}}\", \"deviceId\": \"tablet\", \"home\": { \"players\": [{\"competitionRosterPlayerId\":101,\"jerseyNumber\":1,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":102,\"jerseyNumber\":2,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":103,\"jerseyNumber\":3,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":104,\"jerseyNumber\":4,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":105,\"jerseyNumber\":5,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":106,\"jerseyNumber\":6,\"isMatchCaptain\":false}], \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] }, \"away\": { \"players\": [{\"competitionRosterPlayerId\":201,\"jerseyNumber\":1,\"isMatchCaptain\":true},{\"competitionRosterPlayerId\":202,\"jerseyNumber\":2,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":203,\"jerseyNumber\":3,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":204,\"jerseyNumber\":4,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":205,\"jerseyNumber\":5,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":206,\"jerseyNumber\":6,\"isMatchCaptain\":false}], \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] } }"
                 },
                 "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/open"
               }
@@ -2111,7 +2111,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{ \"clientRequestId\": \"{{$guid}}\", \"deviceId\": \"tablet\", \"home\": { \"competitionRosterPlayerIds\": [{{homeRosterPlayerIds}}], \"captainCompetitionRosterPlayerId\": null, \"liberoCompetitionRosterPlayerIds\": [1,2,3], \"competitionRosterStaffIds\": [] }, \"away\": { \"competitionRosterPlayerIds\": [{{awayRosterPlayerIds}}], \"captainCompetitionRosterPlayerId\": null, \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] } }"
+                  "raw": "{ \"clientRequestId\": \"{{$guid}}\", \"deviceId\": \"tablet\", \"home\": { \"players\": [{\"competitionRosterPlayerId\":101,\"jerseyNumber\":1,\"isMatchCaptain\":true},{\"competitionRosterPlayerId\":102,\"jerseyNumber\":2,\"isMatchCaptain\":true},{\"competitionRosterPlayerId\":103,\"jerseyNumber\":3,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":104,\"jerseyNumber\":4,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":105,\"jerseyNumber\":5,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":106,\"jerseyNumber\":6,\"isMatchCaptain\":false}], \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] }, \"away\": { \"players\": [{\"competitionRosterPlayerId\":201,\"jerseyNumber\":1,\"isMatchCaptain\":true},{\"competitionRosterPlayerId\":202,\"jerseyNumber\":2,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":203,\"jerseyNumber\":3,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":204,\"jerseyNumber\":4,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":205,\"jerseyNumber\":5,\"isMatchCaptain\":false},{\"competitionRosterPlayerId\":206,\"jerseyNumber\":6,\"isMatchCaptain\":false}], \"liberoCompetitionRosterPlayerIds\": [], \"competitionRosterStaffIds\": [] } }"
                 },
                 "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/open"
               }

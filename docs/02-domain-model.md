@@ -64,7 +64,7 @@ Separar entidades permanentes (por ejemplo Team o Person) de su participación c
 
 `MATCH` conserva la identidad del fixture y `MATCH_SHEET` representa su acta operacional única. `MATCH_TEAM` materializa HOME/AWAY desde los TeamEntry del Match; `MATCH_PLAYER` y `MATCH_TEAM_STAFF` congelan la convocatoria seleccionada desde el roster; `MATCH_LIBERO` declara hasta dos líberos sin modelar todavía su presencia en cancha. `MATCH_SHEET_SESSION` identifica la sesión activa y `MATCH_SHEET_AUDIT` registra `MATCH_SHEET_OPENED`.
 
-`COMPETITION_ROSTER` es la participación contextual única de un `TEAM_ENTRY`. Sus jugadores y técnicos conservan historia mediante estados `ACTIVE/INACTIVE`; el roster usa `DRAFT/ACTIVE/CLOSED`. El rol y dorsal del jugador pertenecen a esa inscripción competitiva, no a `PLAYER`.
+`COMPETITION_ROSTER` es la participación contextual única de un `TEAM_ENTRY`. Sus jugadores y técnicos conservan historia mediante estados `ACTIVE/INACTIVE`; el roster usa `DRAFT/ACTIVE/CLOSED`. El rol del jugador pertenece a esa inscripción competitiva; dorsal y capitanía pertenecen a `MATCH_PLAYER`.
 
 ## Electronic Scoresheet Match Engine v1
 
@@ -83,3 +83,7 @@ La cancha efectiva se deriva centralmente como alineación inicial + sustitucion
 ## Proyecciones administrativas del partido
 
 Match Readiness es una evaluación sin persistencia que reutiliza las precondiciones comunes de OpenMatchSheet. Admin MatchSheet Oversight proyecta MatchSheet, sesión relevante y estado operacional resumido sin exponer eventos, lineups ni estado offline local. No agrega tablas ni estado de dominio.
+
+## Match-specific jersey number and captain
+
+`CompetitionRosterPlayer` conserva la habilitación competitiva y el rol contextual. El dorsal y la capitanía pertenecen exclusivamente a `MatchPlayer`, se capturan en `OpenMatchSheet` y quedan congelados para esa acta.

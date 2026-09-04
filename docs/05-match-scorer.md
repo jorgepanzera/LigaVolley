@@ -132,3 +132,7 @@ En Development, `dotnet run --project src/LigaVolley.Api -- --seed-demo-match` c
 ## Frontera con Admin Match Operations
 
 Admin prepara programación, rosters y oficiales, evalúa readiness y supervisa el estado central. No abre actas ni ejecuta acciones deportivas. Scorer conserva en exclusiva OpenMatchSheet, takeover, preparación de sets, puntos, correcciones, sustituciones, líbero, timeout, sync y cierre.
+
+## Convocatoria materializada
+
+`OpenMatchSheet` recibe por cada jugador seleccionado su `CompetitionRosterPlayerId`, dorsal obligatorio 1..99 y `IsMatchCaptain`. Exige dorsales únicos y exactamente un capitán por `MATCH_TEAM`; estos datos quedan congelados en `MATCH_PLAYER` y forman parte del snapshot offline.

@@ -71,8 +71,8 @@ Este documento resume qué decisiones son fuente de verdad y qué aspectos sigue
 - Existe como máximo un roster explícito por TeamEntry.
 - Estados: DRAFT, ACTIVE y CLOSED; no hay mínimos para activar.
 - Máximos ACTIVE: 15 jugadores, dos técnicos y dos líberos.
-- Player y Coach son únicos dentro del roster; el dorsal es único entre jugadores ACTIVE.
-- PLAYER_ROLE y dorsal son contextuales al roster.
+- Player y Coach son únicos dentro del roster.
+- PLAYER_ROLE es contextual al roster; dorsal y capitanía son contextuales al partido.
 - Los miembros INACTIVE permanecen históricos y no cuentan para máximos.
 - Un roster ACTIVE sigue editable mientras Competition y TeamEntry sean operativos; CLOSED es read-only.
 - Los cambios del roster no modifican una convocatoria ya materializada en MatchSheet.
@@ -193,3 +193,7 @@ Ante diferencias, aplicar este orden:
 4. código y tests existentes.
 
 Una contradicción real debe resolverse documentalmente antes de cambiar el código; no se debe inventar una regla para justificar la implementación.
+
+## Decisión cerrada: MATCH-SPECIFIC JERSEY NUMBER & CAPTAIN
+
+El dorsal y el capitán son contextuales al partido. `MATCH_PLAYER` es su única autoridad; `CompetitionRosterPlayer` no contiene ni determina esos valores. La apertura exige dorsal 1..99 único por lado y exactamente un capitán por lado.

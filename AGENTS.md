@@ -209,7 +209,7 @@ No existe entidad League ni DELETE físico en People v1.
 
 ### Competition Rosters v1
 
-Competition Rosters v1 está cerrado: existe un roster explícito por TeamEntry con estados DRAFT/ACTIVE/CLOSED, sin mínimos de activación; máximos de 15 jugadores, 2 técnicos y 2 líberos ACTIVE. Los miembros INACTIVE permanecen históricos, ACTIVE sigue editable durante la Competition operativa, PLAYER_ROLE/dorsal son contextuales, Health Card nunca bloquea y no existe DELETE físico. Un roster CLOSED no es editable.
+Competition Rosters v1 está cerrado: existe un roster explícito por TeamEntry con estados DRAFT/ACTIVE/CLOSED, sin mínimos de activación; máximos de 15 jugadores, 2 técnicos y 2 líberos ACTIVE. Los miembros INACTIVE permanecen históricos, ACTIVE sigue editable durante la Competition operativa, PLAYER_ROLE es contextual, Health Card nunca bloquea y no existe DELETE físico. Un roster CLOSED no es editable.
 
 ### Match Officials v1
 
@@ -255,3 +255,7 @@ En orden de prioridad:
 4. código y tests existentes.
 
 Si dos documentos contradicen una decisión más reciente, actualizar la documentación antes de continuar implementando.
+
+### Match-specific Jersey Number & Captain
+
+CompetitionRosterPlayer define la habilitación competitiva y el PLAYER_ROLE contextual. No fija dorsal ni capitanía. Durante OpenMatchSheet, el Scorer selecciona los jugadores convocados y asigna JerseyNumber e IsMatchCaptain. Ambos se persisten en MATCH_PLAYER y quedan congelados para ese MatchSheet. Un jugador puede usar diferentes dorsales y ser o no capitán en diferentes Matches.

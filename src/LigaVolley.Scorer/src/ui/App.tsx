@@ -318,34 +318,25 @@ export default function App() {
     </main>
   );
 }
-type TeamSelection = { competitionRosterPlayerIds: number[]; captainCompetitionRosterPlayerId?: number; liberoCompetitionRosterPlayerIds: number[]; competitionRosterStaffIds: number[] };
+type TeamSelection = { players: { competitionRosterPlayerId: number; jerseyNumber?: number; isMatchCaptain: boolean }[]; liberoCompetitionRosterPlayerIds: number[]; competitionRosterStaffIds: number[] };
 function selection(context: OpenTeamContext): TeamSelection {
-  const players = context.players.slice(0, 6);
-  return { competitionRosterPlayerIds: players.map((x) => x.competitionRosterPlayerId), captainCompetitionRosterPlayerId: players[0]?.competitionRosterPlayerId, liberoCompetitionRosterPlayerIds: [], competitionRosterStaffIds: [] };
+  return { players: context.players.slice(0, 6).map((x) => ({ competitionRosterPlayerId: x.competitionRosterPlayerId, isMatchCaptain: false })), liberoCompetitionRosterPlayerIds: [], competitionRosterStaffIds: [] };
 }
 function OpeningView({ context, onOpen }: { context: OpenMatchContext; onOpen: (request: { home: TeamSelection; away: TeamSelection; trackSubstitutions: boolean; trackLiberoReplacements: boolean }) => void }) {
   const [home, setHome] = useState(() => selection(context.home));
   const [away, setAway] = useState(() => selection(context.away));
   const [trackSubstitutions, setTrackSubstitutions] = useState(true);
   const [trackLiberoReplacements, setTrackLiberoReplacements] = useState(true);
-  return <main className="loading opening-view"><h1>Abrir acta</h1><p>{context.home.teamName} vs {context.away.teamName}</p>{context.warnings.map((warning) => <p key={warning}>{warning}</p>)}<OpeningTeam context={context.home} value={home} onChange={setHome} /><OpeningTeam context={context.away} value={away} onChange={setAway} /><label><input type="checkbox" checked={trackSubstitutions} onChange={(e) => setTrackSubstitutions(e.target.checked)} /> Registrar sustituciones</label><label><input type="checkbox" checked={trackLiberoReplacements} onChange={(e) => setTrackLiberoReplacements(e.target.checked)} /> Registrar reemplazos de líbero</label><button disabled={home.competitionRosterPlayerIds.length < 6 || away.competitionRosterPlayerIds.length < 6} onClick={() => onOpen({ home, away, trackSubstitutions, trackLiberoReplacements })}>Abrir acta</button></main>;
+  const valid = (team: TeamSelection) => team.players.length >= 6 && team.players.every(x => x.jerseyNumber != null && x.jerseyNumber >= 1 && x.jerseyNumber <= 99) && new Set(team.players.map(x => x.jerseyNumber)).size === team.players.length && team.players.filter(x => x.isMatchCaptain).length === 1;
+  return <main className="loading opening-view"><h1>Abrir acta</h1><p>{context.home.teamName} vs {context.away.teamName}</p>{context.warnings.map((warning) => <p key={warning}>{warning}</p>)}<OpeningTeam context={context.home} value={home} onChange={setHome} /><OpeningTeam context={context.away} value={away} onChange={setAway} /><label><input type="checkbox" checked={trackSubstitutions} onChange={(e) => setTrackSubstitutions(e.target.checked)} /> Registrar sustituciones</label><label><input type="checkbox" checked={trackLiberoReplacements} onChange={(e) => setTrackLiberoReplacements(e.target.checked)} /> Registrar reemplazos de líbero</label><button disabled={!valid(home) || !valid(away)} onClick={() => onOpen({ home, away, trackSubstitutions, trackLiberoReplacements })}>Abrir acta</button></main>;
 }
 function OpeningTeam({ context, value, onChange }: { context: OpenTeamContext; value: TeamSelection; onChange: (value: TeamSelection) => void }) {
   const toggle = (id: number) => {
-    const selected = value.competitionRosterPlayerIds.includes(id);
-    const competitionRosterPlayerIds = selected
-      ? value.competitionRosterPlayerIds.filter((x) => x !== id)
-      : [...value.competitionRosterPlayerIds, id];
-    onChange({
-      ...value,
-      competitionRosterPlayerIds,
-      captainCompetitionRosterPlayerId:
-        selected && value.captainCompetitionRosterPlayerId === id
-          ? competitionRosterPlayerIds[0]
-          : value.captainCompetitionRosterPlayerId,
-    });
+    const selected = value.players.some(x => x.competitionRosterPlayerId === id);
+    onChange({...value, players: selected ? value.players.filter(x => x.competitionRosterPlayerId !== id) : [...value.players, {competitionRosterPlayerId:id,isMatchCaptain:false}]});
   };
-  return <section><h2>{context.teamName}</h2>{context.players.map((player) => <label key={player.competitionRosterPlayerId}><input type="checkbox" checked={value.competitionRosterPlayerIds.includes(player.competitionRosterPlayerId)} onChange={() => toggle(player.competitionRosterPlayerId)} /> {player.displayName}</label>)}</section>;
+  const duplicate = value.players.length !== new Set(value.players.map(x => x.jerseyNumber).filter(Boolean)).size;
+  return <section><h2>{context.teamName}</h2>{duplicate&&<p className="warning">Dorsal repetido en {context.teamName}.</p>}{value.players.filter(x=>x.isMatchCaptain).length!==1&&<p className="warning">Debes seleccionar un capitán para {context.teamName}.</p>}{context.players.map((player) => {const selected=value.players.find(x=>x.competitionRosterPlayerId===player.competitionRosterPlayerId);return <div key={player.competitionRosterPlayerId}><label><input type="checkbox" checked={!!selected} onChange={() => toggle(player.competitionRosterPlayerId)} /> {player.displayName}{player.role==='Libero'?' · LIBERO':''}</label>{selected&&<><input aria-label={`Dorsal de ${player.displayName}`} type="number" min="1" max="99" value={selected.jerseyNumber??''} onChange={e=>onChange({...value,players:value.players.map(x=>x.competitionRosterPlayerId===player.competitionRosterPlayerId?{...x,jerseyNumber:e.target.value?Number(e.target.value):undefined}:x)})}/><input aria-label={`Capitán de ${player.displayName}`} type="radio" name={`captain-${context.teamEntryId}`} checked={selected.isMatchCaptain} onChange={()=>onChange({...value,players:value.players.map(x=>({...x,isMatchCaptain:x.competitionRosterPlayerId===player.competitionRosterPlayerId}))})}/></>}</div>})}</section>;
 }
 function ClosedConsole({
   view,

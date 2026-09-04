@@ -53,16 +53,21 @@ export interface OpenTeamContext {
   teamName: string;
   competitionRosterId: number;
   rosterStatus: string;
-  players: Array<{ competitionRosterPlayerId: number; displayName: string; jerseyNumber?: number; role: string }>;
+  players: Array<{ competitionRosterPlayerId: number; displayName: string; role: string }>;
   staff: Array<{ competitionRosterStaffId: number; displayName: string }>;
 }
 export interface OpenMatchRequest {
   clientRequestId: string;
   deviceId: string;
-  home: { competitionRosterPlayerIds: number[]; captainCompetitionRosterPlayerId?: number; liberoCompetitionRosterPlayerIds: number[]; competitionRosterStaffIds: number[] };
-  away: { competitionRosterPlayerIds: number[]; captainCompetitionRosterPlayerId?: number; liberoCompetitionRosterPlayerIds: number[]; competitionRosterStaffIds: number[] };
+  home: OpenTeamSelection;
+  away: OpenTeamSelection;
   trackSubstitutions?: boolean;
   trackLiberoReplacements?: boolean;
+}
+export interface OpenTeamSelection {
+  players: Array<{ competitionRosterPlayerId: number; jerseyNumber?: number; isMatchCaptain: boolean }>;
+  liberoCompetitionRosterPlayerIds: number[];
+  competitionRosterStaffIds: number[];
 }
 async function call<T>(url: string, init?: RequestInit): Promise<T> {
   let response: Response;

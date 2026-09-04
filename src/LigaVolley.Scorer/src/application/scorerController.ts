@@ -129,7 +129,7 @@ export class ScorerController {
           ? 'BLOCKED'
           : this.syncService.phase === 'SYNCING' || this.syncService.phase === 'RECONCILING'
             ? 'SYNCING'
-            : navigator.onLine
+            : typeof navigator === 'undefined' || navigator.onLine
               ? 'READY'
               : 'OFFLINE';
     this.view = {

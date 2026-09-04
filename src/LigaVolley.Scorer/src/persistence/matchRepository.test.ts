@@ -13,12 +13,12 @@ const server = (id = 1): ServerSheetSnapshot => ({
   match: { matchId: id, status: 'SCHEDULED', homeTeamEntryId: 1, awayTeamEntryId: 2 },
   home: {
     teamName: 'H',
-    players: Array.from({ length: 6 }, (_, i) => ({ matchPlayerId: i + 1, displayName: `H${i}` })),
+    players: Array.from({ length: 6 }, (_, i) => ({ matchPlayerId: i + 1, jerseyNumber: i + 1, isMatchCaptain: i === 0, displayName: `H${i}` })),
     liberos: [],
   },
   away: {
     teamName: 'A',
-    players: Array.from({ length: 6 }, (_, i) => ({ matchPlayerId: i + 11, displayName: `A${i}` })),
+    players: Array.from({ length: 6 }, (_, i) => ({ matchPlayerId: i + 11, jerseyNumber: i + 1, isMatchCaptain: i === 0, displayName: `A${i}` })),
     liberos: [],
   },
   session: {
