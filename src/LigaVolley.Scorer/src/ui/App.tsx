@@ -32,12 +32,13 @@ export default function App() {
   const [panel, setPanel] = useState<Panel>();
   const [dialog, setDialog] = useState<Dialog>();
   const [selected, setSelected] = useState<{ side: Side; logical: number }>();
+  const [substitutionError, setSubstitutionError] = useState('');
   const [scoreLocked, setScoreLocked] = useState(false);
   const [feedback, setFeedback] = useState('');
 
   useEffect(() => {
     void controller.start(matchId);
-    const online = () => void controller.sync();
+    const online = () => void controller.refresh().then(() => controller.sync());
     const refresh = () => void controller.refresh();
     addEventListener('online', online);
     addEventListener('offline', refresh);
@@ -100,7 +101,10 @@ export default function App() {
             feedback={feedback}
             onScore={(side) => void score(side)}
             onPrepare={() => void controller.prepareSet()}
-            onPosition={(side, logical) => setSelected({ side, logical })}
+            onPosition={(side, logical) => {
+              setSubstitutionError('');
+              setSelected({ side, logical });
+            }}
             onDialog={setDialog}
           />
         )}
@@ -112,10 +116,13 @@ export default function App() {
           set={set}
           snapshot={view.bootstrap}
           trackSubstitutions={trackSubs}
+          error={substitutionError}
           onClose={() => setSelected(undefined)}
           onSubstitute={(outId, inId) => {
-            void controller.substitute(selected.side, outId, inId);
-            setSelected(undefined);
+            void controller
+              .substitute(selected.side, outId, inId)
+              .then(() => setSelected(undefined))
+              .catch((error: unknown) => setSubstitutionError(substitutionMessage(error)));
           }}
         />
       )}
@@ -177,25 +184,27 @@ export default function App() {
       )}
       {dialog === 'takeover' && (
         <ConfirmDialog
-          title="TOMAR CONTROL"
-          confirmLabel="Tomar control"
+          title="CONTINUAR DESDE ESTADO CENTRAL"
+          confirmLabel="Continuar desde estado central"
           danger
           onClose={() => setDialog(undefined)}
           onConfirm={() => {
-            void controller.takeOver();
+            void controller.continueFromCentral();
             setDialog(undefined);
           }}
         >
           <p>
-            Otra sesión tiene actualmente autoridad. La sesión anterior será abandonada y el estado
-            deportivo no será modificado.
+            Se consultará el estado central y se tomará control con una sesión nueva. La sesión
+            anterior y toda su cola quedarán intactas como trazabilidad.
           </p>
         </ConfirmDialog>
       )}
       {blocked && (
         <BlockedOverlay
-          onReconcile={() => void controller.sync()}
-          onTakeOver={() => setDialog('takeover')}
+          error={view.error}
+          syncBlock={view.syncBlock}
+          onContinueCentral={() => setDialog('takeover')}
+          onRecoverLocal={() => void controller.recoverLastValidLocal()}
         />
       )}
     </ScorerShell>
@@ -582,26 +591,64 @@ function TimeoutDialog({
   );
 }
 function BlockedOverlay({
-  onReconcile,
-  onTakeOver,
+  error,
+  syncBlock,
+  onContinueCentral,
+  onRecoverLocal,
 }: {
-  onReconcile: () => void;
-  onTakeOver: () => void;
+  error?: string;
+  syncBlock?: ViewState['syncBlock'];
+  onContinueCentral: () => void;
+  onRecoverLocal: () => void;
 }) {
+  const authorityLost = [
+    'match_sheet_session_not_active',
+    'match_sheet_session_mismatch',
+    'session_lost',
+  ].includes(error ?? '');
   return (
     <div className="blocked-overlay" role="alertdialog" aria-modal="true">
       <section>
         <span>!</span>
-        <small>SESIÓN SIN AUTORIDAD</small>
-        <h2>Otra sesión tiene el control del partido.</h2>
+        <small>{authorityLost ? 'SESIÓN SIN AUTORIDAD' : 'SINCRONIZACIÓN BLOQUEADA'}</small>
+        <h2>
+          {authorityLost
+            ? 'Otra sesión tiene el control del partido.'
+            : 'El servidor rechazó una acción deportiva.'}
+        </h2>
         <p>
           Tus eventos locales no fueron eliminados. Puedes consultar el estado, pero no registrar
           nuevas acciones.
         </p>
+        {!authorityLost && error && <p className="blocked-code">Código: {error}</p>}
+        {syncBlock?.eventUuid && (
+          <p className="blocked-code">
+            Evento: {syncBlock.eventUuid} · Secuencia local: {syncBlock.localSequence}
+          </p>
+        )}
+        {syncBlock?.locallyRecovered && (
+          <p>
+            Se reconstruyó el último estado local válido. Sigue siendo de solo consulta: continuar
+            offline requiere una decisión pendiente de branching/rebase del protocolo.
+          </p>
+        )}
         <div>
-          <button onClick={onReconcile}>Reconciliar</button>
-          <button className="danger" onClick={onTakeOver}>
-            Tomar control
+          <button
+            disabled={typeof navigator !== 'undefined' && !navigator.onLine}
+            onClick={onContinueCentral}
+          >
+            Continuar desde estado central
+          </button>
+          <button
+            className="danger"
+            disabled={
+              (typeof navigator !== 'undefined' && navigator.onLine) ||
+              !syncBlock?.eventUuid ||
+              syncBlock.localSequence == null
+            }
+            onClick={onRecoverLocal}
+          >
+            Recuperar último estado local válido
           </button>
         </div>
       </section>
@@ -952,4 +999,13 @@ function useEscape(close: () => void) {
     addEventListener('keydown', key);
     return () => removeEventListener('keydown', key);
   }, [close]);
+}
+
+function substitutionMessage(error: unknown) {
+  const code = error instanceof Error ? error.message : '';
+  if (code === 'substitution_player_is_libero')
+    return 'Los líberos no pueden participar en sustituciones normales.';
+  if (code === 'invalid_substitution_pair')
+    return 'La sustitución no respeta la pareja titular–suplente. Sólo puede reingresar el titular original.';
+  return 'No se pudo registrar la sustitución. Revisa los jugadores seleccionados.';
 }

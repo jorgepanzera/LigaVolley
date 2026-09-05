@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { scorerApi } from './scorerApi';
+import { ApiProblem, scorerApi } from './scorerApi';
 import type { LocalEvent } from '../domain/types';
 
 describe('scorerApi sync contract', () => {
@@ -68,5 +68,33 @@ describe('scorerApi sync contract', () => {
     const request = fetch.mock.calls[0][1] as RequestInit;
     const body = JSON.parse(request.body as string);
     expect(body.events[1].payload.setNumber).toBe(1);
+  });
+
+  it('keeps the rejected event identity from sync ProblemDetails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 409,
+        statusText: 'Conflict',
+        json: async () => ({
+          code: 'substitution_player_is_libero',
+          detail: 'Invalid substitution',
+          eventUuid: 'event-42',
+          localSequence: 42,
+        }),
+      }),
+    );
+
+    let problem: ApiProblem | undefined;
+    try {
+      await scorerApi.sheet(160);
+    } catch (error) {
+      problem = error as ApiProblem;
+    }
+
+    expect(problem).toBeInstanceOf(ApiProblem);
+    expect(problem?.eventUuid).toBe('event-42');
+    expect(problem?.localSequence).toBe(42);
   });
 });

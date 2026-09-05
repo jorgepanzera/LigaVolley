@@ -2370,6 +2370,7 @@
         },
         {
           "name": "Offline Sync",
+          "description": "Los ProblemDetails de rechazos deportivos atribuibles incluyen eventUuid y localSequence. La recuperación central consulta GET /sheet y luego ejecuta take-over; la cola abandonada no se mezcla con la sesión nueva.",
           "item": [
             {
               "name": "01 - Get Sheet for Reconciliation",

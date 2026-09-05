@@ -35,6 +35,8 @@ export class ApiProblem extends Error {
     public status: number,
     public code: string,
     message: string,
+    public eventUuid?: string,
+    public localSequence?: number,
   ) {
     super(message);
   }
@@ -97,7 +99,13 @@ async function call<T>(url: string, init?: RequestInit): Promise<T> {
   }
   if (!response.ok) {
     const p = await response.json().catch(() => ({}));
-    throw new ApiProblem(response.status, p.code ?? 'api_error', p.detail ?? response.statusText);
+    throw new ApiProblem(
+      response.status,
+      p.code ?? 'api_error',
+      p.detail ?? response.statusText,
+      p.eventUuid,
+      typeof p.localSequence === 'number' ? p.localSequence : undefined,
+    );
   }
   return response.json();
 }

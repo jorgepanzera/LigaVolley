@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { applyCommand, effectivePlayers, serverPlayer, validateLiberoPlan } from './matchEngine';
+import {
+  applyCommand,
+  effectivePlayers,
+  regularPlayers,
+  serverPlayer,
+  validateLiberoPlan,
+} from './matchEngine';
 import { initialState, type MatchState, type Side } from './types';
 const ready = () => {
   let s = applyCommand(initialState(), { type: 'PREPARE_SET', payload: {} });
@@ -96,6 +102,24 @@ describe('local MatchEngine', () => {
       }),
     ).toThrow('substitution_player_is_libero');
     expect(state.sets[0].substitutions).toHaveLength(0);
+  });
+  it('keeps normal substitutions aligned with the backend starter-substitute pair', () => {
+    let state = ready();
+    state = applyCommand(state, {
+      type: 'SUBSTITUTION',
+      payload: { side: 'HOME', playerOutMatchPlayerId: 10, playerInMatchPlayerId: 99 },
+    });
+    expect(() =>
+      applyCommand(state, {
+        type: 'SUBSTITUTION',
+        payload: { side: 'HOME', playerOutMatchPlayerId: 99, playerInMatchPlayerId: 98 },
+      }),
+    ).toThrow('invalid_substitution_pair');
+    state = applyCommand(state, {
+      type: 'SUBSTITUTION',
+      payload: { side: 'HOME', playerOutMatchPlayerId: 99, playerInMatchPlayerId: 10 },
+    });
+    expect(regularPlayers(state.sets[0], 'HOME')[0]).toBe(10);
   });
   it('decides best of five and requires explicit close', () => {
     let s = ready();

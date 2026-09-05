@@ -75,7 +75,12 @@ describe('SyncService', () => {
   it('blocks and preserves the causal queue on a permanent domain 400', async () => {
     await setup();
     const api = {
-      sync: vi.fn().mockRejectedValue({ status: 400, code: 'substitution_player_is_libero' }),
+      sync: vi.fn().mockRejectedValue({
+        status: 400,
+        code: 'substitution_player_is_libero',
+        eventUuid: 'rejected-event',
+        localSequence: 1,
+      }),
       takeOver: vi.fn(),
       sheet: vi.fn(),
     };
@@ -84,9 +89,12 @@ describe('SyncService', () => {
     expect(service.phase).toBe('BLOCKED');
     expect(service.lastError).toBe('substitution_player_is_libero');
     expect((await db.events.toArray()).map((event) => event.syncStatus)).toEqual(['PENDING']);
-    expect((await db.sessions.get('session'))?.status).toBe('ABANDONED');
-    await new SyncService(db, api as never).sync(1);
-    expect(api.sync).toHaveBeenCalledTimes(1);
+    expect((await db.sessions.get('session'))?.status).toBe('ACTIVE');
+    expect(JSON.parse((await db.appMeta.get('syncBlocked:1'))!.value)).toEqual({
+      code: 'substitution_player_is_libero',
+      eventUuid: 'rejected-event',
+      localSequence: 1,
+    });
     expect(await db.events.count()).toBe(1);
   });
   it('blocks and preserves events on session loss or conflict', async () => {

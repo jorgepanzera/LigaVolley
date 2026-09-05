@@ -90,7 +90,7 @@ El servidor persiste estado operacional canónico y eventos de trazabilidad; no 
 - P1 es el servidor inicial; un receptor que gana rota `(offset + 1) % 6`. El equipo que conserva saque no rota.
 - Point calcula marcador, saque, rotación, servidor y fin automático.
 - `CorrectLastPoint` cancela únicamente el último evento deportivo efectivo y reconstruye el estado; nunca borra el POINT.
-- Sustituciones conservan pareja titular/suplente y permiten reingreso del titular; deliberadamente no hay máximo global de seis. Una sustitución normal excluye cualquier `MATCH_PLAYER` declarado como líbero tanto en el MatchEngine local como en el backend.
+- Sustituciones conservan pareja titular/suplente y permiten reingreso del titular; deliberadamente no hay máximo global de seis. Una sustitución normal excluye cualquier `MATCH_PLAYER` declarado como líbero tanto en el MatchEngine local como en el backend. La UI sólo ofrece suplentes que formen una pareja válida: la primera entrada admite un regular todavía no utilizado y el reingreso admite exclusivamente al titular original.
 - `TrackSubstitutions` y `TrackLiberoReplacements` pertenecen a MatchSheet. Si están deshabilitados no bloquean puntos.
 - Un líbero declarado puede entrar por P1/P5/P6; sale restaurando la plaza lógica. Se admiten hasta dos declarados.
 - Timeouts siempre se registran y tienen máximo dos por equipo/set.
@@ -101,13 +101,15 @@ El servidor persiste estado operacional canónico y eventos de trazabilidad; no 
 
 Scorer tolera pérdida temporal de conectividad mediante eventos locales con UUID y secuencia por sesión. Al reentrar, el cliente obtiene `GET /sheet`, confirma hasta `LastAcceptedSequence`, reconstruye desde el snapshot, reaplica sus eventos Pending y llama `/sync`. El batch tolera UUID ya aceptados y aplica atómicamente sólo una continuación contigua. IndexedDB, Service Worker y background sync quedan fuera del backend v1.
 
-`TakeOverMatchSheet` requiere la sesión activa esperada para resolver concurrencia: la anterior pasa a ABANDONED y la nueva queda ACTIVE con secuencia cero. No reinicia marcador, set, saque, rotación, cancha, sustituciones, líbero ni timeouts. Una sesión abandonada puede reintentar eventos conocidos, pero sus eventos inéditos son rechazados; la recuperación manual futura no forma parte de v1.
+`TakeOverMatchSheet` requiere la sesión activa esperada para resolver concurrencia: la anterior pasa a ABANDONED y la nueva queda ACTIVE con secuencia cero. No reinicia marcador, set, saque, rotación, cancha, sustituciones, líbero ni timeouts. Una sesión abandonada puede reintentar eventos conocidos, pero sus eventos inéditos son rechazados; no existe merge automático.
 
 ## PWA Core v1
 
 El frontend usa React, TypeScript, Vite, Dexie e IndexedDB. Los cinco stores son `appMeta`, `matchSheets`, `sessions`, `snapshots` y `events`; `deviceId` se genera una vez. Una acción aplica primero el motor local y guarda evento, snapshot y `nextLocalSequence` atómicamente. La UI se actualiza sin esperar HTTP.
 
-Los eventos pasan por PENDING → SYNCING → ACCEPTED. Un cierre/reinicio devuelve SYNCING a PENDING. Ante timeout, red o 5xx se preserva operación offline; cualquier 4xx permanente de dominio, pérdida de sesión o conflicto de secuencia/UUID deja BLOCKED y abandona la sesión local sin borrar, aceptar ni saltar eventos. La reconciliación toma el snapshot canónico completo —incluidas alineaciones, sustituciones, líberos y puntos activos— y reaplica pendientes posteriores, por lo que eventos creados durante un request no desaparecen.
+Los eventos pasan por PENDING → SYNCING → ACCEPTED. Un cierre/reinicio devuelve SYNCING a PENDING. Ante timeout, red o 5xx se preserva operación offline. Un 4xx deportivo permanente deja un marcador persistente de sync BLOCKED sin abandonar la sesión; sólo la pérdida o mismatch real de autoridad deja la sesión ABANDONED. En ambos casos no se borran, aceptan ni saltan eventos. La reconciliación toma el snapshot canónico completo —incluidas alineaciones, sustituciones, líberos y puntos activos— y reaplica pendientes posteriores, por lo que eventos creados durante un request no desaparecen.
+
+Los rechazos atribuibles incluyen `eventUuid` y `localSequence` en ProblemDetails. Desde BLOCKED existen dos recuperaciones explícitas. Online, **Continuar desde estado central** consulta `GET /sheet`, ejecuta takeover sobre la sesión central activa, abandona la sesión problemática, crea una nueva ACTIVE y carga su snapshot sin incorporar la cola anterior. Offline, **Recuperar último estado local válido** sólo se habilita cuando el evento fue identificado y el MatchEngine reproduce determinísticamente el mismo rechazo; reconstruye la vista hasta el evento inmediatamente anterior, conserva el rechazado y sus descendientes sin aplicarlos y permanece BLOCKED/de solo consulta. No crea sesiones, renumera, elimina ni reutiliza eventos. Continuar operando desde esa vista exige branching/rebase y queda pendiente de una decisión de protocolo.
 
 El Service Worker precachea exclusivamente App Shell y assets. No cachea `/api/scorer` como fuente deportiva. La reentrada busca primero IndexedDB y sólo después intenta reconciliar en segundo plano.
 
@@ -129,7 +131,7 @@ OpenMatchSheet usa paneles simétricos y exige que el scorer seleccione convocad
 
 Durante IN_PROGRESS, la cancha consume las derivaciones del MatchEngine y el banco excluye a los seis jugadores efectivos. Punto HOME/AWAY es la acción dominante; timeout, sustitución confirmada y CorrectLastPoint se resuelven en overlays. Historial, acta, oficiales y sesión son consultas en drawers. Los eventos corregidos se conservan y se etiquetan. Al finalizar un set desaparecen las mutaciones y se ofrece preparar el siguiente; a tres sets se ofrece revisar y cerrar; CLOSED queda sólo para consulta.
 
-OFFLINE no interrumpe ni deshabilita una acción deportiva válida y muestra pendientes discretamente. SYNCING tampoco bloquea. BLOCKED conserva visible el partido bajo un overlay, impide todas las mutaciones y ofrece reconciliación o takeover; takeover no modifica estado deportivo. El diseño se orienta a notebook/tablet landscape, ideal entre 1280 y 1440 px y funcional desde 1024x768, donde el sidebar queda sólo con iconos y se compacta la información secundaria.
+OFFLINE no interrumpe ni deshabilita una acción deportiva válida y muestra pendientes discretamente. SYNCING tampoco bloquea. BLOCKED conserva visible el partido bajo un overlay, impide todas las mutaciones y ofrece recuperación central online o reconstrucción local de solo consulta offline. El diseño se orienta a notebook/tablet landscape, ideal entre 1280 y 1440 px y funcional desde 1024x768, donde el sidebar queda sólo con iconos y se compacta la información secundaria.
 
 El comportamiento real de `CorrectLastPoint` permite corregir inmediatamente el punto que terminó automáticamente un set: el motor reconstruye el set como IN_PROGRESS y revierte el set ganado. No existe corrección arbitraria desde el historial.
 

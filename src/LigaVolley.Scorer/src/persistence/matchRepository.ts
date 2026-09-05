@@ -103,6 +103,57 @@ export class MatchRepository {
       .filter((x) => x.syncStatus === 'SYNCING')
       .modify({ syncStatus: 'PENDING' });
   }
+  async recoverBeforeRejected(
+    matchId: number,
+    rejected: { code: string; eventUuid: string; localSequence: number },
+  ) {
+    return this.database.transaction(
+      'rw',
+      this.database.matchSheets,
+      this.database.sessions,
+      this.database.snapshots,
+      this.database.events,
+      async () => {
+        const local = await this.active(matchId);
+        if (!local || local.session.status !== 'ACTIVE') throw new Error('session_lost');
+        const events = await this.database.events
+          .where('[sessionUuid+sequence]')
+          .between(
+            [local.session.sessionUuid, local.session.lastAcceptedSequence + 1],
+            [local.session.sessionUuid, Number.MAX_SAFE_INTEGER],
+          )
+          .sortBy('sequence');
+        const index = events.findIndex(
+          (event) =>
+            event.eventUuid === rejected.eventUuid && event.sequence === rejected.localSequence,
+        );
+        if (index < 0) throw new Error('local_recovery_event_not_found');
+
+        let state = normalizeState(
+          structuredClone(
+            local.sheet.bootstrap.operationalState ?? fromServer(local.sheet.bootstrap),
+          ),
+          local.sheet.bootstrap,
+        );
+        for (const event of events.slice(0, index))
+          state = applyCommand(state, { type: event.type, payload: event.payload });
+
+        try {
+          applyCommand(state, { type: events[index].type, payload: events[index].payload });
+        } catch (error) {
+          if (error instanceof Error && error.message === rejected.code) {
+            await this.database.snapshots.update(matchId, {
+              state,
+              updatedAt: new Date().toISOString(),
+            });
+            return state;
+          }
+          throw new Error('local_recovery_not_deterministic');
+        }
+        throw new Error('local_recovery_not_reproducible');
+      },
+    );
+  }
 }
 export function fromServer(s: ServerSheetSnapshot): MatchState {
   const state = initialState(),

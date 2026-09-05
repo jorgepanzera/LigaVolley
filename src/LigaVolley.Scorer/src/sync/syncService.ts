@@ -3,6 +3,21 @@ import { MatchRepository } from '../persistence/matchRepository';
 import { ApiProblem, scorerApi } from '../api/scorerApi';
 import { reconcile } from './reconciliationService';
 export type SyncPhase = 'IDLE' | 'SYNCING' | 'RECONCILING' | 'BLOCKED';
+export interface SyncBlockInfo {
+  code: string;
+  eventUuid?: string;
+  localSequence?: number;
+  locallyRecovered?: boolean;
+}
+export function readSyncBlock(value?: string): SyncBlockInfo | undefined {
+  if (!value) return undefined;
+  try {
+    const parsed = JSON.parse(value) as SyncBlockInfo;
+    return parsed?.code ? parsed : { code: value };
+  } catch {
+    return { code: value };
+  }
+}
 export class SyncService {
   phase: SyncPhase = 'IDLE';
   lastError?: string;
@@ -50,6 +65,7 @@ export class SyncService {
         },
       );
       await reconcile(this.database, matchId, response.snapshot, response.lastAcceptedSequence);
+      await this.database.appMeta.delete(`syncBlocked:${matchId}`);
       this.phase = response.snapshot.sheet.status === 'CLOSED' ? 'BLOCKED' : 'IDLE';
       this.lastError = undefined;
     } catch (error) {
@@ -58,11 +74,27 @@ export class SyncService {
         .where('eventUuid')
         .anyOf(events.map((x) => x.eventUuid))
         .modify({ syncStatus: 'PENDING' });
+      const authorityLost = [
+        'match_sheet_session_not_active',
+        'match_sheet_session_mismatch',
+        'match_sheet_session_not_found',
+      ].includes(p.code);
       const permanent = p.status >= 400 && p.status < 500;
-      if (permanent) {
+      if (authorityLost) {
         await this.database.sessions.update(local.session.sessionUuid, {
           status: 'ABANDONED',
           endedAt: new Date().toISOString(),
+        });
+        this.phase = 'BLOCKED';
+        this.lastError = p.code;
+      } else if (permanent) {
+        await this.database.appMeta.put({
+          key: `syncBlocked:${matchId}`,
+          value: JSON.stringify({
+            code: p.code,
+            eventUuid: p.eventUuid,
+            localSequence: p.localSequence,
+          } satisfies SyncBlockInfo),
         });
         this.phase = 'BLOCKED';
         this.lastError = p.code;

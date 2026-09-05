@@ -20,9 +20,12 @@ internal sealed class GlobalExceptionHandler(IProblemDetailsService problemDetai
         };
 
         httpContext.Response.StatusCode = status;
-        var extensions = exception is ResourceConflictException conflictException
-            ? conflictException.Extensions
-            : new Dictionary<string, object?>();
+        var extensions = exception switch
+        {
+            ResourceConflictException conflictException => conflictException.Extensions,
+            RequestValidationException validationException => validationException.Extensions,
+            _ => new Dictionary<string, object?>()
+        };
         var details = new ProblemDetails
         {
             Status = status,

@@ -226,6 +226,13 @@ function substitute(state: MatchState, p: Record<string, unknown>) {
     throw new Error('substitution_player_is_libero');
   if (set.status !== 'IN_PROGRESS' || position < 0 || regular.includes(into))
     throw new Error('invalid_substitution');
+  const starter = set.lineups[team][position],
+    history = set.substitutions.filter((x) => x.side === team && x.position === position);
+  if (out === starter) {
+    if (history.length > 0 || set.substitutions.some((x) => x.playerInMatchPlayerId === into))
+      throw new Error('invalid_substitution_pair');
+  } else if (into !== starter || history.length !== 1 || history[0].playerInMatchPlayerId !== out)
+    throw new Error('invalid_substitution_pair');
   set.substitutions.push({
     side: team,
     position,

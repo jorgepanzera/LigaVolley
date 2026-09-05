@@ -7,7 +7,7 @@ import {
   type OpenMatchContext,
   type OpenMatchRequest,
 } from '../api/scorerApi';
-import { SyncService } from '../sync/syncService';
+import { readSyncBlock, SyncService, type SyncBlockInfo } from '../sync/syncService';
 import { reconcile } from '../sync/reconciliationService';
 import type {
   LiberoPlan,
@@ -29,6 +29,7 @@ export interface ViewState {
   lastAcceptedSequence: number;
   error?: string;
   storagePersisted?: boolean;
+  syncBlock?: SyncBlockInfo;
 }
 export class ScorerController {
   view: ViewState = {
@@ -119,6 +120,8 @@ export class ScorerController {
     if (!this.view.matchId) return;
     const local = await this.repo.active(this.view.matchId);
     if (!local) return;
+    const blockedSync = await this.database.appMeta.get(`syncBlocked:${this.view.matchId}`);
+    const syncBlock = readSyncBlock(blockedSync?.value);
     const pending = await this.database.events
         .where('[sessionUuid+syncStatus]')
         .equals([local.session.sessionUuid, 'PENDING'])
@@ -130,7 +133,9 @@ export class ScorerController {
     const runtime: RuntimeState =
       local.session.status === 'CLOSED' || local.snapshot.state.closeConfirmed
         ? 'CLOSED'
-        : local.session.status === 'ABANDONED' || this.syncService.phase === 'BLOCKED'
+        : local.session.status === 'ABANDONED' ||
+            this.syncService.phase === 'BLOCKED' ||
+            blockedSync
           ? 'BLOCKED'
           : this.syncService.phase === 'SYNCING' || this.syncService.phase === 'RECONCILING'
             ? 'SYNCING'
@@ -145,7 +150,11 @@ export class ScorerController {
       bootstrap: local.sheet.bootstrap,
       events: events.sort((a, b) => b.sequence - a.sequence),
       lastAcceptedSequence: local.session.lastAcceptedSequence,
-      error: this.syncService.lastError,
+      syncBlock,
+      error:
+        this.syncService.lastError ??
+        syncBlock?.code ??
+        (local.session.status === 'ABANDONED' ? 'session_lost' : undefined),
     };
     this.emit();
   }
@@ -217,23 +226,28 @@ export class ScorerController {
   async sync() {
     if (this.view.matchId) await this.syncService.sync(this.view.matchId);
   }
-  async takeOver() {
+  async continueFromCentral() {
     if (!this.view.matchId) throw new Error('offline_no_local_match');
+    if (typeof navigator !== 'undefined' && !navigator.onLine)
+      throw new Error('central_recovery_requires_connection');
     const local = await this.repo.active(this.view.matchId);
     if (!local) throw new Error('offline_no_local_match');
-    const device = await deviceId(this.database),
+    const central = await this.api.sheet(this.view.matchId),
+      device = await deviceId(this.database),
       response = await this.api.takeOver(this.view.matchId, {
-        sheetUuid: local.sheet.sheetUuid,
-        expectedSessionUuid: local.session.sessionUuid,
+        sheetUuid: central.sheet.sheetUuid,
+        expectedSessionUuid: central.session.sessionUuid,
         deviceId: device,
         clientRequestId: crypto.randomUUID(),
       });
     await this.database.transaction(
       'rw',
+      this.database.appMeta,
       this.database.sessions,
       this.database.snapshots,
       this.database.matchSheets,
       async () => {
+        await this.database.appMeta.delete(`syncBlocked:${this.view.matchId}`);
         await this.database.sessions.update(local.session.sessionUuid, {
           status: 'ABANDONED',
           endedAt: new Date().toISOString(),
@@ -241,6 +255,30 @@ export class ScorerController {
         await this.repo.bootstrap(this.view.matchId!, response.snapshot, device);
       },
     );
+    this.syncService.phase = 'IDLE';
+    this.syncService.lastError = undefined;
+    await this.refresh();
+  }
+  takeOver() {
+    return this.continueFromCentral();
+  }
+  async recoverLastValidLocal() {
+    if (!this.view.matchId) throw new Error('offline_no_local_match');
+    if (typeof navigator !== 'undefined' && navigator.onLine)
+      throw new Error('local_recovery_requires_offline');
+    const marker = await this.database.appMeta.get(`syncBlocked:${this.view.matchId}`),
+      block = readSyncBlock(marker?.value);
+    if (!block?.eventUuid || block.localSequence == null)
+      throw new Error('local_recovery_event_not_identified');
+    await this.repo.recoverBeforeRejected(this.view.matchId, {
+      code: block.code,
+      eventUuid: block.eventUuid,
+      localSequence: block.localSequence,
+    });
+    await this.database.appMeta.put({
+      key: `syncBlocked:${this.view.matchId}`,
+      value: JSON.stringify({ ...block, locallyRecovered: true }),
+    });
     await this.refresh();
   }
 }

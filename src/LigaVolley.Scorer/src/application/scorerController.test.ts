@@ -219,4 +219,90 @@ describe('ScorerController bootstrap', () => {
     expect(controller.view.opening).toBeUndefined();
     expect(controller.view.state).toBeTruthy();
   });
+
+  it('continues from the central session and preserves the abandoned local queue', async () => {
+    database = new ScorerDatabase(`controller-${crypto.randomUUID()}`);
+    const repo = new MatchRepository(database);
+    await repo.bootstrap(1, snapshot(), 'device');
+    await repo.mutate(1, { type: 'PREPARE_SET', payload: {} });
+    const central = {
+      ...snapshot(),
+      session: { ...snapshot().session, sessionUuid: 'central-session', deviceId: 'other' },
+    };
+    const next = {
+      ...central,
+      session: { ...central.session, sessionUuid: 'new-session', deviceId: 'device' },
+    };
+    const client = api({
+      sheet: vi.fn().mockResolvedValue(central),
+      takeOver: vi.fn().mockResolvedValue({ sessionUuid: 'new-session', snapshot: next }),
+    });
+    const controller = new ScorerController(database, client);
+    controller.view = { ...controller.view, matchId: 1 };
+    controller.syncService.phase = 'BLOCKED';
+    controller.syncService.lastError = 'substitution_player_is_libero';
+
+    await controller.continueFromCentral();
+
+    expect(client.sheet).toHaveBeenCalledWith(1);
+    expect(client.takeOver).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({
+        sheetUuid: 'sheet',
+        expectedSessionUuid: 'central-session',
+      }),
+    );
+    expect((await database.sessions.get('session'))?.status).toBe('ABANDONED');
+    expect((await database.sessions.get('new-session'))?.status).toBe('ACTIVE');
+    expect(await database.events.count()).toBe(1);
+    expect((await database.events.toArray())[0].sessionUuid).toBe('session');
+    expect(controller.view.runtime).toBe('READY');
+  });
+
+  it('recovers only a deterministic local view and preserves the rejected causal tail', async () => {
+    database = new ScorerDatabase(`controller-${crypto.randomUUID()}`);
+    await new MatchRepository(database).bootstrap(1, snapshot(), 'device');
+    const now = new Date().toISOString();
+    await database.events.add({
+      eventUuid: 'rejected-timeout',
+      matchId: 1,
+      sheetUuid: 'sheet',
+      sessionUuid: 'session',
+      sequence: 1,
+      type: 'TIMEOUT',
+      payload: { setNumber: 1, side: 'HOME' },
+      occurredAt: now,
+      syncStatus: 'PENDING',
+      createdAt: now,
+    });
+    await database.events.add({
+      eventUuid: 'descendant',
+      matchId: 1,
+      sheetUuid: 'sheet',
+      sessionUuid: 'session',
+      sequence: 2,
+      type: 'PREPARE_SET',
+      payload: {},
+      occurredAt: now,
+      syncStatus: 'PENDING',
+      createdAt: now,
+    });
+    await database.appMeta.put({
+      key: 'syncBlocked:1',
+      value: JSON.stringify({
+        code: 'match_set_not_found',
+        eventUuid: 'rejected-timeout',
+        localSequence: 1,
+      }),
+    });
+    const controller = new ScorerController(database, api());
+    controller.view = { ...controller.view, matchId: 1 };
+    await controller.recoverLastValidLocal();
+
+    expect((await database.snapshots.get(1))?.state.sets).toEqual([]);
+    expect(await database.events.count()).toBe(2);
+    expect((await database.sessions.get('session'))?.status).toBe('ACTIVE');
+    expect(controller.view.runtime).toBe('BLOCKED');
+    expect(controller.view.syncBlock?.locallyRecovered).toBe(true);
+  });
 });

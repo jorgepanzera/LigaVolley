@@ -41,8 +41,18 @@ function playing() {
 
 describe('normal substitution candidates', () => {
   it('excludes a declared libero even while the libero is outside the effective court', () => {
-    const candidates = normalSubstitutionCandidates(snapshot, 'HOME', playing().sets[0]);
+    const candidates = normalSubstitutionCandidates(snapshot, 'HOME', playing().sets[0], 0);
     expect(candidates.map((player) => player.matchPlayerId)).toEqual([16]);
+  });
+  it('offers only the paired starter when a regular substitute is on court', () => {
+    let state = playing();
+    state = applyCommand(state, {
+      type: 'SUBSTITUTION',
+      payload: { side: 'HOME', playerOutMatchPlayerId: 10, playerInMatchPlayerId: 16 },
+    });
+    expect(
+      normalSubstitutionCandidates(snapshot, 'HOME', state.sets[0], 0).map((x) => x.matchPlayerId),
+    ).toEqual([10]);
   });
   it('does not allow an active libero to be selected as the outgoing normal player', () => {
     const state = playing();

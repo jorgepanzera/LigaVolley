@@ -37,4 +37,5 @@ public sealed class ResourceConflictException(string code, string message) : Exc
 public sealed class RequestValidationException(string code, string message) : Exception(message)
 {
     public string Code { get; } = code;
+    public IReadOnlyDictionary<string, object?> Extensions { get; init; } = new Dictionary<string, object?>();
 }

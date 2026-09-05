@@ -6,12 +6,24 @@ export function normalSubstitutionCandidates(
   snapshot: ServerSheetSnapshot,
   side: Side,
   set: SetState,
+  logical: number,
 ) {
   const onCourt = new Set(regularPlayers(set, side));
   const liberos = new Set(team(snapshot, side)?.liberos.map((x) => x.matchPlayerId));
+  const outgoing = regularPlayers(set, side)[logical];
+  const starter = set.lineups[side][logical];
+  const history = set.substitutions.filter((x) => x.side === side && x.position === logical);
   return (
     team(snapshot, side)?.players.filter(
-      (x) => !liberos.has(x.matchPlayerId) && !onCourt.has(x.matchPlayerId),
+      (x) =>
+        !liberos.has(x.matchPlayerId) &&
+        !onCourt.has(x.matchPlayerId) &&
+        (outgoing === starter
+          ? history.length === 0 &&
+            !set.substitutions.some((entry) => entry.playerInMatchPlayerId === x.matchPlayerId)
+          : history.length === 1 &&
+            history[0].playerInMatchPlayerId === outgoing &&
+            x.matchPlayerId === starter),
     ) ?? []
   );
 }
@@ -29,6 +41,7 @@ export function PlayerActionSheet({
   set,
   snapshot,
   trackSubstitutions,
+  error,
   onClose,
   onSubstitute,
 }: {
@@ -37,6 +50,7 @@ export function PlayerActionSheet({
   set: SetState;
   snapshot: ServerSheetSnapshot;
   trackSubstitutions: boolean;
+  error?: string;
   onClose: () => void;
   onSubstitute: (outId: number, inId: number) => void;
 }) {
@@ -46,7 +60,7 @@ export function PlayerActionSheet({
     effective = effectivePlayers(set, side)[logical],
     current = player(snapshot, side, effective),
     under = player(snapshot, side, regular),
-    available = normalSubstitutionCandidates(snapshot, side, set),
+    available = normalSubstitutionCandidates(snapshot, side, set, logical),
     blockReason = normalSubstitutionBlockReason(set, side, logical);
   return (
     <div className="backdrop" onMouseDown={onClose}>
@@ -60,6 +74,11 @@ export function PlayerActionSheet({
         <h2>
           #{current?.jerseyNumber} {current?.displayName}
         </h2>
+        {error && (
+          <p className="action-warning" role="alert">
+            {error}
+          </p>
+        )}
         {effective !== regular && (
           <>
             <p>

@@ -16,12 +16,12 @@ const sheet = {
   },
   home: {
     teamName: 'HOME',
-    players: Array.from({ length: 7 }, (_, i) => ({
+    players: Array.from({ length: 8 }, (_, i) => ({
       matchPlayerId: i + 1,
       jerseyNumber: i + 1,
       displayName: `H${i}`,
     })),
-    liberos: [],
+    liberos: [{ matchPlayerId: 8 }],
   },
   away: {
     teamName: 'AWAY',
@@ -102,6 +102,32 @@ test('la consola actualiza localmente y protege el doble toque breve', async ({ 
   await point.dblclick({ delay: 20 });
   await expect(page.locator('.team-score.home > strong')).toHaveText('1');
   await expect(point).toBeDisabled();
+});
+test('avisa sobre el líbero activo y permite una sustitución regular válida', async ({ page }) => {
+  await bootstrap(page);
+  await page.getByRole('button', { name: 'Preparar Set 1' }).click();
+  const home = page.locator('.prep-grid article').nth(0);
+  const away = page.locator('.prep-grid article').nth(1);
+  for (let i = 0; i < 6; i++) await home.getByRole('button', { name: new RegExp(`H${i}`) }).click();
+  await home.locator('.libero-config select').selectOption('8');
+  await home.locator('.libero-config button').filter({ hasText: 'P1' }).click();
+  await away.locator('.lineup-slots button').filter({ hasText: 'P1' }).click();
+  for (let i = 0; i < 6; i++) await away.getByRole('button', { name: new RegExp(`A${i}`) }).click();
+  await page.getByRole('button', { name: 'AWAY SACA' }).click();
+  await page.getByRole('button', { name: 'Iniciar Set 1' }).click();
+
+  await page.locator('.team-court.home .court-position').filter({ hasText: 'H7' }).click();
+  await expect(
+    page.getByText(/Los líberos no pueden participar en sustituciones normales/),
+  ).toBeVisible();
+  await page.getByRole('button', { name: '×' }).click();
+
+  await page.locator('.team-court.home .court-position').filter({ hasText: 'H1' }).click();
+  await page.locator('.selector-list button').filter({ hasText: 'H6' }).click();
+  await page.getByRole('button', { name: 'Confirmar sustitución' }).click();
+  await expect(page.locator('.team-court.home')).toContainText('H6');
+  await expect(page.getByText('SESIÓN SIN AUTORIDAD')).toHaveCount(0);
+  await expect(page.getByText('SINCRONIZACIÓN BLOQUEADA')).toHaveCount(0);
 });
 
 for (const viewport of [
