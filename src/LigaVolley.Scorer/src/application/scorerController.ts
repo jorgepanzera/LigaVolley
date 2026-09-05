@@ -95,6 +95,10 @@ export class ScorerController {
           return;
         }
       } else {
+        if (local) {
+          await this.refresh();
+          if (this.view.runtime === 'BLOCKED' || this.view.runtime === 'CLOSED') return;
+        }
         this.view = { ...this.view, runtime: 'OFFLINE', error: errorCode(error) };
         this.emit();
         return;

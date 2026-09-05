@@ -2,6 +2,8 @@ import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiProblem, type OpenMatchContext } from '../api/scorerApi';
 import type { ServerSheetSnapshot } from '../domain/types';
+import { initialState } from '../domain/types';
+import { applyCommand } from '../domain/matchEngine';
 import { ScorerDatabase } from '../persistence/database';
 import { MatchRepository } from '../persistence/matchRepository';
 import { ScorerController } from './scorerController';
@@ -106,6 +108,52 @@ describe('ScorerController bootstrap', () => {
   afterEach(async () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     await database?.delete();
+  });
+  it('reenters offline with the same declared liberos and locally saved set choice', async () => {
+    database = new ScorerDatabase(`controller-libero-${crypto.randomUUID()}`);
+    const server = snapshot();
+    server.home.players.push({ matchPlayerId: 88, jerseyNumber: 42, displayName: 'Libero', isMatchCaptain: false });
+    server.home.liberos = [{ matchPlayerId: 88 }];
+    const repository = new MatchRepository(database);
+    await repository.bootstrap(1, server, 'device');
+    await repository.mutate(1, { type: 'PREPARE_SET', payload: {} });
+    await repository.mutate(1, { type: 'SET_LINEUP', payload: {
+      side: 'HOME', p1MatchPlayerId: 1, p2MatchPlayerId: 2, p3MatchPlayerId: 3,
+      p4MatchPlayerId: 4, p5MatchPlayerId: 5, p6MatchPlayerId: 6,
+      liberoMatchPlayerId: 88, liberoLogicalPositions: [0],
+    } });
+    const controller = new ScorerController(database, api({ sheet: vi.fn().mockRejectedValue(new ApiProblem(0, 'sync_temporarily_unavailable', 'offline')) }));
+    await controller.start(1);
+    expect(controller.view.bootstrap?.home.liberos).toEqual([{ matchPlayerId: 88 }]);
+    expect(controller.view.state?.sets[0].liberoPlans.HOME.liberoMatchPlayerId).toBe(88);
+    expect(controller.view.runtime).toBe('OFFLINE');
+  });
+  it('takeover and GET /sheet reentry preserve candidates and the accepted libero plan', async () => {
+    database = new ScorerDatabase(`controller-takeover-libero-${crypto.randomUUID()}`);
+    const server = snapshot();
+    server.home.players.push({ matchPlayerId: 88, jerseyNumber: 99, displayName: 'Libero', isMatchCaptain: false });
+    server.home.liberos = [{ matchPlayerId: 88 }];
+    server.operationalState = applyCommand(initialState(), { type: 'PREPARE_SET', payload: {} });
+    server.operationalState = applyCommand(server.operationalState, { type: 'SET_LINEUP', payload: {
+      side: 'HOME', p1MatchPlayerId: 1, p2MatchPlayerId: 2, p3MatchPlayerId: 3,
+      p4MatchPlayerId: 4, p5MatchPlayerId: 5, p6MatchPlayerId: 6,
+      liberoMatchPlayerId: 88, liberoLogicalPositions: [0],
+    } });
+    const next = structuredClone(server);
+    next.session.sessionUuid = 'next-libero-session';
+    const client = api({ sheet: vi.fn().mockResolvedValue(server), takeOver: vi.fn().mockResolvedValue({ snapshot: next }) });
+    const controller = new ScorerController(database, client);
+    await controller.start(1);
+    await controller.takeOver();
+    expect(controller.view.bootstrap?.home.liberos).toEqual(server.home.liberos);
+    expect(controller.view.state?.declaredLiberoMatchPlayerIds).toEqual({ HOME: [88], AWAY: [] });
+    expect(controller.view.state?.sets[0].liberoPlans.HOME.liberoMatchPlayerId).toBe(88);
+    expect((await database.sessions.get('session'))?.status).toBe('ABANDONED');
+    vi.mocked(client.sheet).mockResolvedValue(next);
+    const reentered = new ScorerController(database, client);
+    await reentered.start(1);
+    expect(reentered.view.bootstrap?.home.liberos).toEqual(server.home.liberos);
+    expect(reentered.view.state?.sets[0].liberoPlans.HOME.liberoMatchPlayerId).toBe(88);
   });
 
   it('falls back to opening when the sheet is specifically missing', async () => {

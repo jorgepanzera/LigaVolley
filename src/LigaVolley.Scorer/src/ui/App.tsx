@@ -17,6 +17,7 @@ import {
 } from './console/ConsoleDialogs';
 import { team } from './console/model';
 import { isOpeningTeamValid } from './console/openSheetValidation';
+import { toggleOpeningPlayer } from './console/openingTeamSelection';
 import './app.css';
 
 const matchId = Number(new URLSearchParams(location.search).get('matchId') ?? 1);
@@ -880,15 +881,8 @@ function OpeningTeam({
   onChange: (v: TeamSelection) => void;
 }) {
   const selected = (id: number) => value.players.find((x) => x.competitionRosterPlayerId === id);
-  const toggle = (id: number) => {
-    const exists = selected(id);
-    onChange({
-      ...value,
-      players: exists
-        ? value.players.filter((x) => x.competitionRosterPlayerId !== id)
-        : [...value.players, { competitionRosterPlayerId: id, isMatchCaptain: false }],
-    });
-  };
+  const toggle = (player: OpenTeamContext['players'][number]) =>
+    onChange(toggleOpeningPlayer(value, player));
   const duplicate = value.players
     .map((x) => x.jerseyNumber)
     .filter(Boolean)
@@ -925,7 +919,7 @@ function OpeningTeam({
                 <input
                   type="checkbox"
                   checked={!!choice}
-                  onChange={() => toggle(p.competitionRosterPlayerId)}
+                  onChange={() => toggle(p)}
                 />
                 <span>
                   <b>{p.displayName}</b>
