@@ -55,3 +55,9 @@ Los requests repetidos son intencionales cuando comprueban idempotencia,
 conflictos o variantes de un mismo endpoint. Los tests automatizados de
 integración siguen siendo la regresión principal; Postman funciona como catálogo
 ejecutable, smoke test y herramienta de exploración.
+
+## Public Live UX/UI v2
+
+`03 - Public / Live` verifica la ampliación mínima `servingPlayer`: nullable, con sólo `jerseyNumber` entero y `displayName` string. El servidor proviene del calculador canónico del backend; se conserva `servingSide`. En FINISHED se exige null. Los estados HTTP usan los nombres JSON vigentes (`InProgress`, `Suspended`, `Finished`). `LastUpdatedAt` admite null histórico; no se lo interpreta como información reciente.
+
+El request de ausencia esperada usa `scheduledMatchId` y verifica 404 `public_live_match_not_available`. Para los otros requests, `matchId` debe referenciar un partido en curso y `finishedMatchId` uno cerrado con acta. Los tests SQL de integración comprueban además la correspondencia con el servidor canónico durante rotación, sustitución, corrección y la nulabilidad en READY, entre sets y suspensión.

@@ -2723,7 +2723,7 @@
                   "script": {
                     "type": "text/javascript",
                     "exec": [
-                      "pm.test('central live state',()=>{pm.response.to.have.status(200);const x=pm.response.json();pm.expect(x.serverTime).to.exist;pm.expect(x.lastUpdatedAt).to.exist;});"
+                      "pm.test('central live state and canonical public server',()=>{pm.response.to.have.status(200);const x=pm.response.json();pm.expect(x.serverTime).to.be.a('string');pm.expect(x).to.have.property('lastUpdatedAt');pm.expect(x).to.have.property('servingSide');pm.expect(x).to.have.property('servingPlayer');if(x.servingPlayer!==null){pm.expect(x.servingPlayer).to.have.all.keys('jerseyNumber','displayName');pm.expect(Number.isInteger(x.servingPlayer.jerseyNumber)).to.eql(true);pm.expect(x.servingPlayer.displayName).to.be.a('string');pm.expect(x.status).to.eql('InProgress');pm.expect(x.sets.find(s=>s.setNumber===x.currentSetNumber).status).to.eql('InProgress');pm.expect(x.servingSide).to.be.oneOf(['Home','Away']);}if(x.status!=='InProgress'||!x.sets.some(s=>s.setNumber===x.currentSetNumber&&s.status==='InProgress'))pm.expect(x.servingPlayer).to.eql(null);});"
                     ]
                   }
                 }
@@ -2741,7 +2741,7 @@
                   "script": {
                     "type": "text/javascript",
                     "exec": [
-                      "pm.test('finished remains available',()=>{pm.response.to.have.status(200);pm.expect(pm.response.json().status).to.eql('FINISHED');});"
+                      "pm.test('finished remains available without a server',()=>{pm.response.to.have.status(200);const x=pm.response.json();pm.expect(x.status).to.eql('Finished');pm.expect(x.servingPlayer).to.eql(null);pm.expect(x.home.setsWon).to.be.a('number');pm.expect(x.away.setsWon).to.be.a('number');});"
                     ]
                   }
                 }

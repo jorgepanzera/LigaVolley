@@ -260,6 +260,10 @@ En orden de prioridad:
 
 Si dos documentos contradicen una decisión más reciente, actualizar la documentación antes de continuar implementando.
 
+### Public Live UX/UI v2
+
+Public Live es mobile-first: contexto, logos/equipos, puntos actuales, sets ganados, sets anteriores, saque/servidor, cancha secundaria y frescura. HOME queda a la izquierda y AWAY a la derecha. Cancha colapsada inicialmente en móvil, visible desde desktop y colapsada en FINAL; FINAL prioriza sets y no muestra saque. Frescura con ServerTime + LastUpdatedAt: reciente hasta 30 s, demorada hasta 90 s, antigua después; null es desconocida. SUSPENDED es explícito, ausencia esperada no es error técnico y fallos de polling conservan el último estado. Polling 5/15 s, backoff 5/10/20/30 y stop en FINISHED. La única ampliación de contrato es servingPlayer nullable con jerseyNumber y displayName canónicos, conservando ServingSide; no se deriva servidor ni lógica deportiva en React ni se cambia persistencia.
+
 ### Match-specific Jersey Number & Captain
 
 CompetitionRosterPlayer define la habilitación competitiva y el PLAYER_ROLE contextual. No fija dorsal ni capitanía. Durante OpenMatchSheet, el Scorer selecciona los jugadores convocados y asigna JerseyNumber e IsMatchCaptain. Ambos se persisten en MATCH_PLAYER y quedan congelados para ese MatchSheet. Un jugador puede usar diferentes dorsales y ser o no capitán en diferentes Matches.

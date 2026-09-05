@@ -20,7 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace LigaVolley.IntegrationTests;
 
-public sealed class MatchEngineEndpointsTests(LigaVolleyApiFactory factory):IClassFixture<LigaVolleyApiFactory>
+public sealed partial class MatchEngineEndpointsTests(LigaVolleyApiFactory factory):IClassFixture<LigaVolleyApiFactory>
 {
     private static readonly JsonSerializerOptions Json=new(JsonSerializerDefaults.Web){Converters={new JsonStringEnumConverter()}};
 

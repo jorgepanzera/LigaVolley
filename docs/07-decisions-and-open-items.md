@@ -130,6 +130,8 @@ Este documento resume qué decisiones son fuente de verdad y qué aspectos sigue
 - Live usa polling de 5 segundos en IN_PROGRESS, 15 segundos en SUSPENDED, backoff 5/10/20/30 y se detiene en FINISHED.
 - No hay SignalR, WebSocket, PWA, IndexedDB ni MatchEngine en Public v1.
 
+La evolución de consulta pública está cerrada en [Public Live UX/UI v2](08-public-live-ux-ui-v2.md): mobile-first, marcador antes de cancha, frescura central 30/90, estado final por sets, ausencia semántica y conservación del último Live ante errores. Se autoriza únicamente `servingPlayer` nullable con dorsal/nombre canónicos; no se cambia persistencia ni lógica deportiva.
+
 ### Demo Match Seed
 
 - Disponible sólo en Development mediante `--seed-demo-match`.

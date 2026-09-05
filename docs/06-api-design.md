@@ -1348,6 +1348,14 @@ Competition FINISHED
 
 La superficie es GET, anónima y read-only. Publicables: SCHEDULED, IN_PROGRESS, FINISHED y CANCELLED; DRAFT y sus recursos transitivos responden 404. Fixture agrupa fase → ronda, fase → grupo → ronda o playoff → serie → partidos. Standings devuelve tablas independientes calculadas por el servicio canónico. Match Detail separa contexto/resultado de Live, que expone marcador operacional, sets, saque, cancha P1..P6, `LastUpdatedAt` y `ServerTime`. Los códigos estables incluyen `public_competition_not_found`, `public_match_not_found`, `public_live_match_not_available`, `public_live_state_inconsistent`, `public_invalid_standings_scope` y `public_standings_inconsistent`.
 
+## Public Live: servidor explícito y UX/UI v2
+
+La ampliación mínima autorizada agrega `servingPlayer` nullable a `GET /api/public/matches/{matchId}/live`. Su único contenido es `jerseyNumber` (entero) y `displayName` (string), por ejemplo `{"jerseyNumber":7,"displayName":"Pérez"}`. `servingSide` permanece intacto. La cancha conserva el contrato previo, incluido su dorsal textual.
+
+El servidor se resuelve exclusivamente mediante la derivación canónica existente (`MatchCourtStateCalculator.Calculate` de la formación regular y `Server`), incorporando las sustituciones y el offset vigentes sin convertir al líbero en servidor. Es null fuera de Match/set IN_PROGRESS (READY, entre sets, SUSPENDED, FINISHED), sin lineup o cuando no hay servidor/dorsal determinable. No expone IDs ni otros datos personales. No cambia SQL, persistencia ni reglas de saque.
+
+`LastUpdatedAt` puede ser null; `ServerTime` permite medir la frescura desde el reloj central. Los estados JSON conservan los nombres vigentes del serializador: `InProgress`, `Suspended`, `Finished`, `Home` y `Away`. La presentación 30/90, responsive, ausencia esperada y polling se documentan en [Public Live UX/UI v2](08-public-live-ux-ui-v2.md). Swagger/OpenAPI y la carpeta Public/Live de Postman reflejan el campo agregado.
+
 # 23. Admin Match Operations v1
 
 - `GET /api/admin/matches/{matchId}/readiness`: siempre 200 para un Match existente aunque tenga blockers; 404 si no existe y 409 sólo ante inconsistencia persistida.

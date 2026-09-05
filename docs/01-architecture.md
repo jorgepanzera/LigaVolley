@@ -51,6 +51,8 @@ El MatchEngine TypeScript es puro y no depende de React, red ni persistencia. Ca
 
 Public sólo consulta información explícitamente publicable. Live lee el último estado operacional central mediante polling HTTP; no usa SignalR ni WebSocket en v1.
 
+[Public Live UX/UI v2](08-public-live-ux-ui-v2.md) mantiene esa frontera: jerarquía mobile-first con marcador dominante, cancha secundaria, frescura 30/90 y servidor explícito proyectado desde el calculador canónico del backend. No incorpora derivaciones deportivas en React.
+
 ## Superficies HTTP
 
 Las rutas se separan obligatoriamente por consumidor:

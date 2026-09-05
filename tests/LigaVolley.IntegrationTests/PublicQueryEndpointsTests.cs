@@ -36,6 +36,14 @@ public sealed class PublicQueryEndpointsTests(LigaVolleyApiFactory factory):ICla
     public async Task Swagger_documents_complete_public_catalog()
     {
         using var doc=JsonDocument.Parse(await factory.Client.GetStringAsync("/swagger/v1/swagger.json"));var paths=doc.RootElement.GetProperty("paths");foreach(var path in new[]{"/api/public/seasons","/api/public/competitions","/api/public/competitions/{competitionId}","/api/public/competitions/{competitionId}/fixture","/api/public/competitions/{competitionId}/standings","/api/public/matches/{matchId}","/api/public/matches/{matchId}/live"})Assert.True(paths.TryGetProperty(path,out _),path);
+        var schemas = doc.RootElement.GetProperty("components").GetProperty("schemas");
+        var live = schemas.GetProperty(nameof(PublicLiveMatchDto)).GetProperty("properties");
+        Assert.True(live.GetProperty("servingPlayer").GetProperty("nullable").GetBoolean());
+        Assert.True(live.TryGetProperty("servingSide", out _));
+        var player = schemas.GetProperty(nameof(PublicServingPlayerDto)).GetProperty("properties");
+        Assert.Equal(new[] { "displayName", "jerseyNumber" }, player.EnumerateObject().Select(p => p.Name).Order());
+        Assert.Equal("integer", player.GetProperty("jerseyNumber").GetProperty("type").GetString());
+        Assert.Contains("Nullable servingPlayer", paths.GetProperty("/api/public/matches/{matchId}/live").GetProperty("get").GetProperty("description").GetString());
     }
     private async Task<T> Create<T>(string url,object body){var response=await factory.Client.PostAsJsonAsync(url,body,Json);response.EnsureSuccessStatusCode();return(await response.Content.ReadFromJsonAsync<T>(Json))!;}
 }

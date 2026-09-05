@@ -145,6 +145,8 @@ Durante el juego, BANCO HOME ocupa el lateral izquierdo y BANCO AWAY el derecho;
 
 `GET /api/public/matches/{id}/live` lee exclusivamente el último estado operacional central persistido y reutiliza la derivación canónica de cancha. `LastUpdatedAt` proviene de `MATCH_SHEET.last_operational_update_at` y `ServerTime` del servidor que responde. PENDING, SCHEDULED y CANCELLED no tienen live; IN_PROGRESS, SUSPENDED y FINISHED sí. Public no simula pendientes locales ni ejecuta MatchEngine.
 
+La presentación pública se cierra en [Public Live UX/UI v2](08-public-live-ux-ui-v2.md). El nuevo `servingPlayer` nullable proyecta sólo dorsal y display name del servidor canónico en Match/set IN_PROGRESS. `servingSide` permanece. Public nunca resuelve el servidor desde P1 ni publica la convocatoria completa.
+
 ## Escenario demo LIVOSUR 2026
 
 En Development, 

@@ -45,7 +45,7 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+    builder.Services.AddSwaggerGen(options => options.SchemaFilter<LigaVolley.Api.OpenApi.PublicLiveSchemaFilter>());
 }
 builder.Services.AddScoped<SeasonService>();
 builder.Services.AddScoped<DivisionService>();

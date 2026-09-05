@@ -39,4 +39,5 @@ public sealed record PublicLiveSetDto(short SetNumber,MatchSetStatus Status,int 
 public sealed record PublicCourtPlayerDto(string JerseyNumber,string DisplayName,bool IsLibero);
 public sealed record PublicCourtPositionDto(byte Position,PublicCourtPlayerDto Player);
 public sealed record PublicCourtDto(IReadOnlyList<PublicCourtPositionDto> Positions);
-public sealed record PublicLiveMatchDto(int MatchId,MatchStatus Status,PublicLiveTeamDto Home,PublicLiveTeamDto Away,short? CurrentSetNumber,IReadOnlyList<PublicLiveSetDto> Sets,MatchSide? ServingSide,PublicCourtDto? HomeCourt,PublicCourtDto? AwayCourt,DateTimeOffset? LastUpdatedAt,DateTimeOffset ServerTime);
+public sealed record PublicServingPlayerDto(short JerseyNumber,string DisplayName);
+public sealed record PublicLiveMatchDto(int MatchId,MatchStatus Status,PublicLiveTeamDto Home,PublicLiveTeamDto Away,short? CurrentSetNumber,IReadOnlyList<PublicLiveSetDto> Sets,MatchSide? ServingSide,PublicCourtDto? HomeCourt,PublicCourtDto? AwayCourt,DateTimeOffset? LastUpdatedAt,DateTimeOffset ServerTime,PublicServingPlayerDto? ServingPlayer);

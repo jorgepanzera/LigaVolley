@@ -38,7 +38,7 @@ public static class PublicQueryEndpoints
 
         // GET /api/public/matches/456/live
         group.MapGet("/matches/{matchId:int}/live",async(int matchId,PublicQueryService service,CancellationToken ct)=>Results.Ok(await service.GetLiveAsync(matchId,ct)))
-            .WithSummary("Get central public livescore").WithDescription("Returns the latest accepted central operational state, effective P1..P6 courts and server-side freshness timestamps.").Produces<PublicLiveMatchDto>().Produces<ProblemDetails>(404,"application/problem+json").Produces<ProblemDetails>(409,"application/problem+json");
+            .WithSummary("Get central public livescore").WithDescription("Returns the latest accepted central operational state, effective P1..P6 courts and server-side freshness timestamps. servingSide remains explicit. Nullable servingPlayer contains only jerseyNumber (integer) and displayName, resolved by the canonical backend server calculator during an IN_PROGRESS match and set; it is null between sets, in READY, SUSPENDED, FINISHED or when no server can be determined. LastUpdatedAt may be null for historical data and never advances on GET. PENDING, SCHEDULED and CANCELLED have no Live (404 public_live_match_not_available).").Produces<PublicLiveMatchDto>().Produces<ProblemDetails>(404,"application/problem+json").Produces<ProblemDetails>(409,"application/problem+json");
         return app;
     }
 }

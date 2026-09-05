@@ -70,7 +70,27 @@ public sealed class PublicQueryService(IPublicQueryRepository repository, Standi
         if(m.Status is not (MatchStatus.InProgress or MatchStatus.Suspended or MatchStatus.Finished))throw new ResourceNotFoundException("PublicLiveMatch",matchId);
         var s=await repository.GetMatchSheetAsync(matchId,ct)??throw new ResourceConflictException("public_live_state_inconsistent","The central live state is unavailable."); var current=s.Sets.OrderByDescending(x=>x.SetNumber).FirstOrDefault();
         var home=s.Teams.SingleOrDefault(x=>x.Side==MatchSide.Home);var away=s.Teams.SingleOrDefault(x=>x.Side==MatchSide.Away);if(home is null||away is null)throw new ResourceConflictException("public_live_state_inconsistent","Live teams are inconsistent.");
-        return new(matchId,m.Status,new(home.TeamEntryId,home.TeamEntry.Team.Name,s.HomeSets,m.HomeTeamEntry?.Team.Club is null?null:ClubService.LogoUrl(m.HomeTeamEntry.Team.Club)),new(away.TeamEntryId,away.TeamEntry.Team.Name,s.AwaySets,m.AwayTeamEntry?.Team.Club is null?null:ClubService.LogoUrl(m.AwayTeamEntry.Team.Club)),current?.SetNumber,s.Sets.OrderBy(x=>x.SetNumber).Select(x=>new PublicLiveSetDto(x.SetNumber,x.Status,x.HomePoints,x.AwayPoints,x.WinnerSide)).ToArray(),current?.CurrentServingSide,Court(current,home),Court(current,away),s.LastOperationalUpdateAt,DateTimeOffset.UtcNow);
+        return new(matchId,m.Status,new(home.TeamEntryId,home.TeamEntry.Team.Name,s.HomeSets,m.HomeTeamEntry?.Team.Club is null?null:ClubService.LogoUrl(m.HomeTeamEntry.Team.Club)),new(away.TeamEntryId,away.TeamEntry.Team.Name,s.AwaySets,m.AwayTeamEntry?.Team.Club is null?null:ClubService.LogoUrl(m.AwayTeamEntry.Team.Club)),current?.SetNumber,s.Sets.OrderBy(x=>x.SetNumber).Select(x=>new PublicLiveSetDto(x.SetNumber,x.Status,x.HomePoints,x.AwayPoints,x.WinnerSide)).ToArray(),current?.CurrentServingSide,Court(current,home),Court(current,away),s.LastOperationalUpdateAt,DateTimeOffset.UtcNow,ServingPlayer(m.Status,current,home,away));
+    }
+
+    private static PublicServingPlayerDto? ServingPlayer(MatchStatus status, MatchSet? set, MatchTeam home, MatchTeam away)
+    {
+        if (status != MatchStatus.InProgress || set?.Status != MatchSetStatus.InProgress || set.CurrentServingSide is null)
+            return null;
+
+        var team = set.CurrentServingSide == MatchSide.Home ? home : away;
+        var lineup = set.Lineups.SingleOrDefault(x => x.MatchTeamId == team.MatchTeamId);
+        if (lineup is null) return null;
+
+        // Use the same regular-player court and canonical server resolver as Scorer.
+        var court = MatchCourtStateCalculator.Calculate(lineup,
+            team.Side == MatchSide.Home ? set.HomeRotationOffset : set.AwayRotationOffset,
+            set.Substitutions.Where(x => x.MatchTeamId == team.MatchTeamId), []);
+        var serverId = MatchCourtStateCalculator.Server(court);
+        var player = team.Players.SingleOrDefault(x => x.MatchPlayerId == serverId);
+        if (player?.JerseyNumber is not short jerseyNumber) return null;
+        var person = player.CompetitionRosterPlayer.Player.Person;
+        return new(jerseyNumber, $"{person.FirstName} {person.LastName}");
     }
 
     private async Task<StandingsDto> Canonical(Competition c,CompetitionPhase p,CompetitionPhaseGroup? g,CancellationToken ct){try{return await standings.GetAsync(c.CompetitionId,p.CompetitionPhaseId,g?.PhaseGroupId,ct);}catch(ResourceConflictException ex){throw new ResourceConflictException("public_standings_inconsistent",ex.Message);}}
