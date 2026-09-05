@@ -147,7 +147,11 @@ Durante el juego, BANCO HOME ocupa el lateral izquierdo y BANCO AWAY el derecho;
 
 ## Escenario demo LIVOSUR 2026
 
-En Development, `dotnet run --project src/LigaVolley.Api -- --seed-demo-match` crea o reutiliza un escenario explícito inmediatamente anterior a `OpenMatchSheet`. Selecciona una Competition LIVOSUR `ROUND_ROBIN` de 7/8 equipos, genera fixture mediante el caso de uso existente si falta, programa un Match con Venue, crea dos rosters ACTIVE de ocho jugadores (un líbero) y un coach, y asigna los tres oficiales. Los perfiles se identifican mediante documentos `DEMO/LV-DEMO-*`; reintentar no duplica datos. El comando no abre acta ni inicia Competition/Match y muestra los IDs y rutas directas de Scorer/Public.
+En Development, 
+`dotnet run --project src/LigaVolley.Api -- --seed-demo-match` crea o reutiliza un escenario explícito inmediatamente anterior a `OpenMatchSheet`. 
+Tambien limpiá los datos de localhost:5174 en DevTools → Application → Storage → Clear site data
+
+Selecciona una Competition LIVOSUR `ROUND_ROBIN` de 7/8 equipos, genera fixture mediante el caso de uso existente si falta, programa un Match con Venue, crea dos rosters ACTIVE de ocho jugadores (un líbero) y un coach, y asigna los tres oficiales. Los perfiles se identifican mediante documentos `DEMO/LV-DEMO-*`; reintentar no duplica datos. El comando no abre acta ni inicia Competition/Match y muestra los IDs y rutas directas de Scorer/Public.
 
 ## Frontera con Admin Match Operations
 
@@ -156,3 +160,10 @@ Admin prepara programación, rosters y oficiales, evalúa readiness y supervisa 
 ## Convocatoria materializada
 
 `OpenMatchSheet` recibe por cada jugador seleccionado su `CompetitionRosterPlayerId`, dorsal obligatorio 1..99 y `IsMatchCaptain`. Exige dorsales únicos y exactamente un capitán por `MATCH_TEAM`; estos datos quedan congelados en `MATCH_PLAYER` y forman parte del snapshot offline.
+
+
+### Reinicio del partido demo
+
+Cada ejecución de `--seed-demo-match` elimina transaccionalmente el acta anterior del partido demo y sus datos deportivos (eventos, sesiones, auditoría/snapshot, convocados, alineaciones, líberos, sustituciones, timeouts y sets), limpia el resultado y lo devuelve a `SCHEDULED`. Conserva ID, fixture, fecha, sede, planteles y oficiales; no reinicia otros partidos ni la competición. El ID se resuelve mediante los marcadores DEMO, no se fija a 160.
+
+El seeder no puede borrar IndexedDB del navegador. Después de reiniciarlo, cerrar las pestañas del Scorer y limpiar los datos de `http://localhost:5174` en DevTools > Application > Storage > Clear site data antes de volver a abrirlo. Esto descarta también las pruebas offline guardadas en ese origen.

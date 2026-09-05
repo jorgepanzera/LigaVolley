@@ -47,6 +47,7 @@ public sealed class DemoMatchSeeder(
                 await scheduling.ScheduleAsync(competition.CompetitionId, ct);
 
             var match = await SelectMatchAsync(competition.CompetitionId, ct);
+            await ResetMatchAsync(match, ct);
             var venue = await db.Venues.AsNoTracking().Where(x => x.Active).OrderBy(x => x.VenueId).FirstOrDefaultAsync(ct)
                 ?? throw new DemoMatchSeedException("The LIVOSUR dataset does not contain an active Venue.");
 
@@ -86,6 +87,32 @@ public sealed class DemoMatchSeeder(
             await transaction.RollbackAsync(CancellationToken.None);
             throw;
         }
+    }
+
+    // Development-only reset; preserve fixture identity and preparation.
+    private async Task ResetMatchAsync(Match match, CancellationToken ct)
+    {
+        await db.Database.ExecuteSqlInterpolatedAsync($"""
+            DELETE p FROM dbo.MATCH_LINEUP_POSITION p JOIN dbo.MATCH_LINEUP l ON l.match_lineup_id=p.match_lineup_id JOIN dbo.MATCH_SET s ON s.match_set_id=l.match_set_id JOIN dbo.[MATCH] m ON m.match_id=s.match_id WHERE m.match_id={match.MatchId};
+            DELETE p FROM dbo.MATCH_SET_LIBERO_PLAN p JOIN dbo.MATCH_SET s ON s.match_set_id=p.match_set_id JOIN dbo.[MATCH] m ON m.match_id=s.match_id WHERE m.match_id={match.MatchId};
+            DELETE e FROM dbo.MATCH_EVENT e JOIN dbo.MATCH_SHEET sh ON sh.match_sheet_id=e.match_sheet_id JOIN dbo.[MATCH] m ON m.match_id=sh.match_id WHERE m.match_id={match.MatchId};
+            DELETE x FROM dbo.MATCH_SUBSTITUTION x JOIN dbo.MATCH_SET s ON s.match_set_id=x.match_set_id JOIN dbo.[MATCH] m ON m.match_id=s.match_id WHERE m.match_id={match.MatchId};
+            DELETE x FROM dbo.MATCH_LIBERO_REPLACEMENT x JOIN dbo.MATCH_SET s ON s.match_set_id=x.match_set_id JOIN dbo.[MATCH] m ON m.match_id=s.match_id WHERE m.match_id={match.MatchId};
+            DELETE x FROM dbo.MATCH_TIMEOUT x JOIN dbo.MATCH_SET s ON s.match_set_id=x.match_set_id JOIN dbo.[MATCH] m ON m.match_id=s.match_id WHERE m.match_id={match.MatchId};
+            DELETE l FROM dbo.MATCH_LINEUP l JOIN dbo.MATCH_SET s ON s.match_set_id=l.match_set_id JOIN dbo.[MATCH] m ON m.match_id=s.match_id WHERE m.match_id={match.MatchId};
+            DELETE x FROM dbo.MATCH_LIBERO x JOIN dbo.MATCH_TEAM t ON t.match_team_id=x.match_team_id JOIN dbo.MATCH_SHEET sh ON sh.match_sheet_id=t.match_sheet_id JOIN dbo.[MATCH] m ON m.match_id=sh.match_id WHERE m.match_id={match.MatchId};
+            DELETE x FROM dbo.MATCH_TEAM_STAFF x JOIN dbo.MATCH_TEAM t ON t.match_team_id=x.match_team_id JOIN dbo.MATCH_SHEET sh ON sh.match_sheet_id=t.match_sheet_id JOIN dbo.[MATCH] m ON m.match_id=sh.match_id WHERE m.match_id={match.MatchId};
+            DELETE x FROM dbo.MATCH_PLAYER x JOIN dbo.MATCH_TEAM t ON t.match_team_id=x.match_team_id JOIN dbo.MATCH_SHEET sh ON sh.match_sheet_id=t.match_sheet_id JOIN dbo.[MATCH] m ON m.match_id=sh.match_id WHERE m.match_id={match.MatchId};
+            DELETE x FROM dbo.MATCH_SHEET_AUDIT x JOIN dbo.MATCH_SHEET sh ON sh.match_sheet_id=x.match_sheet_id JOIN dbo.[MATCH] m ON m.match_id=sh.match_id WHERE m.match_id={match.MatchId};
+            DELETE x FROM dbo.MATCH_SHEET_SESSION x JOIN dbo.MATCH_SHEET sh ON sh.match_sheet_id=x.match_sheet_id JOIN dbo.[MATCH] m ON m.match_id=sh.match_id WHERE m.match_id={match.MatchId};
+            DELETE s FROM dbo.MATCH_SET s JOIN dbo.[MATCH] m ON m.match_id=s.match_id WHERE m.match_id={match.MatchId};
+            DELETE t FROM dbo.MATCH_TEAM t JOIN dbo.MATCH_SHEET sh ON sh.match_sheet_id=t.match_sheet_id JOIN dbo.[MATCH] m ON m.match_id=sh.match_id WHERE m.match_id={match.MatchId};
+            DELETE sh FROM dbo.MATCH_SHEET sh JOIN dbo.[MATCH] m ON m.match_id=sh.match_id WHERE m.match_id={match.MatchId};
+            UPDATE dbo.[MATCH]
+            SET status = 'SCHEDULED', home_sets = NULL, away_sets = NULL, winner_team_entry_id = NULL
+            WHERE match_id = {match.MatchId};
+            """, ct);
+        await db.Entry(match).ReloadAsync(ct);
     }
 
     private async Task<Competition> SelectCompetitionAsync(CancellationToken ct)

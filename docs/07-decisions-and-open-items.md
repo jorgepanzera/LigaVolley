@@ -203,3 +203,10 @@ El dorsal y el capitán son contextuales al partido. `MATCH_PLAYER` es su única
 Scorer usa un Match Console Shell persistente con HOME fijo a la izquierda, AWAY fijo a la derecha y jerarquía marcador → cancha → banco → puntos → acciones secundarias → sets anteriores. La cancha muestra los seis jugadores efectivos P1..P6 derivados por MatchEngine y el banco sólo quienes están fuera de ella. Los puntos son las únicas acciones deportivas dominantes.
 
 Sidebar y drawers alojan Historial, Acta, oficiales, sesión y detalles secundarios; timeout, sustitución, corrección, cierre y takeover requieren modal u overlay deliberado. Offline y SYNCING mantienen habilitadas las acciones que permita el estado deportivo; BLOCKED conserva la consulta y bloquea toda mutación. Fin de set, partido decidido y CLOSED son estados explícitos. El objetivo responsive es landscape desde 1024x768, con sidebar compacta bajo 1100 px. No se cambian contratos HTTP, MatchEngine, los cinco stores Dexie ni el protocolo de sync/takeover por motivos visuales.
+
+
+### Reinicio del partido demo
+
+Cada ejecución de `--seed-demo-match` elimina transaccionalmente el acta anterior del partido demo y sus datos deportivos (eventos, sesiones, auditoría/snapshot, convocados, alineaciones, líberos, sustituciones, timeouts y sets), limpia el resultado y lo devuelve a `SCHEDULED`. Conserva ID, fixture, fecha, sede, planteles y oficiales; no reinicia otros partidos ni la competición. El ID se resuelve mediante los marcadores DEMO, no se fija a 160.
+
+El seeder no puede borrar IndexedDB del navegador. Después de reiniciarlo, cerrar las pestañas del Scorer y limpiar los datos de `http://localhost:5174` en DevTools > Application > Storage > Clear site data antes de volver a abrirlo. Esto descarta también las pruebas offline guardadas en ese origen.

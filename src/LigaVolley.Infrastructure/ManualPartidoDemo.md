@@ -68,3 +68,10 @@ IndexedDB, limpiar los datos de `http://localhost:5174` desde DevTools →
 Application → Storage → Clear site data.
 
 Para detener los procesos, pulsar `Ctrl+C` en cada terminal.
+
+
+### Reinicio del partido demo
+
+Cada ejecución de `--seed-demo-match` elimina transaccionalmente el acta anterior del partido demo y sus datos deportivos (eventos, sesiones, auditoría/snapshot, convocados, alineaciones, líberos, sustituciones, timeouts y sets), limpia el resultado y lo devuelve a `SCHEDULED`. Conserva ID, fixture, fecha, sede, planteles y oficiales; no reinicia otros partidos ni la competición. El ID se resuelve mediante los marcadores DEMO, no se fija a 160.
+
+El seeder no puede borrar IndexedDB del navegador. Después de reiniciarlo, cerrar las pestañas del Scorer y limpiar los datos de `http://localhost:5174` en DevTools > Application > Storage > Clear site data antes de volver a abrirlo. Esto descarta también las pruebas offline guardadas en ese origen.
