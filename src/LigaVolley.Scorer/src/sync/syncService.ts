@@ -58,14 +58,12 @@ export class SyncService {
         .where('eventUuid')
         .anyOf(events.map((x) => x.eventUuid))
         .modify({ syncStatus: 'PENDING' });
-      if (['match_sheet_session_not_active', 'match_sheet_session_mismatch'].includes(p.code)) {
+      const permanent = p.status >= 400 && p.status < 500;
+      if (permanent) {
         await this.database.sessions.update(local.session.sessionUuid, {
           status: 'ABANDONED',
           endedAt: new Date().toISOString(),
         });
-        this.phase = 'BLOCKED';
-        this.lastError = 'session_lost';
-      } else if (['sync_sequence_gap', 'sync_event_uuid_conflict'].includes(p.code)) {
         this.phase = 'BLOCKED';
         this.lastError = p.code;
       } else {

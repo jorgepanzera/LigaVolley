@@ -90,7 +90,7 @@ El servidor persiste estado operacional canónico y eventos de trazabilidad; no 
 - P1 es el servidor inicial; un receptor que gana rota `(offset + 1) % 6`. El equipo que conserva saque no rota.
 - Point calcula marcador, saque, rotación, servidor y fin automático.
 - `CorrectLastPoint` cancela únicamente el último evento deportivo efectivo y reconstruye el estado; nunca borra el POINT.
-- Sustituciones conservan pareja titular/suplente y permiten reingreso del titular; deliberadamente no hay máximo global de seis.
+- Sustituciones conservan pareja titular/suplente y permiten reingreso del titular; deliberadamente no hay máximo global de seis. Una sustitución normal excluye cualquier `MATCH_PLAYER` declarado como líbero tanto en el MatchEngine local como en el backend.
 - `TrackSubstitutions` y `TrackLiberoReplacements` pertenecen a MatchSheet. Si están deshabilitados no bloquean puntos.
 - Un líbero declarado puede entrar por P1/P5/P6; sale restaurando la plaza lógica. Se admiten hasta dos declarados.
 - Timeouts siempre se registran y tienen máximo dos por equipo/set.
@@ -107,7 +107,7 @@ Scorer tolera pérdida temporal de conectividad mediante eventos locales con UUI
 
 El frontend usa React, TypeScript, Vite, Dexie e IndexedDB. Los cinco stores son `appMeta`, `matchSheets`, `sessions`, `snapshots` y `events`; `deviceId` se genera una vez. Una acción aplica primero el motor local y guarda evento, snapshot y `nextLocalSequence` atómicamente. La UI se actualiza sin esperar HTTP.
 
-Los eventos pasan por PENDING → SYNCING → ACCEPTED. Un cierre/reinicio devuelve SYNCING a PENDING. Ante timeout, red o 5xx se preserva operación offline; pérdida de sesión o conflictos de secuencia/UUID dejan BLOCKED sin borrar eventos. La reconciliación toma el snapshot canónico completo —incluidas alineaciones, sustituciones, líberos y puntos activos— y reaplica pendientes posteriores, por lo que eventos creados durante un request no desaparecen.
+Los eventos pasan por PENDING → SYNCING → ACCEPTED. Un cierre/reinicio devuelve SYNCING a PENDING. Ante timeout, red o 5xx se preserva operación offline; cualquier 4xx permanente de dominio, pérdida de sesión o conflicto de secuencia/UUID deja BLOCKED y abandona la sesión local sin borrar, aceptar ni saltar eventos. La reconciliación toma el snapshot canónico completo —incluidas alineaciones, sustituciones, líberos y puntos activos— y reaplica pendientes posteriores, por lo que eventos creados durante un request no desaparecen.
 
 El Service Worker precachea exclusivamente App Shell y assets. No cachea `/api/scorer` como fuente deportiva. La reentrada busca primero IndexedDB y sólo después intenta reconciliar en segundo plano.
 

@@ -10,7 +10,7 @@ import { applyCommand } from '../domain/matchEngine';
 export class MatchRepository {
   constructor(private database: ScorerDatabase) {}
   async bootstrap(matchId: number, server: ServerSheetSnapshot, device: string) {
-    const state = normalizeState(server.operationalState ?? fromServer(server));
+    const state = normalizeState(server.operationalState ?? fromServer(server), server);
     const session: SessionRecord = {
       ...server.session,
       status: String(server.session.status).toUpperCase() as SessionRecord['status'],
@@ -53,7 +53,7 @@ export class MatchRepository {
       sessions.find((x) => x.status === 'ACTIVE') ??
       sessions.sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
     const snapshot = await this.database.snapshots.get(matchId);
-    if (snapshot) snapshot.state = normalizeState(snapshot.state);
+    if (snapshot) snapshot.state = normalizeState(snapshot.state, sheet.bootstrap);
     return sheet && session && snapshot ? { sheet, session, snapshot } : undefined;
   }
   async mutate(matchId: number, command: MatchCommand) {
@@ -140,7 +140,13 @@ export function fromServer(s: ServerSheetSnapshot): MatchState {
   return state;
 }
 
-export function normalizeState(state: MatchState): MatchState {
+export function normalizeState(state: MatchState, server?: ServerSheetSnapshot): MatchState {
+  if (server)
+    state.declaredLiberoMatchPlayerIds = {
+      HOME: server.home.liberos.map((x) => x.matchPlayerId),
+      AWAY: server.away.liberos.map((x) => x.matchPlayerId),
+    };
+  else state.declaredLiberoMatchPlayerIds ??= { HOME: [], AWAY: [] };
   for (const set of state.sets) {
     set.liberoPlans ??= {
       HOME: { enabled: false, logicalPositions: [] },

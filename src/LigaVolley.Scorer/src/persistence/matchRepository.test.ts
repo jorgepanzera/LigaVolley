@@ -78,4 +78,35 @@ describe('Dexie repository', () => {
     await repo.resetSyncing();
     expect((await db.events.toArray())[0].syncStatus).toBe('PENDING');
   });
+  it('does not persist an invalid normal substitution involving a declared libero', async () => {
+    db = new ScorerDatabase(`t-${crypto.randomUUID()}`);
+    const repo = new MatchRepository(db);
+    const snapshot = server();
+    snapshot.home.liberos = [{ matchPlayerId: 88 }];
+    await repo.bootstrap(1, snapshot, 'device');
+    await repo.mutate(1, { type: 'PREPARE_SET', payload: {} });
+    for (const side of ['HOME', 'AWAY'] as const)
+      await repo.mutate(1, {
+        type: 'SET_LINEUP',
+        payload: {
+          side,
+          ...Object.fromEntries(
+            [1, 2, 3, 4, 5, 6].map((position, index) => [
+              `p${position}MatchPlayerId`,
+              (side === 'HOME' ? 1 : 11) + index,
+            ]),
+          ),
+        },
+      });
+    await repo.mutate(1, { type: 'START_SET', payload: { initialServingSide: 'HOME' } });
+    const before = await db.events.count();
+    await expect(
+      repo.mutate(1, {
+        type: 'SUBSTITUTION',
+        payload: { side: 'HOME', playerOutMatchPlayerId: 1, playerInMatchPlayerId: 88 },
+      }),
+    ).rejects.toThrow('substitution_player_is_libero');
+    expect(await db.events.count()).toBe(before);
+    expect((await db.snapshots.get(1))?.state.sets[0].substitutions).toHaveLength(0);
+  });
 });

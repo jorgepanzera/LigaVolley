@@ -67,8 +67,27 @@ describe('SyncService', () => {
       takeOver: vi.fn(),
       sheet: vi.fn(),
     };
-    await new SyncService(db, api as never).sync(1);
+    const service = new SyncService(db, api as never);
+    await service.sync(1);
     expect((await db.events.toArray())[0].syncStatus).toBe('PENDING');
+    expect(service.phase).toBe('IDLE');
+  });
+  it('blocks and preserves the causal queue on a permanent domain 400', async () => {
+    await setup();
+    const api = {
+      sync: vi.fn().mockRejectedValue({ status: 400, code: 'substitution_player_is_libero' }),
+      takeOver: vi.fn(),
+      sheet: vi.fn(),
+    };
+    const service = new SyncService(db, api as never);
+    await service.sync(1);
+    expect(service.phase).toBe('BLOCKED');
+    expect(service.lastError).toBe('substitution_player_is_libero');
+    expect((await db.events.toArray()).map((event) => event.syncStatus)).toEqual(['PENDING']);
+    expect((await db.sessions.get('session'))?.status).toBe('ABANDONED');
+    await new SyncService(db, api as never).sync(1);
+    expect(api.sync).toHaveBeenCalledTimes(1);
+    expect(await db.events.count()).toBe(1);
   });
   it('blocks and preserves events on session loss or conflict', async () => {
     await setup();

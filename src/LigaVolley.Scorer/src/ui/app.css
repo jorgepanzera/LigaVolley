@@ -769,6 +769,13 @@ button:disabled {
   padding: 22px;
   position: relative;
 }
+.action-warning {
+  padding: 10px 12px;
+  border: 1px solid var(--warning);
+  border-radius: 9px;
+  background: #4a3515;
+  color: #ffe5a3;
+}
 .selector-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

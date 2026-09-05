@@ -194,6 +194,13 @@ export class ScorerController {
     });
   }
   substitute(side: Side, playerOutMatchPlayerId: number, playerInMatchPlayerId: number) {
+    const declaredLiberos = new Set(
+      (side === 'HOME' ? this.view.bootstrap?.home : this.view.bootstrap?.away)?.liberos.map(
+        (player) => player.matchPlayerId,
+      ) ?? [],
+    );
+    if (declaredLiberos.has(playerOutMatchPlayerId) || declaredLiberos.has(playerInMatchPlayerId))
+      return Promise.reject(new Error('substitution_player_is_libero'));
     return this.command({
       type: 'SUBSTITUTION',
       payload: {

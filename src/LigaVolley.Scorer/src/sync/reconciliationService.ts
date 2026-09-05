@@ -23,7 +23,7 @@ export async function reconcile(
           (x) => x.status === 'ACTIVE',
         );
       if (!session) throw new Error('session_lost');
-      const base = normalizeState(server.operationalState ?? fromServer(server));
+      const base = normalizeState(server.operationalState ?? fromServer(server), server);
       const pending = await database.events
         .where('[sessionUuid+syncStatus]')
         .between([session.sessionUuid, 'PENDING'], [session.sessionUuid, 'SYNCING'], true, true)

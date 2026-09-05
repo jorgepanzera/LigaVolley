@@ -80,6 +80,23 @@ describe('local MatchEngine', () => {
     expect(s.sets[0].homeTimeouts).toBe(1);
     expect(s.sets[0].liberoReplacements[0].active).toBe(false);
   });
+  it('rejects normal substitutions when either player is a declared libero', () => {
+    const state = ready();
+    state.declaredLiberoMatchPlayerIds.HOME = [88];
+    expect(() =>
+      applyCommand(state, {
+        type: 'SUBSTITUTION',
+        payload: { side: 'HOME', playerOutMatchPlayerId: 10, playerInMatchPlayerId: 88 },
+      }),
+    ).toThrow('substitution_player_is_libero');
+    expect(() =>
+      applyCommand(state, {
+        type: 'SUBSTITUTION',
+        payload: { side: 'HOME', playerOutMatchPlayerId: 88, playerInMatchPlayerId: 99 },
+      }),
+    ).toThrow('substitution_player_is_libero');
+    expect(state.sets[0].substitutions).toHaveLength(0);
+  });
   it('decides best of five and requires explicit close', () => {
     let s = ready();
     for (let set = 1; set <= 3; set++) {

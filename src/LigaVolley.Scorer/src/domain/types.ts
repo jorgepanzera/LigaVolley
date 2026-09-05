@@ -80,6 +80,7 @@ export interface MatchState {
   matchDecided: boolean;
   closed: boolean;
   closeConfirmed: boolean;
+  declaredLiberoMatchPlayerIds: { HOME: number[]; AWAY: number[] };
 }
 export interface LocalEvent {
   eventUuid: string;
@@ -185,4 +186,5 @@ export const initialState = (): MatchState => ({
   matchDecided: false,
   closed: false,
   closeConfirmed: false,
+  declaredLiberoMatchPlayerIds: { HOME: [], AWAY: [] },
 });

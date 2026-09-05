@@ -221,6 +221,9 @@ function substitute(state: MatchState, p: Record<string, unknown>) {
     into = numberValue(p, 'playerInMatchPlayerId'),
     regular = regularPlayers(set, team),
     position = regular.indexOf(out);
+  const declaredLiberos = new Set(state.declaredLiberoMatchPlayerIds?.[team] ?? []);
+  if (declaredLiberos.has(out) || declaredLiberos.has(into))
+    throw new Error('substitution_player_is_libero');
   if (set.status !== 'IN_PROGRESS' || position < 0 || regular.includes(into))
     throw new Error('invalid_substitution');
   set.substitutions.push({

@@ -2,6 +2,27 @@ import { useEffect, useState } from 'react';
 import type { LocalEvent, ServerSheetSnapshot, SetState, Side } from '../../domain/types';
 import { effectivePlayers, regularPlayers, serverPlayer } from '../../domain/matchEngine';
 import { player, shortName, team } from './model';
+export function normalSubstitutionCandidates(
+  snapshot: ServerSheetSnapshot,
+  side: Side,
+  set: SetState,
+) {
+  const onCourt = new Set(regularPlayers(set, side));
+  const liberos = new Set(team(snapshot, side)?.liberos.map((x) => x.matchPlayerId));
+  return (
+    team(snapshot, side)?.players.filter(
+      (x) => !liberos.has(x.matchPlayerId) && !onCourt.has(x.matchPlayerId),
+    ) ?? []
+  );
+}
+export function canNormalSubstituteFromPosition(set: SetState, side: Side, logical: number) {
+  return effectivePlayers(set, side)[logical] === regularPlayers(set, side)[logical];
+}
+export function normalSubstitutionBlockReason(set: SetState, side: Side, logical: number) {
+  return canNormalSubstituteFromPosition(set, side, logical)
+    ? undefined
+    : 'El jugador en cancha es un líbero. Los líberos no pueden participar en sustituciones normales.';
+}
 export function PlayerActionSheet({
   side,
   logical,
@@ -25,12 +46,8 @@ export function PlayerActionSheet({
     effective = effectivePlayers(set, side)[logical],
     current = player(snapshot, side, effective),
     under = player(snapshot, side, regular),
-    onCourt = new Set(regularPlayers(set, side)),
-    liberos = new Set(team(snapshot, side)?.liberos.map((x) => x.matchPlayerId)),
-    available =
-      team(snapshot, side)?.players.filter(
-        (x) => !liberos.has(x.matchPlayerId) && !onCourt.has(x.matchPlayerId),
-      ) ?? [];
+    available = normalSubstitutionCandidates(snapshot, side, set),
+    blockReason = normalSubstitutionBlockReason(set, side, logical);
   return (
     <div className="backdrop" onMouseDown={onClose}>
       <aside className="action-sheet" onMouseDown={(e) => e.stopPropagation()}>
@@ -44,11 +61,17 @@ export function PlayerActionSheet({
           #{current?.jerseyNumber} {current?.displayName}
         </h2>
         {effective !== regular && (
-          <p>
-            Líbero · reemplaza actualmente a #{under?.jerseyNumber} {shortName(under?.displayName)}
-          </p>
+          <>
+            <p>
+              Líbero · reemplaza actualmente a #{under?.jerseyNumber}{' '}
+              {shortName(under?.displayName)}
+            </p>
+            <p className="action-warning" role="status">
+              {blockReason}
+            </p>
+          </>
         )}
-        {trackSubstitutions && effective === regular && (
+        {trackSubstitutions && canNormalSubstituteFromPosition(set, side, logical) && (
           <>
             <h3>Sustituir</h3>
             <div className="selector-list">
@@ -63,6 +86,11 @@ export function PlayerActionSheet({
                 </button>
               ))}
             </div>
+            {available.length === 0 && (
+              <p className="action-warning" role="status">
+                No hay jugadores regulares disponibles para una sustitución normal.
+              </p>
+            )}
             {candidate && (
               <div className="substitution-confirm">
                 <small>SALE</small>
