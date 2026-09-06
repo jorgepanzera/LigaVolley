@@ -35,14 +35,14 @@ public sealed class CompetitionRoster
         if (Status != CompetitionRosterStatus.Active) throw new DomainValidationException("Only an Active roster can be closed administratively.");
         Status = CompetitionRosterStatus.Closed;
     }
-    public CompetitionRosterPlayer AddPlayer(Player player, PlayerRole role)
+    public CompetitionRosterPlayer AddPlayer(Player player, PlayerRole? role)
     {
         EnsureEditable();
         if (Players.Any(x => x.PlayerId == player.PlayerId)) throw new DomainValidationException("Player already belongs to this roster.");
         EnsurePlayerCapacity(role, null);
         var member = new CompetitionRosterPlayer(this, player, role); Players.Add(member); return member;
     }
-    public void UpdatePlayer(CompetitionRosterPlayer member, PlayerRole role)
+    public void UpdatePlayer(CompetitionRosterPlayer member, PlayerRole? role)
     { EnsureEditable(); EnsureMember(member); if(member.Status==CompetitionRosterMemberStatus.Active)EnsurePlayerCapacity(role, member); member.Update(role); }
     public void ChangePlayerStatus(CompetitionRosterPlayer member, CompetitionRosterMemberStatus status)
     {
@@ -65,12 +65,11 @@ public sealed class CompetitionRoster
             throw new DomainValidationException("A roster cannot contain more than 2 active coaches.");
         member.ChangeStatus(status);
     }
-    private void EnsurePlayerCapacity(PlayerRole role, CompetitionRosterPlayer? current)
+    private void EnsurePlayerCapacity(PlayerRole? role, CompetitionRosterPlayer? current)
     {
-        if (!Enum.IsDefined(role)) throw new DomainValidationException("PlayerRole is invalid.");
+        if (role.HasValue && !Enum.IsDefined(role.Value)) throw new DomainValidationException("PlayerRole is invalid.");
         var active = Players.Where(x => x.Status == CompetitionRosterMemberStatus.Active && x != current).ToArray();
         if (active.Length >= 15) throw new DomainValidationException("A roster cannot contain more than 15 active players.");
-        if (role == PlayerRole.Libero && active.Count(x => x.Role == PlayerRole.Libero) >= 2) throw new DomainValidationException("A roster cannot contain more than 2 active liberos.");
     }
     private void EnsureEditable() { if (Status == CompetitionRosterStatus.Closed) throw new DomainValidationException("A Closed roster cannot be modified."); }
     private void EnsureMember(CompetitionRosterPlayer member) { if (!Players.Contains(member)) throw new DomainValidationException("Player member does not belong to this roster."); }
@@ -79,15 +78,17 @@ public sealed class CompetitionRoster
 public sealed class CompetitionRosterPlayer
 {
     private CompetitionRosterPlayer() { }
-    internal CompetitionRosterPlayer(CompetitionRoster roster, Player player, PlayerRole role) { CompetitionRoster=roster; Player=player; PlayerId=player.PlayerId; Update(role); Status=CompetitionRosterMemberStatus.Active; }
+    internal CompetitionRosterPlayer(CompetitionRoster roster, Player player, PlayerRole? role) { CompetitionRoster=roster; Player=player; PlayerId=player.PlayerId; Update(role); Status=CompetitionRosterMemberStatus.Active; }
     public int CompetitionRosterPlayerId { get; private set; }
     public int CompetitionRosterId { get; private set; }
     public CompetitionRoster CompetitionRoster { get; private set; } = null!;
     public int PlayerId { get; private set; }
     public Player Player { get; private set; } = null!;
-    public PlayerRole Role { get; private set; }
+    // Informative, habitual function within this CompetitionRoster. MATCH_LIBERO is the
+    // sole authority for a player's regulatory libero declaration in a Match.
+    public PlayerRole? Role { get; private set; }
     public CompetitionRosterMemberStatus Status { get; private set; }
-    internal void Update(PlayerRole role) { if (!Enum.IsDefined(role)) throw new DomainValidationException("PlayerRole is invalid."); Role=role; }
+    internal void Update(PlayerRole? role) { if (role.HasValue && !Enum.IsDefined(role.Value)) throw new DomainValidationException("PlayerRole is invalid."); Role=role; }
     internal void ChangeStatus(CompetitionRosterMemberStatus status) { if (!Enum.IsDefined(status)) throw new DomainValidationException("Roster member status is invalid."); Status=status; }
 }
 

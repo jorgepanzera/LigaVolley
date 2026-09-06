@@ -10,6 +10,46 @@ namespace LigaVolley.IntegrationTests;
 
 public sealed partial class MatchSheetOpeningEndpointsTests
 {
+    [Fact]
+    public async Task Open_declares_any_selected_player_and_keeps_habitual_libero_as_regular()
+    {
+        var data = await Seed(1);
+        var root = $"/api/scorer/matches/{data.MatchId}";
+        var context = (await factory.Client.GetFromJsonAsync<OpenMatchContextDto>($"{root}/open-context", Json))!;
+        OpenMatchTeamRequest Team(OpenMatchTeamContextDto side)
+        {
+            var declaredSetter = side.Players.First(p => p.Role == PlayerRole.Setter);
+            return new(side.Players.Select((p, i) => new OpenMatchPlayerRequest(p.CompetitionRosterPlayerId, (short)(i + 1), i == 0)).ToArray(), [declaredSetter.CompetitionRosterPlayerId], []);
+        }
+        var opening = await factory.Client.PostAsJsonAsync($"{root}/open", new OpenMatchSheetRequest(Guid.NewGuid(), "declaration-test", Team(context.Home), Team(context.Away)), Json);
+        opening.EnsureSuccessStatusCode();
+        var sheet = (await opening.Content.ReadFromJsonAsync<OpenMatchSheetResponse>(Json))!.MatchSheet;
+        foreach (var team in new[] { sheet.Home, sheet.Away })
+        {
+            var declared = Assert.Single(team.Liberos).MatchPlayerId;
+            Assert.Equal(PlayerRole.Setter, team.Players.Single(x => x.MatchPlayerId == declared).Role);
+            Assert.Contains(team.Players, x => x.Role == PlayerRole.Libero && x.MatchPlayerId != declared);
+        }
+        (await factory.Client.PostAsync($"{root}/sets/prepare", null)).EnsureSuccessStatusCode();
+        foreach (var team in new[] { sheet.Home, sheet.Away })
+        {
+            var regular = team.Players.Where(x => team.Liberos.All(l => l.MatchPlayerId != x.MatchPlayerId)).Select(x => x.MatchPlayerId).ToArray();
+            var response = await factory.Client.PutAsJsonAsync($"{root}/sets/1/lineups/{team.Side}", new SetLineupRequest(regular[0], regular[1], regular[2], regular[3], regular[4], regular[5], null, []), Json);
+            response.EnsureSuccessStatusCode();
+        }
+    }
+
+    [Theory]
+    [InlineData(6, 1, "match_requires_six_regular_players")]
+    [InlineData(7, 2, "match_requires_six_regular_players")]
+    public async Task Open_rejects_insufficient_regular_players(int selectedCount, int declarations, string code)
+    {
+        var data = await Seed(2);
+        OpenMatchTeamRequest Team(int[] players) => new(players.Take(selectedCount).Select((id, i) => new OpenMatchPlayerRequest(id, (short)(i + 1), i == 0)).ToArray(), players.Take(declarations).ToArray(), []);
+        var response = await factory.Client.PostAsJsonAsync($"/api/scorer/matches/{data.MatchId}/open", new OpenMatchSheetRequest(Guid.NewGuid(), "regular-minimum", Team(data.HomePlayers), Team(data.AwayPlayers)), Json);
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(code, (await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>()).GetProperty("code").GetString());
+    }
     [Theory]
     [InlineData(0, 5)]
     [InlineData(1, 5)]

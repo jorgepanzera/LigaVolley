@@ -55,6 +55,7 @@ export interface OpenMatchContext {
   away: OpenTeamContext;
   matchOfficials: Array<{ role: string; displayName: string }>;
   warnings: string[];
+  rules?: { liberoEnabled: boolean; maxLiberos: number };
   existingMatchSheet?: {
     matchSheetId: number;
     sheetUuid: string;
@@ -67,7 +68,7 @@ export interface OpenTeamContext {
   teamName: string;
   competitionRosterId: number;
   rosterStatus: string;
-  players: Array<{ competitionRosterPlayerId: number; displayName: string; role: string }>;
+  players: Array<{ competitionRosterPlayerId: number; displayName: string; role?: string | null; isHabitualLiberoCandidate?: boolean }>;
   staff: Array<{ competitionRosterStaffId: number; displayName: string }>;
 }
 export interface OpenMatchRequest {

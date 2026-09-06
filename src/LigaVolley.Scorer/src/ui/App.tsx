@@ -19,7 +19,7 @@ import {
 } from './console/ConsoleDialogs';
 import { team } from './console/model';
 import { isOpeningTeamValid } from './console/openSheetValidation';
-import { toggleOpeningPlayer } from './console/openingTeamSelection';
+import { toggleLiberoDeclaration, toggleOpeningPlayer, type OpeningSelectionState } from './console/openingTeamSelection';
 import './app.css';
 
 const matchId = Number(new URLSearchParams(location.search).get('matchId') ?? 1);
@@ -837,7 +837,7 @@ function RecoveryView({ error }: { error?: string }) {
   );
 }
 
-type TeamSelection = {
+type TeamSelection = OpeningSelectionState & {
   players: { competitionRosterPlayerId: number; jerseyNumber?: number; isMatchCaptain: boolean }[];
   liberoCompetitionRosterPlayerIds: number[];
   competitionRosterStaffIds: number[];
@@ -895,8 +895,8 @@ function OpenSheetWorkspace({
           </div>
         )}
         <div className="open-teams">
-          <OpeningTeam side="HOME" context={context.home} value={home} onChange={setHome} />
-          <OpeningTeam side="AWAY" context={context.away} value={away} onChange={setAway} />
+          <OpeningTeam side="HOME" context={context.home} rules={context.rules ?? { liberoEnabled: true, maxLiberos: 2 }} value={home} onChange={setHome} />
+          <OpeningTeam side="AWAY" context={context.away} rules={context.rules ?? { liberoEnabled: true, maxLiberos: 2 }} value={away} onChange={setAway} />
         </div>
         <section className="sheet-config">
           <div>
@@ -922,7 +922,7 @@ function OpenSheetWorkspace({
           </div>
           <button
             className="open-button"
-            disabled={!isOpeningTeamValid(home.players) || !isOpeningTeamValid(away.players)}
+            disabled={!isOpeningTeamValid(home.players, home.liberoCompetitionRosterPlayerIds, context.rules?.maxLiberos ?? 2) || !isOpeningTeamValid(away.players, away.liberoCompetitionRosterPlayerIds, context.rules?.maxLiberos ?? 2)}
             onClick={() =>
               onOpen({ home, away, trackSubstitutions: subs, trackLiberoReplacements: libero })
             }
@@ -937,17 +937,21 @@ function OpenSheetWorkspace({
 function OpeningTeam({
   side,
   context,
+  rules,
   value,
   onChange,
 }: {
   side: Side;
   context: OpenTeamContext;
+  rules: { liberoEnabled: boolean; maxLiberos: number };
   value: TeamSelection;
   onChange: (v: TeamSelection) => void;
 }) {
   const selected = (id: number) => value.players.find((x) => x.competitionRosterPlayerId === id);
+  const maxLiberos = rules.maxLiberos;
+  const liberoEnabled = rules.liberoEnabled;
   const toggle = (player: OpenTeamContext['players'][number]) =>
-    onChange(toggleOpeningPlayer(value, player));
+    onChange(toggleOpeningPlayer(value, player, context.players, maxLiberos));
   const duplicate = value.players
     .map((x) => x.jerseyNumber)
     .filter(Boolean)
@@ -974,7 +978,8 @@ function OpeningTeam({
         </div>
         {context.players.map((p) => {
           const choice = selected(p.competitionRosterPlayerId);
-          const isLibero = p.role.toUpperCase() === 'LIBERO';
+          const isHabitualLibero = p.isHabitualLiberoCandidate;
+          const declaredLibero = value.liberoCompetitionRosterPlayerIds.includes(p.competitionRosterPlayerId);
           return (
             <div
               className={`open-player ${choice ? 'selected' : ''}`}
@@ -985,8 +990,8 @@ function OpeningTeam({
                 <span>
                   <b>{p.displayName}</b>
                   <small>
-                    {p.role}
-                    {isLibero && <em>LÍBERO</em>}
+                    Función habitual: {p.role ?? 'Sin especificar'}
+                    {isHabitualLibero && <em>Candidata habitual</em>}
                   </small>
                 </span>
               </label>
@@ -1028,6 +1033,15 @@ function OpeningTeam({
                   })
                 }
               />
+              <label className="opening-libero-declaration">
+                <input
+                  type="checkbox"
+                  disabled={!choice || !liberoEnabled || (!declaredLibero && value.liberoCompetitionRosterPlayerIds.length >= maxLiberos)}
+                  checked={declaredLibero}
+                  onChange={() => onChange(toggleLiberoDeclaration(value, p.competitionRosterPlayerId, maxLiberos))}
+                />
+                <span>Declarar líbero</span>
+              </label>
             </div>
           );
         })}
@@ -1037,11 +1051,14 @@ function OpeningTeam({
           <span>⚠ Dorsal repetido en {context.teamName}.</span>
         ) : captainCount !== 1 ? (
           <span>○ Selecciona un capitán.</span>
+        ) : value.players.length - value.liberoCompetitionRosterPlayerIds.length < 6 ? (
+          <span>◦ Deben quedar seis jugadoras regulares luego de declarar líberos.</span>
         ) : value.players.length < 6 ? (
           <span>○ Faltan {6 - value.players.length} convocados.</span>
         ) : (
           <span className="ok">✓ Convocatoria válida.</span>
         )}
+        <small>Declarados para este partido: {value.liberoCompetitionRosterPlayerIds.length}/{maxLiberos}. La función habitual es sólo informativa.</small>
       </footer>
     </article>
   );

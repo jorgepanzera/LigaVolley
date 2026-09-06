@@ -2112,6 +2112,7 @@
           "item": [
             {
               "name": "Consultar open-context",
+              "description": "Incluye rules.maxLiberos/liberoEnabled y candidatos habituales informativos. La declaración efectiva sólo se envía en POST /open.",
               "request": {
                 "method": "GET",
                 "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/open-context"
@@ -2130,6 +2131,7 @@
             },
             {
               "name": "Abrir acta válida",
+              "description": "Una lista ausente, null o vacía declara cero MATCH_LIBERO. La función habitual del roster nunca completa la lista.",
               "request": {
                 "method": "POST",
                 "header": [

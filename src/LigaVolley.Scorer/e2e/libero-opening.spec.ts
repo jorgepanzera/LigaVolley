@@ -46,9 +46,9 @@ for (const liberoCount of [0, 1, 2]) {
       const rows = page.locator(`.open-team.${side} .open-player`);
       for (let index = 0; index < 6 + liberoCount; index++) {
         const row = rows.nth(index);
-        await row.getByRole('checkbox').check();
+        await row.getByRole('checkbox').first().check();
         // Exercise deselection so an old declaration cannot linger or duplicate.
-        if (index >= 6) { await row.getByRole('checkbox').uncheck(); await row.getByRole('checkbox').check(); }
+        if (index >= 6) { await row.getByRole('checkbox').first().uncheck(); await row.getByRole('checkbox').first().check(); }
         await row.getByRole('spinbutton').fill(String(index < 6 ? index + 10 : index === 6 ? 42 : 99));
         if (index === 0) await row.getByRole('radio').check();
       }

@@ -47,7 +47,7 @@ test('real SQL demo: observed libero, court/bench, offline reload, sync, Public 
       const row = page
         .locator(`.open-team.${side} .open-player`)
         .filter({ hasText: player.displayName });
-      await row.getByRole('checkbox').check();
+      await row.getByRole('checkbox').first().check();
       await row.getByRole('spinbutton').fill(String(index + 1));
       if (index === 0) await row.getByRole('radio').check();
     }

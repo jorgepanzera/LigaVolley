@@ -1,4 +1,4 @@
-# AGENTS.md — LigaVolley
+﻿# AGENTS.md — LigaVolley
 
 ## Objetivo
 
@@ -143,7 +143,7 @@ El modelo debe soportar al menos este recorrido completo:
 13. corrección/anulación de un punto o evento;
 14. cierre del partido.
 
-Debe soportarse un máximo de **dos líberos registrados/habilitados por equipo**. Las validaciones reglamentarias finas que determinen cuándo corresponde uno o dos líberos se definirán de forma explícita antes de implementarlas.
+Debe soportarse un máximo reglamentario congelado de **dos líberos declarados por MatchSheet y equipo**. `PLAYER_ROLE` del roster es una función habitual informativa y no habilita ni limita acciones de líbero.
 
 Los seis jugadores físicamente en cancha en cualquier instante se obtienen conceptualmente mediante:
 
@@ -211,7 +211,7 @@ No existe entidad League ni DELETE físico en People v1.
 
 ### Competition Rosters v1
 
-Competition Rosters v1 está cerrado: existe un roster explícito por TeamEntry con estados DRAFT/ACTIVE/CLOSED, sin mínimos de activación; máximos de 15 jugadores, 2 técnicos y 2 líberos ACTIVE. Los miembros INACTIVE permanecen históricos, ACTIVE sigue editable durante la Competition operativa, PLAYER_ROLE es contextual, Health Card nunca bloquea y no existe DELETE físico. Un roster CLOSED no es editable.
+Competition Rosters v1 está cerrado: existe un roster explícito por TeamEntry con estados DRAFT/ACTIVE/CLOSED, sin mínimos de activación; máximos de 15 jugadores y 2 técnicos ACTIVE. `PLAYER_ROLE` es una función habitual nullable e informativa, sin máximo de funciones LIBERO; `MATCH_LIBERO` es la declaración reglamentaria del partido. Los miembros INACTIVE permanecen históricos, ACTIVE sigue editable durante la Competition operativa, PLAYER_ROLE es contextual, Health Card nunca bloquea y no existe DELETE físico. Un roster CLOSED no es editable.
 
 ### Match Officials v1
 
@@ -283,3 +283,7 @@ La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](docs/09-
 ## Observed Libero Replacements & Effective Court v1
 
 La decisión más reciente es [Observed Libero Replacements](docs/10-observed-libero-replacements.md). Sustituye la cobertura automática: planes opcionales sólo sugieren; StartSet, Point y CorrectLastPoint no crean reemplazos observados. LIBERO_ENTER/EXIT registran entrada, salida e intercambio directo de hasta dos declarados con máximo uno efectivo por lado. Se conserva historia automática y compatibilidad explícita de replay/sync.
+
+### Match-specific Libero Declaration & Informational Roster Roles v1
+
+`PLAYER_ROLE`/`CompetitionRosterPlayer.Role` es una función habitual nullable e informativa, sin máximo de candidatas `LIBERO`. Sólo `MATCH_LIBERO`, materializado al abrir el acta, declara líberos reglamentarios; se validan contra `rulesSnapshot.maxLiberos`, la convocatoria y seis regulares restantes. Open-context sólo ofrece una sugerencia editable y nunca deriva declaraciones después de abrir.

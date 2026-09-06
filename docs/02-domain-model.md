@@ -2,7 +2,7 @@
 
 ## Admin Master Data v1
 
-`CLUB` representa la institución estable y posee cero o un logo institucional actual. SQL Server conserva únicamente `logo_storage_key`, `logo_content_type` y `logo_version`; el binario reside en storage de Infrastructure. `TEAM` pertenece obligatoriamente a un Club y no cambia de Club luego del alta. TeamEntry continúa siendo la participación contextual. No existen columnas de logo en Team, TeamEntry o Match. `VENUE` permanece independiente de Club y Team.
+MCLUBM representa la institución estable y posee cero o un logo institucional actual. SQL Server conserva únicamente Mlogo_storage_keyM, Mlogo_content_typeM y Mlogo_versionM; el binario reside en storage de Infrastructure. MTEAMM pertenece obligatoriamente a un Club y no cambia de Club luego del alta. TeamEntry continúa siendo la participación contextual. No existen columnas de logo en Team, TeamEntry o Match. MVENUEM permanece independiente de Club y Team.
 
 ## Bloques principales
 
@@ -16,9 +16,9 @@ El modelo se divide conceptualmente en:
 
 ## Proyección pública y frescura operacional
 
-`MATCH_SHEET.last_operational_update_at` conserva el instante generado por el servidor en que se persistió la última mutación deportiva observable. Se actualiza en la misma transacción de mutaciones online o eventos nuevos de sync, nunca por GET, polling, reintentos idempotentes, UUID conocidos o requests rechazados. Puede ser NULL para actas históricas hasta su próxima mutación. La cancha pública deriva los seis jugadores efectivos mediante el calculador canónico; sólo publica P1..P6, dorsal, display name e indicador de líbero.
+MMATCH_SHEET.last_operational_update_atM conserva el instante generado por el servidor en que se persistió la última mutación deportiva observable. Se actualiza en la misma transacción de mutaciones online o eventos nuevos de sync, nunca por GET, polling, reintentos idempotentes, UUID conocidos o requests rechazados. Puede ser NULL para actas históricas hasta su próxima mutación. La cancha pública deriva los seis jugadores efectivos mediante el calculador canónico; sólo publica P1..P6, dorsal, display name e indicador de líbero.
 
-Public Live UX/UI v2 agrega únicamente una proyección nullable `servingPlayer` (dorsal y display name), usando el servidor regular canónico del backend. No introduce entidades, columnas ni estado derivado persistido. Véase [contrato y presentación](08-public-live-ux-ui-v2.md).
+Public Live UX/UI v2 agrega únicamente una proyección nullable MservingPlayerM (dorsal y display name), usando el servidor regular canónico del backend. No introduce entidades, columnas ni estado derivado persistido. Véase [contrato y presentación](08-public-live-ux-ui-v2.md).
 
 ## Entidades base ya consideradas
 
@@ -33,54 +33,54 @@ Entre las entidades del dominio base se encuentran conceptos equivalentes a:
 - TeamEntry
 - Match
 
-`Venue` representa la sede/cancha donde se disputa un partido y permite desacoplar el encuentro de la identidad de los clubes/equipos.
+MVenueM representa la sede/cancha donde se disputa un partido y permite desacoplar el encuentro de la identidad de los clubes/equipos.
 
 ## Competición
 
-`Season` representa la temporada deportiva (por ejemplo, 2026). `Divisional` representa la categoría/división competitiva (por ejemplo, B Femenina). Ambas tienen identidad propia y son entidades maestras reutilizables.
+MSeasonM representa la temporada deportiva (por ejemplo, 2026). MDivisionalM representa la categoría/división competitiva (por ejemplo, B Femenina). Ambas tienen identidad propia y son entidades maestras reutilizables.
 
-Una `Competition` pertenece obligatoriamente a una `Season` y a una `Divisional`, y se configura con un formato estructurado. Ejemplo: “Apertura B Femenina 2026” referencia la temporada 2026 y la divisional B Femenina.
+Una MCompetitionM pertenece obligatoriamente a una MSeasonM y a una MDivisionalM, y se configura con un formato estructurado. Ejemplo: “Apertura B Femenina 2026” referencia la temporada 2026 y la divisional B Femenina.
 
-Los equipos que participan efectivamente en una competición se representan mediante `TEAM_ENTRY` o su equivalente persistente acordado. No confundir la identidad permanente de un equipo con su inscripción en una competición concreta.
+Los equipos que participan efectivamente en una competición se representan mediante MTEAM_ENTRYM o su equivalente persistente acordado. No confundir la identidad permanente de un equipo con su inscripción en una competición concreta.
 
 ## Partido
 
-`MATCH` es la entidad reutilizada por fixture y acta electrónica. El partido en vivo agrega información operacional sin crear una identidad paralela del encuentro.
+MMATCHM es la entidad reutilizada por fixture y acta electrónica. El partido en vivo agrega información operacional sin crear una identidad paralela del encuentro.
 
 ## Principio de identidad y People v1
 
-`PERSON` es la única raíz de identidad física. Su documento opcional es único
-por `(document_type, document_number)`. `PLAYER`, `COACH` y `REFEREE` son perfiles
+MPERSONM es la única raíz de identidad física. Su documento opcional es único
+por M(document_type, document_number)M. MPLAYERM, MCOACHM y MREFEREEM son perfiles
 1:1 opcionales, sin vigencias temporales, que pueden coexistir.
 
-`PERSON_ADDITIONAL_DOCUMENT` conserva múltiples `HEALTH_CARD` y `LEAGUE_CARD`.
-El `HealthCardStatus` se deriva al consultar y nunca se persiste.
+MPERSON_ADDITIONAL_DOCUMENTM conserva múltiples MHEALTH_CARDM y MLEAGUE_CARDM.
+El MHealthCardStatusM se deriva al consultar y nunca se persiste.
 
 Separar entidades permanentes (por ejemplo Team o Person) de su participación contextual (por ejemplo TeamEntry, CompetitionRoster, MatchOfficial).
 
 ## Match Officials v1
 
-`MATCH_OFFICIAL` representa la asignación vigente de un perfil `REFEREE` a un `MATCH`. No duplica `competition_id` ni datos de `PERSON`. Los roles cerrados son `FIRST_REFEREE`, `SECOND_REFEREE` y `SCORER`; cada rol y cada Referee son únicos dentro del Match.
+MMATCH_OFFICIALM representa la asignación vigente de un perfil MREFEREEM a un MMATCHM. No duplica Mcompetition_idM ni datos de MPERSONM. Los roles cerrados son MFIRST_REFEREEM, MSECOND_REFEREEM y MSCORERM; cada rol y cada Referee son únicos dentro del Match.
 
 ## MatchSheet Opening v1
 
-`MATCH` conserva la identidad del fixture y `MATCH_SHEET` representa su acta operacional única. `MATCH_TEAM` materializa HOME/AWAY desde los TeamEntry del Match; `MATCH_PLAYER` y `MATCH_TEAM_STAFF` congelan la convocatoria seleccionada desde el roster; `MATCH_LIBERO` declara hasta dos líberos sin modelar todavía su presencia en cancha. `MATCH_SHEET_SESSION` identifica la sesión activa y `MATCH_SHEET_AUDIT` registra `MATCH_SHEET_OPENED`.
+MMATCHM conserva la identidad del fixture y MMATCH_SHEETM representa su acta operacional única. MMATCH_TEAMM materializa HOME/AWAY desde los TeamEntry del Match; MMATCH_PLAYERM y MMATCH_TEAM_STAFFM congelan la convocatoria seleccionada desde el roster; MMATCH_LIBEROM declara hasta dos líberos sin modelar todavía su presencia en cancha. MMATCH_SHEET_SESSIONM identifica la sesión activa y MMATCH_SHEET_AUDITM registra MMATCH_SHEET_OPENEDM.
 
-`COMPETITION_ROSTER` es la participación contextual única de un `TEAM_ENTRY`. Sus jugadores y técnicos conservan historia mediante estados `ACTIVE/INACTIVE`; el roster usa `DRAFT/ACTIVE/CLOSED`. El rol del jugador pertenece a esa inscripción competitiva; dorsal y capitanía pertenecen a `MATCH_PLAYER`.
+MCOMPETITION_ROSTERM es la participación contextual única de un MTEAM_ENTRYM. Sus jugadores y técnicos conservan historia mediante estados MACTIVE/INACTIVEM; el roster usa MDRAFT/ACTIVE/CLOSEDM. El rol del jugador pertenece a esa inscripción competitiva; dorsal y capitanía pertenecen a MMATCH_PLAYERM.
 
 ## Electronic Scoresheet Match Engine v1
 
-`MATCH_SET` se reutiliza como estado operacional y resultado consumido por standings. Un set del Scorer referencia `MATCH_SHEET`, posee UUID, número 1..5, READY/IN_PROGRESS/FINISHED, puntos, ganador, saque, offsets y timestamps. Los resultados históricos previos conservan compatibilidad mediante el vínculo nullable; toda creación del motor nuevo exige MatchSheet.
+MMATCH_SETM se reutiliza como estado operacional y resultado consumido por standings. Un set del Scorer referencia MMATCH_SHEETM, posee UUID, número 1..5, READY/IN_PROGRESS/FINISHED, puntos, ganador, saque, offsets y timestamps. Los resultados históricos previos conservan compatibilidad mediante el vínculo nullable; toda creación del motor nuevo exige MatchSheet.
 
-`MATCH_LINEUP` y `MATCH_LINEUP_POSITION` congelan P1..P6 por lado y set. `MATCH_EVENT` ordena trazabilidad mediante UUID y `SequenceNumber` monotónico. `MATCH_SUBSTITUTION`, `MATCH_LIBERO_REPLACEMENT` y `MATCH_TIMEOUT` conservan el detalle operacional sin convertir el sistema en event sourcing.
+MMATCH_LINEUPM y MMATCH_LINEUP_POSITIONM congelan P1..P6 por lado y set. MMATCH_EVENTM ordena trazabilidad mediante UUID y MSequenceNumberM monotónico. MMATCH_SUBSTITUTIONM, MMATCH_LIBERO_REPLACEMENTM y MMATCH_TIMEOUTM conservan el detalle operacional sin convertir el sistema en event sourcing.
 
-La cancha efectiva se deriva centralmente como alineación inicial + sustituciones + `rotation_offset` + reemplazo activo de líbero. El servidor es siempre el jugador regular vigente en P1 del lado que posee el saque; el líbero nunca se convierte en servidor.
+La cancha efectiva se deriva centralmente como alineación inicial + sustituciones + Mrotation_offsetM + reemplazo activo de líbero. El servidor es siempre el jugador regular vigente en P1 del lado que posee el saque; el líbero nunca se convierte en servidor.
 
-`MATCH_SET_LIBERO_PLAN` guarda, por lado y set, el líbero elegido y una máscara de plazas lógicas cubiertas. El plan opcional se configura en READY como preferencias de sugerencias. P5/P6 y P1 receptor son candidatos habituales. Ninguna posición retira ni inserta al líbero automáticamente; se requiere una acción observada.
+MMATCH_SET_LIBERO_PLANM guarda, por lado y set, el líbero elegido y una máscara de plazas lógicas cubiertas. El plan opcional se configura en READY como preferencias de sugerencias. P5/P6 y P1 receptor son candidatos habituales. Ninguna posición retira ni inserta al líbero automáticamente; se requiere una acción observada.
 
 ## Sesiones de Scorer y sincronización
 
-`MATCH_SHEET_SESSION` admite ACTIVE, ABANDONED y CLOSED, conserva `LastAcceptedSequence` y tiene como máximo una fila ACTIVE por MatchSheet. `MATCH_EVENT` mantiene su secuencia global y puede vincularse a la sesión con una secuencia local y hash del payload sincronizado. `MATCH_SHEET_AUDIT` registra `MATCH_SHEET_TAKEN_OVER` con sesión/dispositivo anterior y nuevo.
+MMATCH_SHEET_SESSIONM admite ACTIVE, ABANDONED y CLOSED, conserva MLastAcceptedSequenceM y tiene como máximo una fila ACTIVE por MatchSheet. MMATCH_EVENTM mantiene su secuencia global y puede vincularse a la sesión con una secuencia local y hash del payload sincronizado. MMATCH_SHEET_AUDITM registra MMATCH_SHEET_TAKEN_OVERM con sesión/dispositivo anterior y nuevo.
 
 ## Proyecciones administrativas del partido
 
@@ -88,7 +88,7 @@ Match Readiness es una evaluación sin persistencia que reutiliza las precondici
 
 ## Match-specific jersey number and captain
 
-`CompetitionRosterPlayer` conserva la habilitación competitiva y el rol contextual. El dorsal y la capitanía pertenecen exclusivamente a `MatchPlayer`, se capturan en `OpenMatchSheet` y quedan congelados para esa acta.
+MCompetitionRosterPlayerM conserva la habilitación competitiva y el rol contextual. El dorsal y la capitanía pertenecen exclusivamente a MMatchPlayerM, se capturan en MOpenMatchSheetM y quedan congelados para esa acta.
 
 ## SCORER RULES ASSISTANT v1
 

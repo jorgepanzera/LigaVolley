@@ -27,3 +27,7 @@ Las actas nuevas congelan rulesProtocolVersion/rulesSnapshotVersion 2 en las col
 ## Verificación
 
 Resultados de ejecución y estado final del demo: se completan al terminar la validación del slice.
+
+## Match-specific Libero Declaration v1
+
+La declaración congelada en MATCH_LIBERO es la única autoridad operativa. La función habitual nullable de COMPETITION_ROSTER_PLAYER sólo puede sugerir candidatas en apertura y nunca habilita, bloquea ni reinterpreta entradas, salidas, replay, sync o takeover.
