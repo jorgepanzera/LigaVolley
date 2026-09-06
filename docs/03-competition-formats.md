@@ -495,6 +495,6 @@ El comando de limpieza competitiva reconstruye dos formatos raíz activos:
 
 Ambos formatos otorgan 2/1 puntos de tabla para resultados 3-0, 3-1 y 3-2. Los desempates, todos descendentes, son: puntos de tabla, partidos ganados, ratio de sets, ratio de puntos y enfrentamiento directo. Los puestos 1..2 de la Final tienen movimiento de promoción con delta -1; los dos últimos de Regular (formato 1) o Relegation (formato 2) tienen descenso con delta +1.
 
-## SCORER RULES ASSISTANT v1
+## Referencias de decisiones vigentes
 
-La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.
+- [Acta electrónica y Scorer](05-match-scorer.md): reglas congeladas, confirmaciones, declaración por partido y cancha efectiva.

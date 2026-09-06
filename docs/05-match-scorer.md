@@ -1,180 +1,51 @@
-# 05 — Partido en vivo y Scorer
+# 05 — Acta electrónica y Scorer
 
-## Objetivo
+## Responsabilidad y apertura
 
-Modelar un partido completo desde la apertura del acta hasta el cierre, preservando suficiente información para reconstruir el estado reglamentario y permitir correcciones.
+`LigaVolley.Scorer` es la consola operacional del partido. Admin prepara planteles y oficiales y supervisa en lectura; Public sólo proyecta estado canónico. Scorer puede trabajar sin conectividad, pero no decide reglas estructurales de competición.
 
-## Apertura implementada
+`GET /api/scorer/matches/{matchId}/open-context` prepara la apertura sin persistir. `POST /open` exige un Match SCHEDULED, rosters ACTIVE, tres oficiales y una convocatoria válida; crea una única `MATCH_SHEET` OPEN de forma transaccional e idempotente. Abrir el acta no inicia el Match ni la Competition.
 
-`GET /api/scorer/matches/{matchId}/open-context` prepara sin persistencia Match, Competition, rosters activos, miembros activos, oficiales, warnings y acta existente. `POST /open` exige Match SCHEDULED, ambos rosters ACTIVE, tres oficiales y al menos seis jugadores por lado; materializa el universo del partido en una transacción y deja `MATCH_SHEET=OPEN` sin iniciar Match ni Competition. `GET /sheet` recupera el mismo snapshot para reentrada.
+La convocatoria congela `MATCH_PLAYER`, dorsal, capitanía, staff, declaración de líberos y `RulesSnapshot`. Debe haber al menos seis jugadores regulares por lado tras la declaración. `GET /sheet` devuelve el snapshot canónico para reentrada y reconciliación.
 
-La apertura es idempotente por Match, respaldada por `UNIQUE(match_id)` y bloqueo serializable. La convocatoria, dorsales y UUID quedan congelados; no existen todavía set, alineación, saque, servidor ni líbero activo.
+## Reglas congeladas y asistencia deportiva
 
-## Flujo operacional v1
+El formato aporta por defecto seis sustituciones y dos timeouts por equipo/set. La Competition puede configurar overrides; al abrir el acta se congelan los valores efectivos, habilitación y máximo de líberos, saque de líbero, punto de cambio de campo y versiones de protocolo/snapshot. Las actas históricas no se reinterpretan.
 
-1. Cargar/seleccionar los planteles habilitados.
-2. Verificar los tres oficiales asignados.
-3. Abrir acta.
-4. Definir alineación inicial del primer set.
-5. Iniciar set.
-6. Registrar puntos.
-7. Gestionar cambio de saque y rotación.
-8. Registrar sustituciones.
-9. Registrar reemplazos de líbero.
-10. Registrar timeouts.
-11. Finalizar set.
-12. Comenzar sets siguientes.
-13. Corregir/anular un punto o evento cuando corresponda.
-14. Cerrar partido.
+Scorer separa evaluación de aplicación. HARD protege lifecycle, referencias, representación determinista, autoridad e integridad; una irregularidad deportiva representable es WARNING y requiere confirmación explícita antes de crear el único evento deportivo. Cancelar no consume UUID ni secuencia. Una confirmación forma parte del payload original; no existe `force` ni evento override separado.
 
-## Jugadores efectivos en cancha
+El backend es autoridad de integridad, sync y persistencia canónica. Una decisión deportiva ya aceptada localmente se conserva durante sync aunque la evaluación deportiva del backend difiera. BLOCKED se reserva para autoridad, causalidad, integridad o problemas técnicos.
 
-La definición acordada es:
+Las advertencias cubren, entre otras, límites o reingresos de sustitución, uso de líbero, servidor inesperado y exceso de timeout. Son HARD las referencias inválidas, jugadores duplicados en cancha, tracking deshabilitado, alineación inválida, líbero no declarado, lifecycle inválido y cualquier estado no representable. La respuesta para una confirmación faltante es `409 rule_confirmation_required` con advertencias y contexto concreto.
 
-`alineación inicial P1..P6 + sustituciones normales + rotation_offset + reemplazo de líbero activo = 6 jugadores físicamente en cancha`
+## Motor de partido
 
-Esta fórmula conceptual es central para el diseño.
+El partido es mejor de cinco: sets 1..4 a 25, set 5 a 15, siempre con diferencia de dos. Las alineaciones P1..P6 sólo se editan en READY. P1 determina el servidor inicial; un equipo que recupera saque rota, el que conserva saque no rota. Un punto cierra el set automáticamente cuando corresponde. El tercer set ganado decide el resultado; sólo `CloseMatch` deja MatchSheet CLOSED y Match FINISHED.
 
-### Alineación
+`CorrectLastPoint` anula el último evento deportivo efectivo y reconstruye el estado. CLOSED es definitivo. El cambio de campo al llegar a ocho en el set decisivo es un recordatorio no bloqueante; HOME permanece a la izquierda.
 
-Cada set comienza con seis posiciones reglamentarias P1..P6 por equipo.
+## Sustituciones, timeouts y líberos
 
-### Rotación
+Una sustitución modifica el jugador regular lógico aunque esté cubierto por un líbero; cuando éste sale, vuelve el regular vigente. Las solicitudes múltiples son atómicas y cada pareja cuenta para el límite. Timeout siempre se registra; un exceso representable requiere confirmación.
 
-La rotación se modela mediante un desplazamiento/estado (`rotation_offset` o equivalente) sobre la alineación vigente, evitando reescribir innecesariamente seis filas ante cada cambio de saque.
+`CompetitionRosterPlayer.Role` es sólo una función habitual informativa. `MATCH_LIBERO`, creado desde `liberoCompetitionRosterPlayerIds` al abrir el acta, es la única declaración reglamentaria del partido. Una persona con función habitual `LIBERO` puede jugar regular y cualquier otra función puede ser declarada líbero.
 
-### Sustituciones
+La apertura valida que cada declarado pertenezca al lado, esté ACTIVE y convocado, que no haya duplicados ni más del máximo efectivo y que queden seis regulares. Ausencia, `null` o lista vacía declara cero líberos. Un retry idempotente con distinta declaración entra en conflicto.
 
-Las sustituciones normales modifican qué jugador ocupa la plaza lógica correspondiente para ese set.
+La cancha efectiva combina alineación regular, sustituciones, offset de rotación y coberturas observadas. `PrepareSet` puede conservar un plan de sugerencias, pero no cambia la cancha. En actas v2, `StartSet`, `Point` y `CorrectLastPoint` tampoco crean ni eliminan coberturas: `LIBERO_ENTER`, `LIBERO_EXIT` e intercambio se registran de forma explícita. Sólo un líbero puede ser efectivo por lado; dos efectivos, referencias inválidas, lifecycle inválido y tracking deshabilitado son HARD. Frente, saque no permitido o reemplazo sin rally completado son warnings confirmables.
 
-### Líbero
+## Offline, sync e historial
 
-El sistema debe soportar un máximo de dos líberos registrados/habilitados y registrar el reemplazo activo de líbero de manera diferenciada de una sustitución normal. Las reglas reglamentarias finas que determinen cuándo corresponde registrar uno o dos líberos quedan pendientes de definición explícita.
+Scorer es una PWA React/TypeScript/Vite. Dexie conserva exactamente cinco stores: `appMeta`, `matchSheets`, `sessions`, `snapshots` y `events`. Toda mutación válida aplica primero MatchEngine local y persiste evento PENDING, snapshot y secuencia en una transacción.
 
-## Estado que debe poder obtenerse
+Sync usa UUID idempotente y secuencia local contigua por sesión. La reconciliación parte de un snapshot canónico y reaplica pendientes. `TakeOverMatchSheet` abandona la sesión esperada y crea la única ACTIVE sin alterar el estado deportivo. BLOCKED preserva cola y estado para recuperación; no es una sanción deportiva.
 
-Para cualquier instante relevante del partido:
+`MATCH_LIBERO`, las confirmaciones y las coberturas observadas se conservan en `GET /sheet`, IndexedDB, replay, sync y takeover; nunca se recalculan desde el roster. Las actas v2 usan `rulesProtocolVersion` y `rulesSnapshotVersion` 2. Actas y eventos v0/v1 mantienen su semántica histórica durante replay.
 
-- marcador por set y partido;
-- equipo al saque;
-- jugador servidor;
-- rotación;
-- seis jugadores efectivos en cancha por equipo;
-- sustituciones realizadas;
-- reemplazo de líbero activo;
-- timeouts;
-- secuencia de eventos;
-- correcciones.
+## Interfaces y límites
 
-## Persistencia de estado y eventos
+La consola mantiene HOME a la izquierda y AWAY a la derecha, con marcador y cancha efectiva P1..P6 como centro. Puntos son acciones primarias; drawers y modals agrupan decisiones secundarias. Los estados de apertura, READY, set en curso, fin de set, partido decidido y CLOSED son explícitos.
 
-El estado actual se persiste para operación y consulta eficiente; los eventos y auditorías complementan esa proyección sin convertirla en event sourcing.
+Admin muestra convocatoria congelada, declaraciones, cancha efectiva e historial. Public no publica planteles, funciones habituales ni oficiales y no ejecuta MatchEngine, IndexedDB o estado deportivo local.
 
-### Reemplazo de oficiales
-
-Los tres oficiales se designan inicialmente desde Admin y son precondición de `OpenMatchSheet`. Durante `IN_PROGRESS`, Scorer puede reemplazar el Referee vigente de un rol mediante un caso de uso específico, sin convertir Scorer en CRUD administrativo. `MATCH_OFFICIAL` conserva el estado canónico actual. La auditoría deportiva definitiva de `OFFICIAL_REPLACEMENT` permanece pendiente.
-
-No se adopta event sourcing como arquitectura. El estado operacional actual necesario para operar y consultar eficientemente el partido se persiste. Los cambios relevantes se registran además como eventos/auditoría para mantener trazabilidad y permitir correcciones o reconstrucción cuando corresponda.
-
-El servidor persiste estado operacional canónico y eventos de trazabilidad; no usa event sourcing. `GET /sheet` devuelve el snapshot para reconciliación, la sesión vigente o última, el dispositivo y `LastAcceptedSequence`.
-
-## Correcciones
-
-`CorrectLastPoint` cancela el último evento deportivo efectivo sin borrarlo y reconstruye el estado resultante. Correcciones históricas diferentes de ese caso y correcciones de sustitución, líbero o timeout permanecen fuera de v1.
-
-## Motor online v1
-
-- Match best-of-5; primero a tres sets.
-- Sets 1..4: 25 puntos y diferencia 2. Set 5: 15 puntos y diferencia 2. No hay máximo.
-- `PrepareSet` crea solamente el siguiente set. Lineups P1..P6 son reemplazables en READY y definitivas en IN_PROGRESS.
-- P1 es el servidor inicial; un receptor que gana rota `(offset + 1) % 6`. El equipo que conserva saque no rota.
-- Point calcula marcador, saque, rotación, servidor y fin automático.
-- `CorrectLastPoint` cancela únicamente el último evento deportivo efectivo y reconstruye el estado; nunca borra el POINT.
-- Rules Assistant v1 conserva las parejas como guía y evalúa sus irregularidades como warnings confirmables. Las actas nuevas congelan el límite efectivo (default seis); las históricas conservan sustituciones ilimitadas. La UI ofrece candidatos habituales y una opción explícita por decisión del juez. Una solicitud puede contener varias parejas atómicas y cada pareja cuenta. Usar un líbero como regular requiere confirmación; un líbero no puede integrar la alineación inicial.
-- `TrackSubstitutions` y `TrackLiberoReplacements` pertenecen a MatchSheet. Si están deshabilitados no bloquean puntos.
-- El plan opcional sugiere P1/P5/P6 elegibles sin modificar cancha. Entradas, salidas e intercambios requieren registro observado y conservan el regular lógico vigente. Las decisiones manuales representables, incluida la entrada de un segundo líbero, se evalúan con warnings específicos. Se admiten hasta dos declarados.
-- Timeouts siempre se registran; el límite efectivo congelado tiene default dos. Superarlo exige confirmación directa y se conserva al sincronizar una decisión local persistida.
-- Tres sets ganados sólo marcan `MatchDecided`; `CloseMatch` explícito deja MatchSheet CLOSED y Match FINISHED. CLOSED no se reabre.
-- CloseMatch reutiliza la progresión de playoffs dentro de la misma transacción; los partidos de liga quedan disponibles para standings.
-
-## Offline Sync v1
-
-Scorer tolera pérdida temporal de conectividad mediante eventos locales con UUID y secuencia por sesión. Al reentrar, el cliente obtiene `GET /sheet`, confirma hasta `LastAcceptedSequence`, reconstruye desde el snapshot, reaplica sus eventos Pending y llama `/sync`. El batch tolera UUID ya aceptados y aplica atómicamente sólo una continuación contigua. IndexedDB, Service Worker y background sync quedan fuera del backend v1.
-
-`TakeOverMatchSheet` requiere la sesión activa esperada para resolver concurrencia: la anterior pasa a ABANDONED y la nueva queda ACTIVE con secuencia cero. No reinicia marcador, set, saque, rotación, cancha, sustituciones, líbero ni timeouts. Una sesión abandonada puede reintentar eventos conocidos, pero sus eventos inéditos son rechazados; no existe merge automático.
-
-## PWA Core v1
-
-El frontend usa React, TypeScript, Vite, Dexie e IndexedDB. Los cinco stores son `appMeta`, `matchSheets`, `sessions`, `snapshots` y `events`; `deviceId` se genera una vez. Una acción aplica primero el motor local y guarda evento, snapshot y `nextLocalSequence` atómicamente. La UI se actualiza sin esperar HTTP.
-
-Los eventos pasan por PENDING → SYNCING → ACCEPTED. Un cierre/reinicio devuelve SYNCING a PENDING. Ante timeout, red o 5xx se preserva operación offline. Un rechazo HARD permanente deja un marcador persistente de sync BLOCKED sin abandonar la sesión; sólo la pérdida o mismatch real de autoridad deja la sesión ABANDONED. La discrepancia deportiva no rechaza un evento ya persistido. No se borran, aceptan ni saltan eventos rechazados. La reconciliación toma el snapshot canónico completo y reaplica pendientes posteriores; el sync continúa con las acciones creadas durante el batch aceptado.
-
-Los rechazos atribuibles incluyen `eventUuid` y `localSequence` en ProblemDetails. Desde BLOCKED existen dos recuperaciones explícitas. Online, **Continuar desde estado central** consulta `GET /sheet`, ejecuta takeover sobre la sesión central activa, abandona la sesión problemática, crea una nueva ACTIVE y carga su snapshot sin incorporar la cola anterior. Offline, **Recuperar último estado local válido** sólo se habilita cuando el evento fue identificado y el MatchEngine reproduce determinísticamente el mismo rechazo; reconstruye la vista hasta el evento inmediatamente anterior, conserva el rechazado y sus descendientes sin aplicarlos y permanece BLOCKED/de solo consulta. No crea sesiones, renumera, elimina ni reutiliza eventos. Continuar operando desde esa vista exige branching/rebase y queda pendiente de una decisión de protocolo.
-
-El Service Worker precachea exclusivamente App Shell y assets. No cachea `/api/scorer` como fuente deportiva. La reentrada busca primero IndexedDB y sólo después intenta reconciliar en segundo plano.
-
-## Scorer Console UI v1
-
-La interfaz es una consola horizontal: marcador dominante, HOME fijo a la izquierda, AWAY fijo a la derecha, cancha enfrentada P1..P6, saque/servidor, puntos y sets. Los únicos controles deportivos primarios son `+ PUNTO HOME` y `+ PUNTO AWAY`; existe una protección breve contra doble toque.
-
-PrepareSet permite completar P1→P6 con avance automático, reemplazar una selección con dos toques, copiar la alineación inicial del set anterior y rotarla sólo mientras está READY. El saque inicial se selecciona por lado y el servidor se deriva de P1. Al iniciar, la consola persiste automáticamente las alineaciones válidas que todavía tengan cambios locales; los botones de guardado explícito permanecen disponibles, pero no son un prerrequisito operativo.
-
-El tracking de sustituciones y líbero es opcional y estable por MatchSheet. Cada equipo decide por set si usa líbero, cuál y qué plazas lógicas cubre. El motor deriva el estado pre-saque y las entradas/salidas naturales; no hay botones primarios de entrada/salida. Una sustitución cambia al regular vigente de la plaza, por lo que el líbero lo cubre y posteriormente lo restaura.
-
-Timeout, CorrectLastPoint con reconstrucción, historial de consulta, revisión y CloseMatch explícito completan el recorrido. El cierre puede persistirse offline y la reentrada recupera primero los cinco stores IndexedDB; `navigator.storage.persist()` es una mejora progresiva, nunca un bloqueo.
-
-## Scorer UX/UI v2
-
-La aplicación se presenta como una consola deportiva dark, con header de contexto/sync y sidebar secundaria para Partido, Historial, Acta y Más. HOME permanece a la izquierda y AWAY a la derecha en apertura, preparación y juego. El layout prioriza marcador, cancha efectiva enfrentada, banco, puntos, acciones secundarias y resultados anteriores, en ese orden.
-
-OpenMatchSheet usa paneles simétricos y exige que el scorer seleccione convocados, escriba dorsales y marque exactamente un capitán por lado. Antes de PrepareSet se muestra el marcador inicial y una cancha pendiente. READY reutiliza la geometría P1..P6 del partido, retira de disponibles a cada jugador asignado y conserva selección rápida, copia, rotación, saque inicial y plan de líbero.
-
-Durante IN_PROGRESS, la cancha consume las derivaciones del MatchEngine y el banco excluye a los seis jugadores efectivos. Punto HOME/AWAY es la acción dominante; timeout, sustitución confirmada y CorrectLastPoint se resuelven en overlays. Historial, acta, oficiales y sesión son consultas en drawers. Los eventos corregidos se conservan y se etiquetan. Al finalizar un set desaparecen las mutaciones y se ofrece preparar el siguiente; a tres sets se ofrece revisar y cerrar; CLOSED queda sólo para consulta.
-
-OFFLINE no interrumpe ni deshabilita una acción deportiva válida y muestra pendientes discretamente. SYNCING tampoco bloquea. BLOCKED conserva visible el partido bajo un overlay, impide todas las mutaciones y ofrece recuperación central online o reconstrucción local de solo consulta offline. El diseño se orienta a notebook/tablet landscape, ideal entre 1280 y 1440 px y funcional desde 1024x768, donde el sidebar queda sólo con iconos y se compacta la información secundaria.
-
-El comportamiento real de `CorrectLastPoint` permite corregir inmediatamente el punto que terminó automáticamente un set: el motor reconstruye el set como IN_PROGRESS y revierte el set ganado. No existe corrección arbitraria desde el historial.
-
-### Court & Bench Visual Refinement v2.1
-
-En READY e IN_PROGRESS la cancha se representa como una única superficie indoor: zona libre teal profunda alrededor de un rectángulo de juego naranja/terracota, con líneas blanco cálido, líneas de ataque y red central neutra visibles. HOME y AWAY se distinguen mediante nombres, orientación y acentos teal/violeta en fichas, bancos y acciones, nunca coloreando cada mitad del piso. Las fichas oscuras tienen elevación y contraste sobre la superficie sin sustituirla visualmente. El servidor se identifica con un icono vectorial genérico de pelota de volleyball y el texto `SAQUE`, tanto en su ficha como en el scoreboard.
-
-Durante el juego, BANCO HOME ocupa el lateral izquierdo y BANCO AWAY el derecho; ambos tienen scroll interno y contienen únicamente jugadores fuera de cancha. En PrepareSet esas columnas laterales contienen los convocados todavía disponibles, manteniendo la misma geometría P1..P6. Ante falta de ancho se compactan primero los laterales, preservando cancha, marcador y acciones de punto.
-
-## Consumo Public Live v1
-
-`GET /api/public/matches/{id}/live` lee exclusivamente el último estado operacional central persistido y reutiliza la derivación canónica de cancha. `LastUpdatedAt` proviene de `MATCH_SHEET.last_operational_update_at` y `ServerTime` del servidor que responde. PENDING, SCHEDULED y CANCELLED no tienen live; IN_PROGRESS, SUSPENDED y FINISHED sí. Public no simula pendientes locales ni ejecuta MatchEngine.
-
-La presentación pública se cierra en [Public Live UX/UI v2](08-public-live-ux-ui-v2.md). El nuevo `servingPlayer` nullable proyecta sólo dorsal y display name del servidor canónico en Match/set IN_PROGRESS. `servingSide` permanece. Public nunca resuelve el servidor desde P1 ni publica la convocatoria completa.
-
-## Escenario demo LIVOSUR 2026
-
-En Development, 
-`dotnet run --project src/LigaVolley.Api -- --seed-demo-match` crea o reutiliza un escenario explícito inmediatamente anterior a `OpenMatchSheet`. 
-Tambien limpiá los datos de localhost:5174 en DevTools → Application → Storage → Clear site data
-
-Selecciona una Competition LIVOSUR `ROUND_ROBIN` de 7/8 equipos, genera fixture mediante el caso de uso existente si falta, programa un Match con Venue, crea dos rosters ACTIVE de ocho jugadores (un líbero) y un coach, y asigna los tres oficiales. Los perfiles se identifican mediante documentos `DEMO/LV-DEMO-*`; reintentar no duplica datos. El comando no abre acta ni inicia Competition/Match y muestra los IDs y rutas directas de Scorer/Public.
-
-## Frontera con Admin Match Operations
-
-Admin prepara programación, rosters y oficiales, evalúa readiness y supervisa el estado central. No abre actas ni ejecuta acciones deportivas. Scorer conserva en exclusiva OpenMatchSheet, takeover, preparación de sets, puntos, correcciones, sustituciones, líbero, timeout, sync y cierre.
-
-## Convocatoria materializada
-
-`OpenMatchSheet` recibe por cada jugador seleccionado su `CompetitionRosterPlayerId`, dorsal obligatorio 1..99 y `IsMatchCaptain`. Exige dorsales únicos y exactamente un capitán por `MATCH_TEAM`; estos datos quedan congelados en `MATCH_PLAYER` y forman parte del snapshot offline.
-
-
-### Reinicio del partido demo
-
-Cada ejecución de `--seed-demo-match` elimina transaccionalmente el acta anterior del partido demo y sus datos deportivos (eventos, sesiones, auditoría/snapshot, convocados, alineaciones, líberos, sustituciones, timeouts y sets), limpia el resultado y lo devuelve a `SCHEDULED`. Conserva ID, fixture, fecha, sede, planteles y oficiales; no reinicia otros partidos ni la competición. El ID se resuelve mediante los marcadores DEMO, no se fija a 160.
-
-El seeder no puede borrar IndexedDB del navegador. Después de reiniciarlo, cerrar las pestañas del Scorer y limpiar los datos de `http://localhost:5174` en DevTools > Application > Storage > Clear site data antes de volver a abrirlo. Esto descarta también las pruebas offline guardadas en ese origen.
-
-## SCORER RULES ASSISTANT v1
-
-La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.
-
-
-## Observed Libero Replacements & Effective Court v1
-
-La decisión más reciente es [Observed Libero Replacements](10-observed-libero-replacements.md). Sustituye la cobertura automática: planes opcionales sólo sugieren; StartSet, Point y CorrectLastPoint no crean reemplazos observados. LIBERO_ENTER/EXIT registran entrada, salida e intercambio directo de hasta dos declarados con máximo uno efectivo por lado. Se conserva historia automática y compatibilidad explícita de replay/sync.
+No cubre sanciones, obligatoriedad de uno o dos líberos, detección de posiciones físicas reales, corrección histórica general, autenticación nueva ni branching/rebase offline.

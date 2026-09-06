@@ -2,7 +2,7 @@
 
 ## Estado
 
-La arquitectura de la API y los contratos de los slices implementados están cerrados. Este documento es el catálogo contractual; las reglas de dominio se desarrollan en los documentos temáticos y las decisiones abiertas se concentran en `07-decisions-and-open-items.md`.
+La arquitectura de la API y sus contratos vigentes están definidos. Este documento es el catálogo contractual; las reglas de dominio se desarrollan en los documentos temáticos y las decisiones abiertas se concentran en `07-decisions-and-open-items.md`.
 
 ### Competition Scheduling Admin v1
 
@@ -1348,13 +1348,13 @@ Competition FINISHED
 
 La superficie es GET, anónima y read-only. Publicables: SCHEDULED, IN_PROGRESS, FINISHED y CANCELLED; DRAFT y sus recursos transitivos responden 404. Fixture agrupa fase → ronda, fase → grupo → ronda o playoff → serie → partidos. Standings devuelve tablas independientes calculadas por el servicio canónico. Match Detail separa contexto/resultado de Live, que expone marcador operacional, sets, saque, cancha P1..P6, `LastUpdatedAt` y `ServerTime`. Los códigos estables incluyen `public_competition_not_found`, `public_match_not_found`, `public_live_match_not_available`, `public_live_state_inconsistent`, `public_invalid_standings_scope` y `public_standings_inconsistent`.
 
-## Public Live: servidor explícito y UX/UI v2
+## Public Live: servidor explícito
 
 La ampliación mínima autorizada agrega `servingPlayer` nullable a `GET /api/public/matches/{matchId}/live`. Su único contenido es `jerseyNumber` (entero) y `displayName` (string), por ejemplo `{"jerseyNumber":7,"displayName":"Pérez"}`. `servingSide` permanece intacto. La cancha conserva el contrato previo, incluido su dorsal textual.
 
 El servidor se resuelve exclusivamente mediante la derivación canónica existente (`MatchCourtStateCalculator.Calculate` de la formación regular y `Server`), incorporando las sustituciones y el offset vigentes sin convertir al líbero en servidor. Es null fuera de Match/set IN_PROGRESS (READY, entre sets, SUSPENDED, FINISHED), sin lineup o cuando no hay servidor/dorsal determinable. No expone IDs ni otros datos personales. No cambia SQL, persistencia ni reglas de saque.
 
-`LastUpdatedAt` puede ser null; `ServerTime` permite medir la frescura desde el reloj central. Los estados JSON conservan los nombres vigentes del serializador: `InProgress`, `Suspended`, `Finished`, `Home` y `Away`. La presentación 30/90, responsive, ausencia esperada y polling se documentan en [Public Live UX/UI v2](08-public-live-ux-ui-v2.md). Swagger/OpenAPI y la carpeta Public/Live de Postman reflejan el campo agregado.
+`LastUpdatedAt` puede ser null; `ServerTime` permite medir la frescura desde el reloj central. Los estados JSON conservan los nombres vigentes del serializador: `InProgress`, `Suspended`, `Finished`, `Home` y `Away`. La presentación 30/90, responsive, ausencia esperada y polling se documentan en [Consulta pública y Live](08-public-query-and-live.md). Swagger/OpenAPI y la carpeta Public/Live de Postman reflejan el campo agregado.
 
 # 23. Admin Match Operations v1
 
@@ -1379,11 +1379,6 @@ Create/Clone responden 201 y nacen inactivos. Update estructural bloqueado respo
 
 `POST /api/scorer/matches/{matchId}/open` recibe `home.players` y `away.players`; cada elemento incluye `competitionRosterPlayerId`, `jerseyNumber` e `isMatchCaptain`. El servidor no resuelve dorsal ni capitán desde el roster. `open-context` no proyecta esos atributos como datos del roster.
 
-## SCORER RULES ASSISTANT v1
+## Referencias de decisiones vigentes
 
-La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.
-
-
-## Observed Libero Replacements & Effective Court v1
-
-La decisión más reciente es [Observed Libero Replacements](10-observed-libero-replacements.md). Sustituye la cobertura automática: planes opcionales sólo sugieren; StartSet, Point y CorrectLastPoint no crean reemplazos observados. LIBERO_ENTER/EXIT registran entrada, salida e intercambio directo de hasta dos declarados con máximo uno efectivo por lado. Se conserva historia automática y compatibilidad explícita de replay/sync.
+- [Acta electrónica y Scorer](05-match-scorer.md): reglas congeladas, confirmaciones, declaración por partido y cancha efectiva.

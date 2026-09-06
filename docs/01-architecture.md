@@ -51,7 +51,7 @@ El MatchEngine TypeScript es puro y no depende de React, red ni persistencia. Ca
 
 Public sólo consulta información explícitamente publicable. Live lee el último estado operacional central mediante polling HTTP; no usa SignalR ni WebSocket en v1.
 
-[Public Live UX/UI v2](08-public-live-ux-ui-v2.md) mantiene esa frontera: jerarquía mobile-first con marcador dominante, cancha secundaria, frescura 30/90 y servidor explícito proyectado desde el calculador canónico del backend. No incorpora derivaciones deportivas en React.
+[Consulta pública y Live](08-public-query-and-live.md) mantiene esa frontera: jerarquía mobile-first con marcador dominante, cancha secundaria, frescura 30/90 y servidor explícito proyectado desde el calculador canónico del backend. No incorpora derivaciones deportivas en React.
 
 ## Superficies HTTP
 
@@ -75,11 +75,6 @@ La sincronización offline entra por Application y reutiliza el mismo MatchEngin
 
 Security es transversal. Permanecen abiertos el proveedor de identidad, autenticación, roles, claims y permisos finos. El dominio no debe acoplarse a una tecnología concreta hasta cerrar esas decisiones.
 
-## SCORER RULES ASSISTANT v1
+## Referencias de decisiones vigentes
 
-La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.
-
-
-## Observed Libero Replacements & Effective Court v1
-
-La decisión más reciente es [Observed Libero Replacements](10-observed-libero-replacements.md). Sustituye la cobertura automática: planes opcionales sólo sugieren; StartSet, Point y CorrectLastPoint no crean reemplazos observados. LIBERO_ENTER/EXIT registran entrada, salida e intercambio directo de hasta dos declarados con máximo uno efectivo por lado. Se conserva historia automática y compatibilidad explícita de replay/sync.
+- [Acta electrónica y Scorer](05-match-scorer.md): reglas congeladas, confirmaciones, declaración por partido y cancha efectiva.

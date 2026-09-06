@@ -1,6 +1,6 @@
-# Public Live UX/UI v2
+# 08 — Consulta pública y Live
 
-Decisión cerrada. La página `/matches/{id}` conserva el detalle público y consume `GET /api/public/matches/{id}/live`. Public sigue siendo anónimo, read-only y server-centric: representa exclusivamente el último estado central persistido. No ejecuta MatchEngine, no reconstruye eventos ni deriva servidor, rotación, cancha, sustituciones, líberos, sets ganados o ganador.
+La página `/matches/{id}` conserva el detalle público y consume `GET /api/public/matches/{id}/live`. Public sigue siendo anónimo, read-only y server-centric: representa exclusivamente el último estado central persistido. No ejecuta MatchEngine, no reconstruye eventos ni deriva servidor, rotación, cancha, sustituciones, líberos, sets ganados o ganador.
 
 ## Jerarquía y responsive
 
@@ -33,9 +33,9 @@ Polling preservado: 5 s en IN_PROGRESS, 15 s en SUSPENDED, stop en FINISHED; bac
 
 No se agregan SignalR, WebSocket, SSE, background sync, PWA, Dexie, IndexedDB ni estado deportivo local durable.
 
-## Ampliación mínima autorizada del contrato
+## Contrato Live
 
-El contrato anterior exponía `servingSide` y cancha efectiva, pero no un servidor explícito. Se autorizó agregar exclusivamente:
+Live expone `servingSide`, cancha efectiva y el siguiente servidor explícito:
 
 ```json
 "servingPlayer": { "jerseyNumber": 7, "displayName": "Pérez" }
@@ -43,20 +43,5 @@ El contrato anterior exponía `servingSide` y cancha efectiva, pero no un servid
 
 `servingPlayer` es nullable; `jerseyNumber` es entero y `displayName` es string. Se mantiene `servingSide` sin cambios. La proyección reutiliza `MatchCourtStateCalculator.Calculate` sobre la formación regular con sustituciones y offset, y `MatchCourtStateCalculator.Server`, exactamente como la derivación existente del servidor en Scorer. No se incorpora una regla de saque nueva ni se obtiene el servidor desde P1 en React. Sólo se proyecta durante Match y set IN_PROGRESS con servidor y dorsal determinables; en READY, entre sets, SUSPENDED y FINISHED es null. No se publican IDs, convocatoria, perfiles, oficiales ni otros atributos del jugador. La cancha mantiene su contrato anterior, incluido su dorsal textual.
 
-No hay cambios de SQL, persistencia, migraciones, Scorer, Admin ni reglas deportivas. OpenAPI y Postman documentan y verifican la ampliación.
+El contrato no expone IDs, convocatoria, perfiles, oficiales ni reglas deportivas adicionales. OpenAPI y Postman lo mantienen consistente.
 
-## Verificación
-
-- Tests unitarios de presentación: 30/31/90/91 s, null, reloj relativo y estado deportivo independiente de frescura.
-- Tests React: jerarquía, servidor exclusivamente desde DTO, cancha colapsable, P1..P6, logos y fallback, suspensión, final, ausencia esperada y conservación ante fallos.
-- Tests del hook: intervalos, backoff, recuperación, visibilidad, cierre y cancelación de respuestas de otro partido.
-- Playwright: 320/390/768/1024/1440 px, sin overflow, HOME/AWAY, disclosure con teclado, nombres largos y rutas de final/programado. Usa respuestas HTTP controladas para escenarios reproducibles.
-- Integración SQL Server: servidor frente a la proyección canónica de Scorer tras rotación, sustitución, corrección y líbero receptor; null entre sets/READY/suspensión/final; timestamps en lectura/retry y esquema OpenAPI.
-
-Comandos desde `src/LigaVolley.Public`: `npm test`, `npm run build`, `npm run e2e`. Desde la raíz: `dotnet test LigaVolley.sln`, con la conexión local de pruebas configurada para bases temporales aisladas.
-
-### Resultado de verificación — 2026-09-05
-
-Public: 33 tests frontend, build de producción y 8 tests Playwright correctos. Backend: 70 tests Domain, 77 Application y los 4 tests de integración Public/OpenAPI correctos, usando bases temporales de SQL Server local con autenticación Windows. La conexión de secrets de desarrollo no dispone de CREATE DATABASE; no se usó la base de desarrollo como base compartida de tests.
-
-La suite completa de integración arroja 58 correctos y 13 fallidos. Se ejecutó también la revisión original `0e634db` en una copia aislada: 56 correctos y exactamente los mismos 13 fallidos. La comparación de los TRX no detecta fallos nuevos. Los fallos existentes corresponden a assets de logos no disponibles (6), tests de catálogo Admin (4), reinicio demo (2) y un test de sync (1). Esos fallos preexistentes quedan fuera del alcance de este slice. Evidencia local en `TestResults/public-live/` y `TestResults/public-live-baseline/results/`; capturas responsive en `src/LigaVolley.Public/test-results/`.
