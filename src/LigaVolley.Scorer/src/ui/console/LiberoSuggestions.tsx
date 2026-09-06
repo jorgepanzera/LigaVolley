@@ -24,8 +24,8 @@ export function LiberoSuggestions({ state, snapshot, disabled, onCommand }: {
         : `Ingresar líbero #${libero?.jerseyNumber} por #${regular?.jerseyNumber}`;
       return <div key={key}>
         <small>Sugerencia {suggestion.side} · P{physical}</small>
-        <button disabled={disabled} onClick={() => { setError(''); void onCommand(suggestion.command).catch(e => setError(e instanceof Error ? e.message : 'No se pudo registrar')); }}>{text}</button>
-        <button disabled={disabled} aria-label={`Descartar sugerencia ${suggestion.side} P${physical}`} onClick={() => setDismissed([...dismissed.filter(x => x.startsWith(revision)), key])}>Descartar</button>
+        <button className="libero-suggestion-apply" disabled={disabled} onClick={() => { setError(''); void onCommand(suggestion.command).catch(e => setError(e instanceof Error ? e.message : 'No se pudo registrar')); }}>{text}</button>
+        <button className="libero-suggestion-dismiss" disabled={disabled} aria-label={`Descartar sugerencia ${suggestion.side} P${physical}`} onClick={() => setDismissed([...dismissed.filter(x => x.startsWith(revision)), key])}>Descartar</button>
       </div>;
     })}
     {error && <p role="alert">{error}</p>}

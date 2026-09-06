@@ -119,15 +119,15 @@ public sealed class Livosur2026ClubLogoSeederTests(LigaVolleyApiFactory factory)
     }
 
     [Fact]
-    public async Task ApprovedDataset_Processes98Clubs_AndRerunIsFullyIdempotent()
+    public async Task ApprovedDataset_ProcessesLivosurClubs_AndSkipsUnavailableNationalTeams()
     {
         await using var scope = factory.Services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<Livosur2026Seeder>().SeedAsync();
         var seeder = scope.ServiceProvider.GetRequiredService<Livosur2026ClubLogoSeeder>();
         var first = await seeder.SeedAsync(); var second = await seeder.SeedAsync();
-        Assert.Equal(98, first.ManifestRows); Assert.Equal(98, first.ClubsFound); Assert.Equal(0, first.Errors);
+        Assert.Equal(115, first.ManifestRows); Assert.Equal(98, first.ClubsFound); Assert.Equal(17, first.SkippedClubNotFound); Assert.Equal(0, first.Errors);
         Assert.Equal(98, first.Applied + first.Replaced + first.AlreadyCurrent);
-        Assert.Equal(98, second.AlreadyCurrent); Assert.Equal(0, second.Applied); Assert.Equal(0, second.Replaced); Assert.Equal(0, second.Errors);
+        Assert.Equal(98, second.AlreadyCurrent); Assert.Equal(17, second.SkippedClubNotFound); Assert.Equal(0, second.Applied); Assert.Equal(0, second.Replaced); Assert.Equal(0, second.Errors);
     }
 
     private static Livosur2026ClubLogoSeeder CreateSeeder(

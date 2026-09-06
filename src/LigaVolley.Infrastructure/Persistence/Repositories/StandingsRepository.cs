@@ -16,8 +16,13 @@ internal sealed class StandingsRepository(LigaVolleyDbContext db) : IStandingsRe
             .OrderBy(x => x.TeamEntryId).ToListAsync(ct);
 
     public async Task<IReadOnlyList<TeamEntry>> ListGroupParticipantsAsync(int competitionId, int phaseGroupId, CancellationToken ct)
-        => await db.PhaseGroupEntries.AsNoTracking().Where(x => x.CompetitionId == competitionId && x.PhaseGroupId == phaseGroupId)
-            .OrderBy(x => x.TeamEntryId).Select(x => x.TeamEntry).Include(x => x.Team).ToListAsync(ct);
+    {
+        var entryIds = await db.PhaseGroupEntries.AsNoTracking()
+            .Where(x => x.CompetitionId == competitionId && x.PhaseGroupId == phaseGroupId)
+            .OrderBy(x => x.TeamEntryId).Select(x => x.TeamEntryId).ToArrayAsync(ct);
+        return await db.TeamEntries.AsNoTracking().Include(x => x.Team)
+            .Where(x => entryIds.Contains(x.TeamEntryId)).OrderBy(x => x.TeamEntryId).ToListAsync(ct);
+    }
 
     public async Task<IReadOnlyList<Match>> ListScopeMatchesAsync(int competitionId, int phaseId, int? phaseGroupId, CancellationToken ct)
         => await db.Matches.AsNoTracking().Include(x => x.Sets)

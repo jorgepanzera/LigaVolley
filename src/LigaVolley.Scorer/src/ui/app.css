@@ -1546,4 +1546,16 @@ button:disabled {
 .libero-suggestions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .4rem 0; }
 .libero-suggestions > div { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
 .libero-suggestions button, .libero-quick-actions button { min-height:44px; }
+.libero-suggestions small { color: var(--text-primary); font-weight: 700; }
+.libero-suggestion-apply,
+.libero-suggestion-dismiss {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-weight: 700;
+}
+.libero-suggestion-apply { background: var(--surface-alt); color: var(--text-primary); }
+.libero-suggestion-apply:hover { background: var(--home-soft); border-color: var(--home); }
+.libero-suggestion-dismiss { background: transparent; color: var(--text-primary); }
+.libero-suggestion-dismiss:hover { background: var(--surface-soft); border-color: var(--text-secondary); }
 .libero-quick-actions { display:grid; gap:.5rem; padding:.5rem 0; }
