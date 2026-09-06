@@ -118,7 +118,7 @@ test('avisa sobre el líbero activo y permite una sustitución regular válida',
 
   await page.locator('.team-court.home .court-position').filter({ hasText: 'H7' }).click();
   await expect(
-    page.getByText(/Los líberos no pueden participar en sustituciones normales/),
+    page.getByText(/La sustitución cambia al regular de esta plaza/),
   ).toBeVisible();
   await page.getByRole('button', { name: '×' }).click();
 

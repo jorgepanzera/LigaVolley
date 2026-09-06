@@ -4,7 +4,7 @@ using LigaVolley.Domain.Fixtures;
 namespace LigaVolley.Domain.MatchSheets;
 
 public enum LineupPosition { P1 = 1, P2, P3, P4, P5, P6 }
-public enum MatchEventType { PrepareSet, SetLineup, StartSet, Point, PointCorrection, Substitution, LiberoEnter, LiberoExit, Timeout, MatchClosed }
+public enum MatchEventType { PrepareSet, SetLineup, StartSet, Point, PointCorrection, Substitution, LiberoEnter, LiberoExit, Timeout, MatchClosed, SubstitutionRequest }
 public enum MatchEventStatus { Active, Cancelled }
 
 public sealed class MatchLineup
@@ -69,6 +69,8 @@ public sealed class MatchEvent
     private MatchEvent() { }
     internal MatchEvent(MatchSheet sheet, MatchSet? set, Guid uuid, MatchEventType type, long sequence, MatchSide? side, int? playerId, DateTimeOffset now, MatchEvent? related)
     { if (uuid == Guid.Empty) throw new DomainValidationException("EventUuid is required."); MatchSheet = sheet; MatchSet = set; EventUuid = uuid; EventType = type; SequenceNumber = sequence; Side = side; MatchPlayerId = playerId; OccurredAt = now; Status = MatchEventStatus.Active; RelatedEvent = related; }
+    public string? CommandPayload { get; private set; }
+    public void RecordCommand(string payload) => CommandPayload = payload;
     public int MatchEventId { get; private set; }
     public Guid EventUuid { get; private set; }
     public int MatchSheetId { get; private set; }
@@ -97,6 +99,8 @@ public sealed class MatchSubstitution
     public MatchSubstitution(Guid uuid, MatchSet set, MatchTeam team, MatchPlayer playerOut, MatchPlayer playerIn, LineupPosition position, DateTimeOffset now)
     { SubstitutionUuid = uuid; MatchSet = set; MatchTeam = team; PlayerOut = playerOut; PlayerIn = playerIn; LineupPosition = position; OccurredAt = now; }
     public int MatchSubstitutionId { get; private set; }
+    public Guid? RequestEventUuid { get; private set; }
+    public void BindRequest(Guid eventUuid) => RequestEventUuid = eventUuid;
     public Guid SubstitutionUuid { get; private set; }
     public int MatchSetId { get; private set; }
     public MatchSet MatchSet { get; private set; } = null!;
@@ -130,13 +134,13 @@ public sealed class MatchLiberoReplacement
 public sealed class MatchTimeout
 {
     private MatchTimeout() { }
-    public MatchTimeout(Guid uuid, MatchSet set, MatchTeam team, byte timeoutNumber, DateTimeOffset now) { if (timeoutNumber is not 1 and not 2) throw new DomainValidationException("TimeoutNumber must be 1 or 2."); TimeoutUuid = uuid; MatchSet = set; MatchTeam = team; TimeoutNumber = timeoutNumber; OccurredAt = now; }
+    public MatchTimeout(Guid uuid, MatchSet set, MatchTeam team, int timeoutNumber, DateTimeOffset now) { if (timeoutNumber < 1) throw new DomainValidationException("TimeoutNumber must be positive."); TimeoutUuid = uuid; MatchSet = set; MatchTeam = team; TimeoutNumber = timeoutNumber; OccurredAt = now; }
     public int MatchTimeoutId { get; private set; }
     public Guid TimeoutUuid { get; private set; }
     public int MatchSetId { get; private set; }
     public MatchSet MatchSet { get; private set; } = null!;
     public int MatchTeamId { get; private set; }
-    public MatchTeam MatchTeam { get; private set; } = null!; public byte TimeoutNumber { get; private set; }
+    public MatchTeam MatchTeam { get; private set; } = null!; public int TimeoutNumber { get; private set; }
     public DateTimeOffset OccurredAt { get; private set; }
 }
 
@@ -149,14 +153,21 @@ public static class MatchCourtStateCalculator
 
     public static IReadOnlyList<CourtPlayerState> Calculate(MatchLineup lineup, byte offset, IEnumerable<MatchSubstitution> substitutions, IEnumerable<MatchLiberoReplacement> replacements)
     {
-        var occupants = lineup.Positions.ToDictionary(x => x.Position, x => x.MatchPlayerId);
-        foreach (var s in substitutions)
-        {
-            var current = occupants[s.LineupPosition];
-            if (current == s.PlayerOutMatchPlayerId) occupants[s.LineupPosition] = s.PlayerInMatchPlayerId;
-        }
+        var initial = lineup.Positions.OrderBy(x => x.Position).ToArray();
+        var regular = RegularPlayers(initial.Select(x => x.MatchPlayerId), substitutions
+            .OrderBy(x => x.MatchSubstitutionId == 0 ? int.MaxValue : x.MatchSubstitutionId)
+            .Select(x => ((int)x.LineupPosition - 1, x.PlayerOutMatchPlayerId, x.PlayerInMatchPlayerId)));
+        var occupants = initial.Select((x, index) => (x.Position, Player: regular[index])).ToDictionary(x => x.Position, x => x.Player);
         var active = replacements.Where(x => !x.ExitedAt.HasValue).ToDictionary(x => x.LineupPosition, x => x.LiberoMatchPlayerId);
         return occupants.OrderBy(x => x.Key).Select(x => new CourtPlayerState(x.Key, ToPhysical(x.Key, offset), active.GetValueOrDefault(x.Key, x.Value), active.ContainsKey(x.Key))).ToArray();
+    }
+    public static int[] RegularPlayers(IEnumerable<int> lineup, IEnumerable<(int Position, int PlayerOut, int PlayerIn)> substitutions)
+    {
+        var players = lineup.ToArray();
+        foreach (var substitution in substitutions)
+            if (substitution.Position >= 0 && substitution.Position < players.Length && players[substitution.Position] == substitution.PlayerOut)
+                players[substitution.Position] = substitution.PlayerIn;
+        return players;
     }
     public static int Server(IReadOnlyList<CourtPlayerState> state) => state.Single(x => x.PhysicalPosition == LineupPosition.P1).EffectiveMatchPlayerId;
 }

@@ -74,3 +74,7 @@ La sincronización offline entra por Application y reutiliza el mismo MatchEngin
 ## Security
 
 Security es transversal. Permanecen abiertos el proveedor de identidad, autenticación, roles, claims y permisos finos. El dominio no debe acoplarse a una tecnología concreta hasta cerrar esas decisiones.
+
+## SCORER RULES ASSISTANT v1
+
+La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.

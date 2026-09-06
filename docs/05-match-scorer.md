@@ -90,10 +90,10 @@ El servidor persiste estado operacional canónico y eventos de trazabilidad; no 
 - P1 es el servidor inicial; un receptor que gana rota `(offset + 1) % 6`. El equipo que conserva saque no rota.
 - Point calcula marcador, saque, rotación, servidor y fin automático.
 - `CorrectLastPoint` cancela únicamente el último evento deportivo efectivo y reconstruye el estado; nunca borra el POINT.
-- Sustituciones conservan pareja titular/suplente y permiten reingreso del titular; deliberadamente no hay máximo global de seis. Una sustitución normal excluye cualquier `MATCH_PLAYER` declarado como líbero tanto en el MatchEngine local como en el backend. La UI sólo ofrece suplentes que formen una pareja válida: la primera entrada admite un regular todavía no utilizado y el reingreso admite exclusivamente al titular original.
+- Rules Assistant v1 conserva las parejas como guía y evalúa sus irregularidades como warnings confirmables. Las actas nuevas congelan el límite efectivo (default seis); las históricas conservan sustituciones ilimitadas. La UI ofrece candidatos habituales y una opción explícita por decisión del juez. Una solicitud puede contener varias parejas atómicas y cada pareja cuenta. Usar un líbero como regular requiere confirmación; un líbero no puede integrar la alineación inicial.
 - `TrackSubstitutions` y `TrackLiberoReplacements` pertenecen a MatchSheet. Si están deshabilitados no bloquean puntos.
-- Un líbero declarado puede entrar por P1/P5/P6; sale restaurando la plaza lógica. Se admiten hasta dos declarados.
-- Timeouts siempre se registran y tienen máximo dos por equipo/set.
+- El plan automático usa P1/P5/P6 elegibles, conserva el servidor regular y restaura el regular lógico vigente. Las decisiones manuales representables, incluida la entrada de un segundo líbero, se evalúan con warnings específicos. Se admiten hasta dos declarados.
+- Timeouts siempre se registran; el límite efectivo congelado tiene default dos. Superarlo exige confirmación directa y se conserva al sincronizar una decisión local persistida.
 - Tres sets ganados sólo marcan `MatchDecided`; `CloseMatch` explícito deja MatchSheet CLOSED y Match FINISHED. CLOSED no se reabre.
 - CloseMatch reutiliza la progresión de playoffs dentro de la misma transacción; los partidos de liga quedan disponibles para standings.
 
@@ -107,7 +107,7 @@ Scorer tolera pérdida temporal de conectividad mediante eventos locales con UUI
 
 El frontend usa React, TypeScript, Vite, Dexie e IndexedDB. Los cinco stores son `appMeta`, `matchSheets`, `sessions`, `snapshots` y `events`; `deviceId` se genera una vez. Una acción aplica primero el motor local y guarda evento, snapshot y `nextLocalSequence` atómicamente. La UI se actualiza sin esperar HTTP.
 
-Los eventos pasan por PENDING → SYNCING → ACCEPTED. Un cierre/reinicio devuelve SYNCING a PENDING. Ante timeout, red o 5xx se preserva operación offline. Un 4xx deportivo permanente deja un marcador persistente de sync BLOCKED sin abandonar la sesión; sólo la pérdida o mismatch real de autoridad deja la sesión ABANDONED. En ambos casos no se borran, aceptan ni saltan eventos. La reconciliación toma el snapshot canónico completo —incluidas alineaciones, sustituciones, líberos y puntos activos— y reaplica pendientes posteriores, por lo que eventos creados durante un request no desaparecen.
+Los eventos pasan por PENDING → SYNCING → ACCEPTED. Un cierre/reinicio devuelve SYNCING a PENDING. Ante timeout, red o 5xx se preserva operación offline. Un rechazo HARD permanente deja un marcador persistente de sync BLOCKED sin abandonar la sesión; sólo la pérdida o mismatch real de autoridad deja la sesión ABANDONED. La discrepancia deportiva no rechaza un evento ya persistido. No se borran, aceptan ni saltan eventos rechazados. La reconciliación toma el snapshot canónico completo y reaplica pendientes posteriores; el sync continúa con las acciones creadas durante el batch aceptado.
 
 Los rechazos atribuibles incluyen `eventUuid` y `localSequence` en ProblemDetails. Desde BLOCKED existen dos recuperaciones explícitas. Online, **Continuar desde estado central** consulta `GET /sheet`, ejecuta takeover sobre la sesión central activa, abandona la sesión problemática, crea una nueva ACTIVE y carga su snapshot sin incorporar la cola anterior. Offline, **Recuperar último estado local válido** sólo se habilita cuando el evento fue identificado y el MatchEngine reproduce determinísticamente el mismo rechazo; reconstruye la vista hasta el evento inmediatamente anterior, conserva el rechazado y sus descendientes sin aplicarlos y permanece BLOCKED/de solo consulta. No crea sesiones, renumera, elimina ni reutiliza eventos. Continuar operando desde esa vista exige branching/rebase y queda pendiente de una decisión de protocolo.
 
@@ -169,3 +169,7 @@ Admin prepara programación, rosters y oficiales, evalúa readiness y supervisa 
 Cada ejecución de `--seed-demo-match` elimina transaccionalmente el acta anterior del partido demo y sus datos deportivos (eventos, sesiones, auditoría/snapshot, convocados, alineaciones, líberos, sustituciones, timeouts y sets), limpia el resultado y lo devuelve a `SCHEDULED`. Conserva ID, fixture, fecha, sede, planteles y oficiales; no reinicia otros partidos ni la competición. El ID se resuelve mediante los marcadores DEMO, no se fija a 160.
 
 El seeder no puede borrar IndexedDB del navegador. Después de reiniciarlo, cerrar las pestañas del Scorer y limpiar los datos de `http://localhost:5174` en DevTools > Application > Storage > Clear site data antes de volver a abrirlo. Esto descarta también las pruebas offline guardadas en ese origen.
+
+## SCORER RULES ASSISTANT v1
+
+La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.

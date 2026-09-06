@@ -104,7 +104,7 @@ Este documento resume qué decisiones son fuente de verdad y qué aspectos sigue
 - Saque, servidor, rotación y cancha efectiva son derivados.
 - Point termina el set automáticamente; el tercer set ganado decide el resultado, pero sólo CloseMatch cierra MatchSheet y Match.
 - CorrectLastPoint cancela sólo el último evento deportivo efectivo y reconstruye el estado.
-- Tracking de sustituciones y líbero es configurable y estable por MatchSheet; timeout es obligatorio, con máximo dos por equipo y set.
+- Tracking de sustituciones y líbero es configurable y estable por MatchSheet; timeout es obligatorio, con default dos, snapshot efectivo congelado y exceso confirmable por Rules Assistant v1.
 - La clave idempotente es EventUuid y la secuencia causal es local, contigua y reinicia en 1 por sesión.
 - Sync acepta retries conocidos y aplica atómicamente todos los eventos nuevos contiguos.
 - TakeOver abandona la sesión esperada, crea la única sesión ACTIVE con secuencia cero y conserva el estado deportivo.
@@ -212,3 +212,7 @@ Sidebar y drawers alojan Historial, Acta, oficiales, sesión y detalles secundar
 Cada ejecución de `--seed-demo-match` elimina transaccionalmente el acta anterior del partido demo y sus datos deportivos (eventos, sesiones, auditoría/snapshot, convocados, alineaciones, líberos, sustituciones, timeouts y sets), limpia el resultado y lo devuelve a `SCHEDULED`. Conserva ID, fixture, fecha, sede, planteles y oficiales; no reinicia otros partidos ni la competición. El ID se resuelve mediante los marcadores DEMO, no se fija a 160.
 
 El seeder no puede borrar IndexedDB del navegador. Después de reiniciarlo, cerrar las pestañas del Scorer y limpiar los datos de `http://localhost:5174` en DevTools > Application > Storage > Clear site data antes de volver a abrirlo. Esto descarta también las pruebas offline guardadas en ese origen.
+
+## SCORER RULES ASSISTANT v1
+
+La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.

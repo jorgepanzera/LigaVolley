@@ -2,7 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 namespace LigaVolley.Application.MatchSheets;
 [JsonConverter(typeof(UpperSnakeCaseEnumConverter<ScorerSyncEventType>))]
-public enum ScorerSyncEventType{PrepareSet,SetLineup,StartSet,Point,CorrectLastPoint,Substitution,LiberoEnter,LiberoExit,Timeout,MatchClose}
+public enum ScorerSyncEventType{PrepareSet,SetLineup,StartSet,Point,CorrectLastPoint,Substitution,LiberoEnter,LiberoExit,Timeout,MatchClose,SubstitutionRequest}
 [JsonConverter(typeof(UpperSnakeCaseEnumConverter<ScorerSyncResultStatus>))]
 public enum ScorerSyncResultStatus{Applied,AlreadyAccepted}
 public sealed record ScorerSyncEvent(Guid EventUuid,long Sequence,ScorerSyncEventType Type,DateTimeOffset OccurredAt,JsonElement Payload);
@@ -14,11 +14,11 @@ public sealed record TakeOverMatchSheetResponse(bool AlreadyApplied,Guid Previou
 internal sealed record SyncSetPayload(byte SetNumber);
 internal sealed record SyncLineupPayload(byte SetNumber,Domain.MatchSheets.MatchSide Side,int P1MatchPlayerId,int P2MatchPlayerId,int P3MatchPlayerId,int P4MatchPlayerId,int P5MatchPlayerId,int P6MatchPlayerId,int? LiberoMatchPlayerId=null,IReadOnlyList<byte>? LiberoLogicalPositions=null);
 internal sealed record SyncStartPayload(byte SetNumber,Domain.MatchSheets.MatchSide InitialServingSide);
-internal sealed record SyncPointPayload(byte SetNumber,Domain.MatchSheets.MatchSide WinningSide);
-internal sealed record SyncSubstitutionPayload(byte SetNumber,int PlayerOutMatchPlayerId,int PlayerInMatchPlayerId);
-internal sealed record SyncLiberoEnterPayload(byte SetNumber,int LiberoMatchPlayerId,int ReplacedMatchPlayerId);
-internal sealed record SyncLiberoExitPayload(byte SetNumber,int LiberoMatchPlayerId);
-internal sealed record SyncTimeoutPayload(byte SetNumber,Domain.MatchSheets.MatchSide Side);
+internal sealed record SyncPointPayload(byte SetNumber,Domain.MatchSheets.MatchSide WinningSide,int? ObservedServerMatchPlayerId=null,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
+internal sealed record SyncSubstitutionPayload(byte SetNumber,int PlayerOutMatchPlayerId,int PlayerInMatchPlayerId,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
+internal sealed record SyncLiberoEnterPayload(byte SetNumber,int LiberoMatchPlayerId,int ReplacedMatchPlayerId,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
+internal sealed record SyncLiberoExitPayload(byte SetNumber,int LiberoMatchPlayerId,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
+internal sealed record SyncTimeoutPayload(byte SetNumber,Domain.MatchSheets.MatchSide Side,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
 
 public sealed class UpperSnakeCaseEnumConverter<TEnum> : JsonConverter<TEnum> where TEnum : struct, Enum
 {
@@ -39,3 +39,5 @@ public sealed class UpperSnakeCaseEnumConverter<TEnum> : JsonConverter<TEnum> wh
             index > 0 && char.IsUpper(c) ? "_" + c : c.ToString())).ToUpperInvariant());
     }
 }
+
+internal sealed record SyncSubstitutionRequestPayload(byte SetNumber,Domain.MatchSheets.MatchSide Side,IReadOnlyList<SubstitutionPairRequest> Replacements,IReadOnlyList<string>? ConfirmedRuleWarnings=null);

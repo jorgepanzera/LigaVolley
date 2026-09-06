@@ -1,3 +1,4 @@
+import { RuleWarningDialog } from './console/RuleWarningDialog';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { createScorerController } from '../application/composition';
 import type { ViewState } from '../application/scorerController';
@@ -83,6 +84,11 @@ export default function App() {
   return (
     <ScorerShell view={view} panel={panel} onPanel={setPanel}>
       <section className="console-workspace" aria-live="polite">
+        {set?.setNumber === 5 &&
+          Math.max(set.homePoints, set.awayPoints) ===
+            (state.rulesSnapshot?.decidingSetCourtChangePoint ?? 8) && (
+            <p role="status">Cambio de campo</p>
+          )}
         {set?.status === 'READY' ? (
           <SetPreparation
             set={set}
@@ -111,7 +117,7 @@ export default function App() {
         )}
       </section>
 
-      {selected && set?.status === 'IN_PROGRESS' && trackSubs && !blocked && (
+      {selected && set?.status === 'IN_PROGRESS' && !blocked && (
         <PlayerActionSheet
           {...selected}
           set={set}
@@ -119,6 +125,44 @@ export default function App() {
           trackSubstitutions={trackSubs}
           error={substitutionError}
           onClose={() => setSelected(undefined)}
+          onSubstitutionRequest={(pairs) => {
+            void controller
+              .substituteRequest(selected.side, pairs)
+              .then(() => setSelected(undefined))
+              .catch((error: unknown) => setSubstitutionError(substitutionMessage(error)));
+          }}
+          onLiberoEnter={(liberoMatchPlayerId, replacedMatchPlayerId) => {
+            void controller
+              .command({
+                type: 'LIBERO_ENTER',
+                payload: {
+                  setNumber: set.setNumber,
+                  side: selected.side,
+                  liberoMatchPlayerId,
+                  replacedMatchPlayerId,
+                },
+              })
+              .then(() => setSelected(undefined))
+              .catch((error: unknown) => setSubstitutionError(substitutionMessage(error)));
+          }}
+          onLiberoExit={(liberoMatchPlayerId) => {
+            void controller
+              .command({
+                type: 'LIBERO_EXIT',
+                payload: { setNumber: set.setNumber, side: selected.side, liberoMatchPlayerId },
+              })
+              .then(() => setSelected(undefined))
+              .catch((error: unknown) => setSubstitutionError(substitutionMessage(error)));
+          }}
+          onObservedServer={(observedServerMatchPlayerId, winningSide) => {
+            void controller
+              .command({
+                type: 'POINT',
+                payload: { setNumber: set.setNumber, observedServerMatchPlayerId, winningSide },
+              })
+              .then(() => setSelected(undefined))
+              .catch((error: unknown) => setSubstitutionError(substitutionMessage(error)));
+          }}
           onSubstitute={(outId, inId) => {
             void controller
               .substitute(selected.side, outId, inId)
@@ -130,6 +174,7 @@ export default function App() {
       {dialog === 'timeout' && set && (
         <TimeoutDialog
           set={set}
+          maximum={state.rulesSnapshot?.maxTimeoutsPerSet ?? 2}
           onClose={() => setDialog(undefined)}
           onTimeout={(side) => {
             void controller.timeout(side);
@@ -199,6 +244,15 @@ export default function App() {
             anterior y toda su cola quedarán intactas como trazabilidad.
           </p>
         </ConfirmDialog>
+      )}
+      {view.pendingRuleDecision && !blocked && (
+        <RuleWarningDialog
+          evaluation={view.pendingRuleDecision.evaluation}
+          onCancel={() => controller.cancelRuleDecision()}
+          onConfirm={() => {
+            void controller.confirmRuleDecision();
+          }}
+        />
       )}
       {blocked && (
         <BlockedOverlay
@@ -410,7 +464,7 @@ function MatchWorkspace({
         <Court
           set={set}
           snapshot={snapshot}
-          onPosition={(side, logical) => trackSubs && !blocked && onPosition(side, logical)}
+          onPosition={(side, logical) => !blocked && onPosition(side, logical)}
         />
         <BenchSide side="AWAY" snapshot={snapshot} set={set} />
       </section>
@@ -443,13 +497,11 @@ function MatchWorkspace({
         </button>
       </section>
       <section className="secondary-actions">
-        <button
-          disabled={blocked || (set.homeTimeouts >= 2 && set.awayTimeouts >= 2)}
-          onClick={() => onDialog('timeout')}
-        >
+        <button disabled={blocked} onClick={() => onDialog('timeout')}>
           ◷ Timeout{' '}
           <span>
-            {set.homeTimeouts}/2 · {set.awayTimeouts}/2
+            {set.homeTimeouts}/{view.state?.rulesSnapshot?.maxTimeoutsPerSet ?? 2} ·{' '}
+            {set.awayTimeouts}/{view.state?.rulesSnapshot?.maxTimeoutsPerSet ?? 2}
           </span>
         </button>
         {trackSubs && (
@@ -457,7 +509,13 @@ function MatchWorkspace({
             disabled={blocked}
             onClick={() => document.querySelector<HTMLButtonElement>('.court-position')?.focus()}
           >
-            ⇄ Sustitución <span>Selecciona cancha</span>
+            ⇄ Sustitución{' '}
+            <span>
+              {set.substitutions.filter((x) => x.side === 'HOME').length}/
+              {state.rulesSnapshot?.maxSubstitutionsPerSet ?? '∞'} ·{' '}
+              {set.substitutions.filter((x) => x.side === 'AWAY').length}/
+              {state.rulesSnapshot?.maxSubstitutionsPerSet ?? '∞'} · Selecciona cancha
+            </span>
           </button>
         )}
       </section>
@@ -560,10 +618,12 @@ function FinalState({
 
 function TimeoutDialog({
   set,
+  maximum,
   onClose,
   onTimeout,
 }: {
   set: SetState;
+  maximum: number;
   onClose: () => void;
   onTimeout: (side: Side) => void;
 }) {
@@ -575,15 +635,15 @@ function TimeoutDialog({
           return (
             <article key={side}>
               <b>{side}</b>
-              <div aria-label={`${count} de 2 timeouts usados`}>
-                {Array.from({ length: 2 }, (_, i) => (
+              <div aria-label={`${count} de ${maximum} timeouts usados`}>
+                {Array.from({ length: Math.min(maximum, 10) }, (_, i) => (
                   <span key={i}>{i < count ? '●' : '○'}</span>
                 ))}
               </div>
-              <strong>{count}/2</strong>
-              <button disabled={count >= 2} onClick={() => onTimeout(side)}>
-                Timeout {side}
-              </button>
+              <strong>
+                {count}/{maximum}
+              </strong>
+              <button onClick={() => onTimeout(side)}>Timeout {side}</button>
             </article>
           );
         })}
@@ -916,11 +976,7 @@ function OpeningTeam({
               key={p.competitionRosterPlayerId}
             >
               <label>
-                <input
-                  type="checkbox"
-                  checked={!!choice}
-                  onChange={() => toggle(p)}
-                />
+                <input type="checkbox" checked={!!choice} onChange={() => toggle(p)} />
                 <span>
                   <b>{p.displayName}</b>
                   <small>

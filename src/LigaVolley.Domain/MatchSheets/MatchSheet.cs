@@ -4,6 +4,13 @@ public enum MatchSheetStatus{Open,InProgress,Suspended,Closed,Cancelled}public e
 public sealed class MatchSheet
 {
  private MatchSheet(){}public MatchSheet(Match match,DateTimeOffset now,Guid? uuid=null){Match=match??throw new DomainValidationException("Match is required.");MatchId=match.MatchId;SheetUuid=uuid??Guid.NewGuid();Status=MatchSheetStatus.Open;OpenedAt=now;}
+ public RulesSnapshot RulesSnapshot { get; private set; } = RulesSnapshot.Legacy;
+ public void FreezeRules(RulesSnapshot rules)
+ {
+  if (Status != MatchSheetStatus.Open || Sets.Count != 0 || RulesSnapshot.RulesSnapshotVersion != 0)
+   throw new DomainValidationException("MatchSheet rules are frozen.");
+  RulesSnapshot = rules;
+ }
  public int MatchSheetId{get;private set;}public Guid SheetUuid{get;private set;}public int MatchId{get;private set;}public Match Match{get;private set;}=null!;public MatchSheetStatus Status{get;private set;}public DateTimeOffset OpenedAt{get;private set;}public DateTimeOffset? StartedAt{get;private set;}public DateTimeOffset? EndedAt{get;private set;}public DateTimeOffset? LastOperationalUpdateAt{get;private set;}public byte HomeSets{get;private set;}public byte AwaySets{get;private set;}public int? WinnerTeamEntryId{get;private set;}public bool TrackSubstitutions{get;private set;}=true;public bool TrackLiberoReplacements{get;private set;}=true;public List<MatchTeam> Teams{get;private set;}=[];public List<MatchSheetSession> Sessions{get;private set;}=[];public List<MatchSheetAudit> Audits{get;private set;}=[];public List<MatchSet> Sets{get;private set;}=[];public List<MatchEvent> Events{get;private set;}=[];
  public MatchTeam AddTeam(TeamEntry entry,CompetitionRoster roster,MatchSide side){if(Teams.Any(x=>x.Side==side))throw new DomainValidationException("Match side already exists.");var x=new MatchTeam(this,entry,roster,side);Teams.Add(x);return x;}
  public MatchSheetSession OpenSession(MatchOfficial scorer,string deviceId,DateTimeOffset now){if(Sessions.Any(x=>x.Status==MatchSheetSessionStatus.Active))throw new DomainValidationException("An active MatchSheet session already exists.");var x=new MatchSheetSession(this,scorer,deviceId,now);Sessions.Add(x);return x;}

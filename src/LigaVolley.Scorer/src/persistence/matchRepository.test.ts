@@ -123,7 +123,7 @@ describe('Dexie repository', () => {
     await repo.resetSyncing();
     expect((await db.events.toArray())[0].syncStatus).toBe('PENDING');
   });
-  it('does not persist an invalid normal substitution involving a declared libero', async () => {
+  it('does not persist a substitution referencing a player outside the frozen sheet', async () => {
     db = new ScorerDatabase(`t-${crypto.randomUUID()}`);
     const repo = new MatchRepository(db);
     const snapshot = server();
@@ -150,7 +150,7 @@ describe('Dexie repository', () => {
         type: 'SUBSTITUTION',
         payload: { side: 'HOME', playerOutMatchPlayerId: 1, playerInMatchPlayerId: 88 },
       }),
-    ).rejects.toThrow('substitution_player_is_libero');
+    ).rejects.toThrow('invalid_substitution');
     expect(await db.events.count()).toBe(before);
     expect((await db.snapshots.get(1))?.state.sets[0].substitutions).toHaveLength(0);
   });

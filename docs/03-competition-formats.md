@@ -494,3 +494,7 @@ El comando de limpieza competitiva reconstruye dos formatos raíz activos:
 - `CompetitionFormat 2` (`SPLIT_STAGE`, 9..16 equipos): `REGULAR` a una rueda, seguida por `SECOND_STAGE` con grupos `CHAMPIONSHIP` y `RELEGATION`, una rueda y `CarryOverMode.NONE`; `TOP_HALF`/`BOTTOM_HALF` materializan el split y los cuatro primeros de Championship clasifican a playoffs con la misma estructura anterior.
 
 Ambos formatos otorgan 2/1 puntos de tabla para resultados 3-0, 3-1 y 3-2. Los desempates, todos descendentes, son: puntos de tabla, partidos ganados, ratio de sets, ratio de puntos y enfrentamiento directo. Los puestos 1..2 de la Final tienen movimiento de promoción con delta -1; los dos últimos de Regular (formato 1) o Relegation (formato 2) tienen descenso con delta +1.
+
+## SCORER RULES ASSISTANT v1
+
+La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.

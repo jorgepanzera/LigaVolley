@@ -1378,3 +1378,7 @@ Create/Clone responden 201 y nacen inactivos. Update estructural bloqueado respo
 ## OpenMatchSheet: dorsal y capitán por partido
 
 `POST /api/scorer/matches/{matchId}/open` recibe `home.players` y `away.players`; cada elemento incluye `competitionRosterPlayerId`, `jerseyNumber` e `isMatchCaptain`. El servidor no resuelve dorsal ni capitán desde el roster. `open-context` no proyecta esos atributos como datos del roster.
+
+## SCORER RULES ASSISTANT v1
+
+La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.

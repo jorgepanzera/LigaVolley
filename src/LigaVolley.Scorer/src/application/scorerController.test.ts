@@ -109,6 +109,41 @@ describe('ScorerController bootstrap', () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     await database?.delete();
   });
+  it('cancels without an event and confirms exactly once, then reloads offline with confirmations', async () => {
+    database = new ScorerDatabase(`rules-confirm-${crypto.randomUUID()}`);
+    const server = snapshot();
+    server.rulesSnapshot = { rulesProtocolVersion: 1, rulesSnapshotVersion: 1, maxSubstitutionsPerSet: 6,
+      maxTimeoutsPerSet: 1, liberoEnabled: true, maxLiberos: 2, liberoCanServe: false, decidingSetCourtChangePoint: 8 };
+    const client = api({ sheet: vi.fn().mockResolvedValue(server), sync: vi.fn().mockRejectedValue(new ApiProblem(0, 'offline', 'offline')) });
+    const controller = new ScorerController(database, client);
+    await controller.start(1);
+    await controller.prepareSet();
+    for (const side of ['HOME', 'AWAY'] as const) await controller.saveLineup(side,
+      Array.from({ length: 6 }, (_, i) => i + (side === 'HOME' ? 1 : 11)), { enabled: false, logicalPositions: [] });
+    await controller.startSet('HOME');
+    await controller.timeout('HOME');
+    await new Promise(resolve => setTimeout(resolve, 20));
+    const count = await database.events.count();
+    const sequence = (await database.sessions.get('session'))!.nextLocalSequence;
+    await controller.timeout('HOME');
+    expect(controller.view.pendingRuleDecision?.evaluation.warnings.map(x => x.code)).toEqual(['timeout_limit_exceeded']);
+    expect(await database.events.count()).toBe(count);
+    controller.cancelRuleDecision();
+    expect((await database.sessions.get('session'))!.nextLocalSequence).toBe(sequence);
+    await controller.timeout('HOME');
+    await Promise.all([controller.confirmRuleDecision(), controller.confirmRuleDecision()]);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(await database.events.count()).toBe(count + 1);
+    expect((await database.sessions.get('session'))!.nextLocalSequence).toBe(sequence + 1);
+    const last = (await database.events.orderBy('[sessionUuid+sequence]').toArray()).at(-1)!;
+    expect(last.payload.confirmedRuleWarnings).toEqual(['timeout_limit_exceeded']);
+    expect(controller.view.state?.sets[0].homeTimeouts).toBe(2);
+    const reentered = new ScorerController(database, api({ sheet: vi.fn().mockRejectedValue(new ApiProblem(0, 'offline', 'offline')) }));
+    await reentered.start(1);
+    expect(reentered.view.state?.sets[0].homeTimeouts).toBe(2);
+    expect(reentered.view.state?.rulesSnapshot?.maxTimeoutsPerSet).toBe(1);
+    expect(reentered.view.runtime).toBe('OFFLINE');
+  });
   it('reenters offline with the same declared liberos and locally saved set choice', async () => {
     database = new ScorerDatabase(`controller-libero-${crypto.randomUUID()}`);
     const server = snapshot();
@@ -134,6 +169,7 @@ describe('ScorerController bootstrap', () => {
     server.home.players.push({ matchPlayerId: 88, jerseyNumber: 99, displayName: 'Libero', isMatchCaptain: false });
     server.home.liberos = [{ matchPlayerId: 88 }];
     server.operationalState = applyCommand(initialState(), { type: 'PREPARE_SET', payload: {} });
+    server.operationalState.declaredLiberoMatchPlayerIds.HOME = [88];
     server.operationalState = applyCommand(server.operationalState, { type: 'SET_LINEUP', payload: {
       side: 'HOME', p1MatchPlayerId: 1, p2MatchPlayerId: 2, p3MatchPlayerId: 3,
       p4MatchPlayerId: 4, p5MatchPlayerId: 5, p6MatchPlayerId: 6,

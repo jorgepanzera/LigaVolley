@@ -1,3 +1,8 @@
+import {
+  evaluateCommand,
+  RuleConfirmationRequired,
+  type RuleEvaluation,
+} from '../domain/rulesAssistant';
 import type { ScorerDatabase } from '../persistence/database';
 import { deviceId } from '../persistence/database';
 import { MatchRepository } from '../persistence/matchRepository';
@@ -19,6 +24,7 @@ import type {
   Side,
 } from '../domain/types';
 export interface ViewState {
+  pendingRuleDecision?: { command: MatchCommand; evaluation: RuleEvaluation };
   runtime: RuntimeState;
   pendingEventCount: number;
   state?: MatchState;
@@ -165,9 +171,49 @@ export class ScorerController {
   async command(command: MatchCommand) {
     if (!this.view.matchId || this.view.runtime === 'BLOCKED' || this.view.state?.closed)
       throw new Error(this.view.state?.closed ? 'match_closed' : 'session_lost');
-    await this.repo.mutate(this.view.matchId, command);
+    const evaluation = evaluateCommand(this.view.state!, command);
+    if (evaluation.hardViolations.length) throw new Error(evaluation.hardViolations[0].code);
+    const confirmed = Array.isArray(command.payload.confirmedRuleWarnings)
+      ? command.payload.confirmedRuleWarnings
+      : [];
+    if (evaluation.warnings.some((x) => !confirmed.includes(x.code))) {
+      this.view = {
+        ...this.view,
+        pendingRuleDecision: { command: structuredClone(command), evaluation },
+      };
+      this.emit();
+      return;
+    }
+    try {
+      await this.repo.mutate(this.view.matchId, command);
+    } catch (error) {
+      if (!(error instanceof RuleConfirmationRequired)) throw error;
+      this.view = {
+        ...this.view,
+        pendingRuleDecision: { command: structuredClone(command), evaluation: error.evaluation },
+      };
+      this.emit();
+      return;
+    }
+    this.view = { ...this.view, pendingRuleDecision: undefined };
     await this.refresh();
-    void this.syncService.sync(this.view.matchId);
+    void this.syncService.sync(this.view.matchId!);
+  }
+  cancelRuleDecision() {
+    this.view = { ...this.view, pendingRuleDecision: undefined };
+    this.emit();
+  }
+  async confirmRuleDecision() {
+    const decision = this.view.pendingRuleDecision;
+    if (!decision) return;
+    this.cancelRuleDecision();
+    await this.command({
+      ...decision.command,
+      payload: {
+        ...decision.command.payload,
+        confirmedRuleWarnings: decision.evaluation.warnings.map((x) => x.code),
+      },
+    });
   }
   prepareSet() {
     return this.command({ type: 'PREPARE_SET', payload: {} });
@@ -207,13 +253,6 @@ export class ScorerController {
     });
   }
   substitute(side: Side, playerOutMatchPlayerId: number, playerInMatchPlayerId: number) {
-    const declaredLiberos = new Set(
-      (side === 'HOME' ? this.view.bootstrap?.home : this.view.bootstrap?.away)?.liberos.map(
-        (player) => player.matchPlayerId,
-      ) ?? [],
-    );
-    if (declaredLiberos.has(playerOutMatchPlayerId) || declaredLiberos.has(playerInMatchPlayerId))
-      return Promise.reject(new Error('substitution_player_is_libero'));
     return this.command({
       type: 'SUBSTITUTION',
       payload: {
@@ -222,6 +261,15 @@ export class ScorerController {
         playerOutMatchPlayerId,
         playerInMatchPlayerId,
       },
+    });
+  }
+  substituteRequest(
+    side: Side,
+    replacements: Array<{ playerOutMatchPlayerId: number; playerInMatchPlayerId: number }>,
+  ) {
+    return this.command({
+      type: 'SUBSTITUTION_REQUEST',
+      payload: { setNumber: this.view.state?.currentSetNumber, side, replacements },
     });
   }
   closeMatch() {

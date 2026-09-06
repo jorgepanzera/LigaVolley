@@ -1,0 +1,818 @@
+[
+  {
+    "name": "valid_substitution",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 1,
+          "playerInMatchPlayerId": 7
+        }
+      ]
+    },
+    "warnings": [],
+    "hard": [],
+    "warningContexts": {}
+  },
+  {
+    "name": "sixth_substitution",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 9,
+          "playerInMatchPlayerId": 3
+        }
+      ]
+    },
+    "warnings": [],
+    "hard": [],
+    "substitutions": [
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 1,
+        "playerInMatchPlayerId": 7
+      },
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 7,
+        "playerInMatchPlayerId": 1
+      },
+      {
+        "position": 1,
+        "playerOutMatchPlayerId": 2,
+        "playerInMatchPlayerId": 8
+      },
+      {
+        "position": 1,
+        "playerOutMatchPlayerId": 8,
+        "playerInMatchPlayerId": 2
+      },
+      {
+        "position": 2,
+        "playerOutMatchPlayerId": 3,
+        "playerInMatchPlayerId": 9
+      }
+    ],
+    "warningContexts": {}
+  },
+  {
+    "name": "seventh_substitution",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 4,
+          "playerInMatchPlayerId": 10
+        }
+      ]
+    },
+    "warnings": [
+      "substitution_limit_exceeded"
+    ],
+    "hard": [],
+    "substitutions": [
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 1,
+        "playerInMatchPlayerId": 7
+      },
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 7,
+        "playerInMatchPlayerId": 1
+      },
+      {
+        "position": 1,
+        "playerOutMatchPlayerId": 2,
+        "playerInMatchPlayerId": 8
+      },
+      {
+        "position": 1,
+        "playerOutMatchPlayerId": 8,
+        "playerInMatchPlayerId": 2
+      },
+      {
+        "position": 2,
+        "playerOutMatchPlayerId": 3,
+        "playerInMatchPlayerId": 9
+      },
+      {
+        "position": 2,
+        "playerOutMatchPlayerId": 9,
+        "playerInMatchPlayerId": 3
+      }
+    ],
+    "warningContexts": {
+      "substitution_limit_exceeded": {
+        "used": 6,
+        "requested": 1,
+        "projected": 7,
+        "maximum": 6
+      }
+    }
+  },
+  {
+    "name": "override_eight",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 4,
+          "playerInMatchPlayerId": 10
+        }
+      ]
+    },
+    "warnings": [],
+    "hard": [],
+    "substitutions": [
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 1,
+        "playerInMatchPlayerId": 7
+      },
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 7,
+        "playerInMatchPlayerId": 1
+      },
+      {
+        "position": 1,
+        "playerOutMatchPlayerId": 2,
+        "playerInMatchPlayerId": 8
+      },
+      {
+        "position": 1,
+        "playerOutMatchPlayerId": 8,
+        "playerInMatchPlayerId": 2
+      },
+      {
+        "position": 2,
+        "playerOutMatchPlayerId": 3,
+        "playerInMatchPlayerId": 9
+      },
+      {
+        "position": 2,
+        "playerOutMatchPlayerId": 9,
+        "playerInMatchPlayerId": 3
+      }
+    ],
+    "maxSubstitutions": 8,
+    "warningContexts": {}
+  },
+  {
+    "name": "multiple_four_to_six",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 3,
+          "playerInMatchPlayerId": 9
+        },
+        {
+          "playerOutMatchPlayerId": 4,
+          "playerInMatchPlayerId": 10
+        }
+      ]
+    },
+    "warnings": [],
+    "hard": [],
+    "substitutions": [
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 1,
+        "playerInMatchPlayerId": 7
+      },
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 7,
+        "playerInMatchPlayerId": 1
+      },
+      {
+        "position": 1,
+        "playerOutMatchPlayerId": 2,
+        "playerInMatchPlayerId": 8
+      },
+      {
+        "position": 1,
+        "playerOutMatchPlayerId": 8,
+        "playerInMatchPlayerId": 2
+      }
+    ],
+    "warningContexts": {}
+  },
+  {
+    "name": "multiple_five_to_seven",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 9,
+          "playerInMatchPlayerId": 3
+        },
+        {
+          "playerOutMatchPlayerId": 4,
+          "playerInMatchPlayerId": 10
+        }
+      ]
+    },
+    "warnings": [
+      "substitution_limit_exceeded"
+    ],
+    "hard": [],
+    "substitutions": [
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 1,
+        "playerInMatchPlayerId": 7
+      },
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 7,
+        "playerInMatchPlayerId": 1
+      },
+      {
+        "position": 1,
+        "playerOutMatchPlayerId": 2,
+        "playerInMatchPlayerId": 8
+      },
+      {
+        "position": 1,
+        "playerOutMatchPlayerId": 8,
+        "playerInMatchPlayerId": 2
+      },
+      {
+        "position": 2,
+        "playerOutMatchPlayerId": 3,
+        "playerInMatchPlayerId": 9
+      }
+    ],
+    "warningContexts": {
+      "substitution_limit_exceeded": {
+        "used": 5,
+        "requested": 2,
+        "projected": 7,
+        "maximum": 6
+      }
+    }
+  },
+  {
+    "name": "valid_reentry",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 7,
+          "playerInMatchPlayerId": 1
+        }
+      ]
+    },
+    "warnings": [],
+    "hard": [],
+    "substitutions": [
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 1,
+        "playerInMatchPlayerId": 7
+      }
+    ],
+    "warningContexts": {}
+  },
+  {
+    "name": "irregular_reentry",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 1,
+          "playerInMatchPlayerId": 7
+        }
+      ]
+    },
+    "warnings": [
+      "substitution_reentry_irregular"
+    ],
+    "hard": [],
+    "substitutions": [
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 1,
+        "playerInMatchPlayerId": 7
+      },
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 7,
+        "playerInMatchPlayerId": 1
+      }
+    ],
+    "warningContexts": {
+      "substitution_reentry_irregular": {
+        "position": 0
+      }
+    }
+  },
+  {
+    "name": "already_bound",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 2,
+          "playerInMatchPlayerId": 7
+        }
+      ]
+    },
+    "warnings": [
+      "substitution_player_already_bound"
+    ],
+    "hard": [],
+    "substitutions": [
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 1,
+        "playerInMatchPlayerId": 7
+      },
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 7,
+        "playerInMatchPlayerId": 1
+      }
+    ],
+    "warningContexts": {
+      "substitution_player_already_bound": {
+        "playerInMatchPlayerId": 7
+      }
+    }
+  },
+  {
+    "name": "covered_regular",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 5,
+          "playerInMatchPlayerId": 11
+        }
+      ]
+    },
+    "warnings": [],
+    "hard": [],
+    "activeLiberos": [
+      {
+        "position": 4,
+        "liberoMatchPlayerId": 14,
+        "replacedMatchPlayerId": 5
+      }
+    ],
+    "warningContexts": {}
+  },
+  {
+    "name": "normal_libero",
+    "command": {
+      "type": "LIBERO_ENTER",
+      "side": "HOME",
+      "liberoMatchPlayerId": 14,
+      "replacedMatchPlayerId": 5
+    },
+    "warnings": [],
+    "hard": [],
+    "warningContexts": {}
+  },
+  {
+    "name": "second_libero",
+    "command": {
+      "type": "LIBERO_ENTER",
+      "side": "HOME",
+      "liberoMatchPlayerId": 15,
+      "replacedMatchPlayerId": 14
+    },
+    "warnings": [],
+    "hard": [],
+    "activeLiberos": [
+      {
+        "position": 4,
+        "liberoMatchPlayerId": 14,
+        "replacedMatchPlayerId": 5
+      }
+    ],
+    "rallyCount": 1,
+    "lastLiberoRally": 0,
+    "lastLiberoRegular": 5,
+    "warningContexts": {}
+  },
+  {
+    "name": "without_rally",
+    "command": {
+      "type": "LIBERO_EXIT",
+      "side": "HOME",
+      "liberoMatchPlayerId": 14
+    },
+    "warnings": [
+      "libero_replacement_without_completed_rally"
+    ],
+    "hard": [],
+    "activeLiberos": [
+      {
+        "position": 4,
+        "liberoMatchPlayerId": 14,
+        "replacedMatchPlayerId": 5
+      }
+    ],
+    "lastLiberoRally": 0,
+    "warningContexts": {
+      "libero_replacement_without_completed_rally": {}
+    }
+  },
+  {
+    "name": "front_row",
+    "command": {
+      "type": "LIBERO_ENTER",
+      "side": "HOME",
+      "liberoMatchPlayerId": 14,
+      "replacedMatchPlayerId": 2
+    },
+    "warnings": [
+      "libero_in_front_row"
+    ],
+    "hard": [],
+    "warningContexts": {
+      "libero_in_front_row": {
+        "physicalPosition": 2
+      }
+    }
+  },
+  {
+    "name": "expected_server",
+    "command": {
+      "type": "POINT",
+      "side": "HOME",
+      "observedServerMatchPlayerId": 1
+    },
+    "warnings": [],
+    "hard": [],
+    "warningContexts": {}
+  },
+  {
+    "name": "unexpected_server",
+    "command": {
+      "type": "POINT",
+      "side": "HOME",
+      "observedServerMatchPlayerId": 2
+    },
+    "warnings": [
+      "unexpected_server"
+    ],
+    "hard": [],
+    "warningContexts": {
+      "unexpected_server": {
+        "expectedMatchPlayerId": 1,
+        "observedMatchPlayerId": 2
+      }
+    }
+  },
+  {
+    "name": "libero_service",
+    "command": {
+      "type": "POINT",
+      "side": "HOME",
+      "observedServerMatchPlayerId": 14
+    },
+    "warnings": [
+      "unexpected_server",
+      "libero_service_not_allowed"
+    ],
+    "hard": [],
+    "warningContexts": {
+      "unexpected_server": {
+        "expectedMatchPlayerId": 1,
+        "observedMatchPlayerId": 14
+      },
+      "libero_service_not_allowed": {
+        "observedMatchPlayerId": 14
+      }
+    }
+  },
+  {
+    "name": "timeout_two",
+    "command": {
+      "type": "TIMEOUT",
+      "side": "HOME"
+    },
+    "warnings": [],
+    "hard": [],
+    "timeouts": 1,
+    "warningContexts": {}
+  },
+  {
+    "name": "timeout_three",
+    "command": {
+      "type": "TIMEOUT",
+      "side": "HOME"
+    },
+    "warnings": [
+      "timeout_limit_exceeded"
+    ],
+    "hard": [],
+    "timeouts": 2,
+    "warningContexts": {
+      "timeout_limit_exceeded": {
+        "used": 2,
+        "maximum": 2
+      }
+    }
+  },
+  {
+    "name": "court_change",
+    "command": {
+      "type": "POINT",
+      "side": "HOME"
+    },
+    "warnings": [],
+    "hard": [],
+    "rallyCount": 7,
+    "setNumber": 5,
+    "warningContexts": {}
+  },
+  {
+    "name": "confirmed_reproduced",
+    "command": {
+      "type": "TIMEOUT",
+      "side": "HOME",
+      "confirmedRuleWarnings": [
+        "timeout_limit_exceeded"
+      ]
+    },
+    "warnings": [
+      "timeout_limit_exceeded"
+    ],
+    "hard": [],
+    "timeouts": 2,
+    "warningContexts": {
+      "timeout_limit_exceeded": {
+        "used": 2,
+        "maximum": 2
+      }
+    }
+  },
+  {
+    "name": "confirmed_not_reproduced",
+    "command": {
+      "type": "TIMEOUT",
+      "side": "HOME",
+      "confirmedRuleWarnings": [
+        "timeout_limit_exceeded"
+      ]
+    },
+    "warnings": [],
+    "hard": [],
+    "warningContexts": {}
+  },
+  {
+    "name": "additional_server_warning",
+    "command": {
+      "type": "TIMEOUT",
+      "side": "HOME",
+      "confirmedRuleWarnings": []
+    },
+    "warnings": [
+      "timeout_limit_exceeded"
+    ],
+    "hard": [],
+    "timeouts": 2,
+    "origin": "PERSISTED",
+    "warningContexts": {
+      "timeout_limit_exceeded": {
+        "used": 2,
+        "maximum": 2
+      }
+    }
+  },
+  {
+    "name": "hard_wrong_team",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 1,
+          "playerInMatchPlayerId": 107
+        }
+      ]
+    },
+    "warnings": [],
+    "hard": [
+      "invalid_substitution"
+    ],
+    "warningContexts": {}
+  },
+  {
+    "name": "legacy_unlimited",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 4,
+          "playerInMatchPlayerId": 10
+        }
+      ]
+    },
+    "warnings": [],
+    "hard": [],
+    "substitutions": [
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 1,
+        "playerInMatchPlayerId": 7
+      },
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 7,
+        "playerInMatchPlayerId": 1
+      },
+      {
+        "position": 1,
+        "playerOutMatchPlayerId": 2,
+        "playerInMatchPlayerId": 8
+      },
+      {
+        "position": 1,
+        "playerOutMatchPlayerId": 8,
+        "playerInMatchPlayerId": 2
+      },
+      {
+        "position": 2,
+        "playerOutMatchPlayerId": 3,
+        "playerInMatchPlayerId": 9
+      },
+      {
+        "position": 2,
+        "playerOutMatchPlayerId": 9,
+        "playerInMatchPlayerId": 3
+      }
+    ],
+    "maxSubstitutions": null,
+    "warningContexts": {}
+  },
+  {
+    "name": "replay_confirmed",
+    "command": {
+      "type": "TIMEOUT",
+      "side": "HOME",
+      "confirmedRuleWarnings": [
+        "timeout_limit_exceeded"
+      ]
+    },
+    "warnings": [
+      "timeout_limit_exceeded"
+    ],
+    "hard": [],
+    "timeouts": 2,
+    "origin": "PERSISTED",
+    "warningContexts": {
+      "timeout_limit_exceeded": {
+        "used": 2,
+        "maximum": 2
+      }
+    }
+  },
+  {
+    "name": "original_mismatch",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 7,
+          "playerInMatchPlayerId": 8
+        }
+      ]
+    },
+    "warnings": [
+      "substitution_original_player_mismatch"
+    ],
+    "hard": [],
+    "substitutions": [
+      {
+        "position": 0,
+        "playerOutMatchPlayerId": 1,
+        "playerInMatchPlayerId": 7
+      }
+    ],
+    "warningContexts": {
+      "substitution_original_player_mismatch": {
+        "expectedMatchPlayerId": 1
+      }
+    }
+  },
+  {
+    "name": "libero_regular",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 1,
+          "playerInMatchPlayerId": 14
+        }
+      ]
+    },
+    "warnings": [
+      "libero_used_as_regular_substitute"
+    ],
+    "hard": [],
+    "warningContexts": {
+      "libero_used_as_regular_substitute": {}
+    }
+  },
+  {
+    "name": "libero_wrong_regular",
+    "command": {
+      "type": "LIBERO_ENTER",
+      "side": "HOME",
+      "liberoMatchPlayerId": 14,
+      "replacedMatchPlayerId": 6
+    },
+    "warnings": [
+      "libero_wrong_regular_replacement"
+    ],
+    "hard": [],
+    "lastLiberoRegular": 5,
+    "warningContexts": {
+      "libero_wrong_regular_replacement": {
+        "expectedMatchPlayerId": 5
+      }
+    }
+  },
+  {
+    "name": "irregular_second",
+    "command": {
+      "type": "LIBERO_ENTER",
+      "side": "HOME",
+      "liberoMatchPlayerId": 15,
+      "replacedMatchPlayerId": 6
+    },
+    "warnings": [
+      "libero_irregular_second_libero_replacement"
+    ],
+    "hard": [],
+    "activeLiberos": [
+      {
+        "position": 4,
+        "liberoMatchPlayerId": 14,
+        "replacedMatchPlayerId": 5
+      }
+    ],
+    "warningContexts": {
+      "libero_irregular_second_libero_replacement": {}
+    }
+  },
+  {
+    "name": "closed",
+    "command": {
+      "type": "TIMEOUT",
+      "side": "HOME"
+    },
+    "warnings": [],
+    "hard": [
+      "match_already_closed"
+    ],
+    "closed": true,
+    "warningContexts": {}
+  },
+  {
+    "name": "duplicate_effective",
+    "command": {
+      "type": "SUBSTITUTION_REQUEST",
+      "side": "HOME",
+      "replacements": [
+        {
+          "playerOutMatchPlayerId": 1,
+          "playerInMatchPlayerId": 2
+        }
+      ]
+    },
+    "warnings": [
+      "substitution_player_already_bound"
+    ],
+    "hard": [
+      "substitution_player_already_on_court",
+      "duplicate_effective_player"
+    ],
+    "warningContexts": {
+      "substitution_player_already_bound": {
+        "playerInMatchPlayerId": 2
+      }
+    }
+  }
+]

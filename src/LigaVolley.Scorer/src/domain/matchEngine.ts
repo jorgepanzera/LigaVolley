@@ -1,3 +1,4 @@
+import { evaluateCommand, assertEvaluation } from './rulesAssistant';
 import type {
   EventType,
   LiberoPlan,
@@ -18,7 +19,8 @@ export function currentSet(state: MatchState) {
   if (!set) throw new Error('match_set_not_found');
   return set;
 }
-export function applyCommand(source: MatchState, command: MatchCommand) {
+export function applyCommand(source: MatchState, command: MatchCommand, origin: 'DIRECT' | 'PERSISTED' = 'DIRECT') {
+  assertEvaluation(evaluateCommand(source, command), command, origin);
   if (source.closed) throw new Error('match_closed');
   const state = clone(source);
   switch (command.type) {
@@ -37,8 +39,9 @@ export function applyCommand(source: MatchState, command: MatchCommand) {
     case 'CORRECT_LAST_POINT':
       correct(state);
       break;
+    case 'SUBSTITUTION_REQUEST':
     case 'SUBSTITUTION':
-      substitute(state, command.payload);
+      substitute(state, command);
       break;
     case 'LIBERO_ENTER':
       manualEnter(state, command.payload);
@@ -90,7 +93,7 @@ function setLineup(state: MatchState, p: Record<string, unknown>) {
   const libero = p.liberoMatchPlayerId ? Number(p.liberoMatchPlayerId) : undefined,
     positions = Array.isArray(p.liberoLogicalPositions) ? p.liberoLogicalPositions.map(Number) : [];
   const plan = {
-    enabled: Boolean(libero && positions.length),
+    enabled: state.trackLiberoReplacements !== false && Boolean(libero && positions.length),
     liberoMatchPlayerId: libero,
     logicalPositions: [...new Set(positions)].sort(),
   } as LiberoPlan;
@@ -104,7 +107,7 @@ export function validateLiberoPlan(plan: LiberoPlan, lineup: number[]) {
     !plan.liberoMatchPlayerId ||
     lineup.includes(plan.liberoMatchPlayerId) ||
     !plan.logicalPositions.length ||
-    plan.logicalPositions.some((x) => x < 0 || x > 5)
+    plan.logicalPositions.some((x) => !Number.isInteger(x) || x < 0 || x > 5)
   )
     throw new Error('invalid_libero_plan');
   for (let r = 0; r < 6; r++)
@@ -165,6 +168,10 @@ function point(state: MatchState, winner: Side) {
       text: `Set ${set.setNumber} finalizado`,
     });
   }
+  const courtChange = state.rulesSnapshot?.decidingSetCourtChangePoint ?? 8;
+  if (set.setNumber === 5 && Math.max(set.homePoints, set.awayPoints) === courtChange &&
+      Math.max(set.homePoints - (winner === 'HOME' ? 1 : 0), set.awayPoints - (winner === 'AWAY' ? 1 : 0)) < courtChange)
+    consequences.push({ kind: 'REMINDER', text: 'Cambio de campo' });
   set.lastConsequences = consequences;
 }
 function rebuildPoints(set: SetState) {
@@ -193,7 +200,7 @@ function correct(state: MatchState) {
   if (set.winnerSide === 'AWAY') state.awaySets--;
   set.points.pop();
   rebuildPoints(set);
-  set.liberoReplacements.forEach((x) => (x.active = false));
+  set.liberoReplacements.filter(x => x.automatic !== false).forEach((x) => (x.active = false));
   state.matchDecided = state.homeSets === 3 || state.awaySets === 3;
   set.lastSportingEvent = 'CORRECT_LAST_POINT';
   set.lastConsequences = [
@@ -214,57 +221,30 @@ export function effectivePlayers(set: SetState, team: Side) {
     players[x.position] = x.liberoMatchPlayerId;
   return players;
 }
-function substitute(state: MatchState, p: Record<string, unknown>) {
-  const set = currentSet(state),
-    team = parseSide(p),
-    out = numberValue(p, 'playerOutMatchPlayerId'),
-    into = numberValue(p, 'playerInMatchPlayerId'),
-    regular = regularPlayers(set, team),
-    position = regular.indexOf(out);
-  const declaredLiberos = new Set(state.declaredLiberoMatchPlayerIds?.[team] ?? []);
-  if (declaredLiberos.has(out) || declaredLiberos.has(into))
-    throw new Error('substitution_player_is_libero');
-  if (set.status !== 'IN_PROGRESS' || position < 0 || regular.includes(into))
-    throw new Error('invalid_substitution');
-  const starter = set.lineups[team][position],
-    history = set.substitutions.filter((x) => x.side === team && x.position === position);
-  if (out === starter) {
-    if (history.length > 0 || set.substitutions.some((x) => x.playerInMatchPlayerId === into))
-      throw new Error('invalid_substitution_pair');
-  } else if (into !== starter || history.length !== 1 || history[0].playerInMatchPlayerId !== out)
-    throw new Error('invalid_substitution_pair');
-  set.substitutions.push({
-    side: team,
-    position,
-    playerOutMatchPlayerId: out,
-    playerInMatchPlayerId: into,
-  });
-  set.lastSportingEvent = 'SUBSTITUTION';
-  set.lastConsequences = [
-    {
-      kind: 'SUBSTITUTION',
-      side: team,
-      playerMatchPlayerId: into,
-      replacedMatchPlayerId: out,
-      text: `Sustitución ${team}`,
-    },
-    ...reconcileAutomaticLiberos(set),
-  ];
+function substitute(state: MatchState, command: MatchCommand) {
+  const set = currentSet(state), team = parseSide(command.payload), regular = regularPlayers(set, team);
+  const pairs = command.type === 'SUBSTITUTION' ? [command.payload] : command.payload.replacements as Record<string, unknown>[];
+  for (const pair of pairs) set.substitutions.push({ side: team, position: regular.indexOf(Number(pair.playerOutMatchPlayerId)), playerOutMatchPlayerId: Number(pair.playerOutMatchPlayerId), playerInMatchPlayerId: Number(pair.playerInMatchPlayerId) });
+  set.lastSportingEvent = command.type;
+  set.lastConsequences = [{ kind: 'SUBSTITUTION', side: team, text: `Sustitucion ${team}` }];
 }
 function manualEnter(state: MatchState, p: Record<string, unknown>) {
   const set = currentSet(state),
     team = parseSide(p),
     libero = numberValue(p, 'liberoMatchPlayerId'),
     replaced = numberValue(p, 'replacedMatchPlayerId'),
-    position = regularPlayers(set, team).indexOf(replaced),
+    position = effectivePlayers(set, team).indexOf(replaced),
     physical = physicalPosition(position, rotation(set, team));
-  if (position < 0 || ![1, 5, 6].includes(physical)) throw new Error('libero_not_back_row');
+  set.liberoReplacements.filter(x => x.side === team && x.active && x.position === position).forEach(x => { x.active = false; });
+  const regular = regularPlayers(set, team)[position];
+  set.lastLiberoRally ??= {}; set.lastLiberoRegular ??= {};
+  set.lastLiberoRally[team] = set.points.length; set.lastLiberoRegular[team] = regular;
   set.liberoReplacements.push({
     side: team,
     position,
     liberoMatchPlayerId: libero,
-    replacedMatchPlayerId: replaced,
-    active: true,
+    replacedMatchPlayerId: regular,
+    active: true, automatic: false,
   });
   set.lastSportingEvent = 'LIBERO_ENTER';
 }
@@ -277,6 +257,7 @@ function manualExit(state: MatchState, p: Record<string, unknown>) {
     );
   if (!active) throw new Error('invalid_libero_replacement');
   active.active = false;
+  set.lastLiberoRally ??= {}; set.lastLiberoRally[team] = set.points.length;
   set.lastSportingEvent = 'LIBERO_EXIT';
 }
 export function reconcileAutomaticLiberos(set: SetState) {
@@ -284,6 +265,8 @@ export function reconcileAutomaticLiberos(set: SetState) {
   for (const team of ['HOME', 'AWAY'] as Side[]) {
     const plan = set.liberoPlans[team];
     if (!plan?.enabled || !plan.liberoMatchPlayerId) continue;
+    if (set.liberoReplacements.some(x => x.side === team && x.active && x.automatic === false)) continue;
+    if (regularPlayers(set, team).includes(plan.liberoMatchPlayerId)) continue;
     const desired = plan.logicalPositions.filter((logical) => {
       const physical = physicalPosition(logical, rotation(set, team));
       return physical === 5 || physical === 6 || (physical === 1 && set.servingSide !== team);
@@ -308,7 +291,7 @@ export function reconcileAutomaticLiberos(set: SetState) {
         position,
         liberoMatchPlayerId: plan.liberoMatchPlayerId,
         replacedMatchPlayerId: regular,
-        active: true,
+        active: true, automatic: true,
       });
       consequences.push({
         kind: 'LIBERO_ENTER',
@@ -324,7 +307,7 @@ export function reconcileAutomaticLiberos(set: SetState) {
 function timeout(state: MatchState, team: Side) {
   const set = currentSet(state),
     key = team === 'HOME' ? 'homeTimeouts' : 'awayTimeouts';
-  if (set.status !== 'IN_PROGRESS' || set[key] >= 2) throw new Error('timeout_limit_reached');
+
   set[key]++;
   set.lastSportingEvent = 'TIMEOUT';
   set.lastConsequences = [{ kind: 'TIMEOUT', side: team, text: `Timeout ${team}` }];
@@ -338,7 +321,7 @@ export function replay(
   base: MatchState,
   events: Array<{ type: EventType; payload: Record<string, unknown> }>,
 ) {
-  return events.reduce((state, event) => applyCommand(state, event), base);
+  return events.reduce((state, event) => applyCommand(state, event, 'PERSISTED'), base);
 }
 export function physicalPosition(logicalIndex: number, rotationOffset: number) {
   return ((((logicalIndex - rotationOffset) % 6) + 6) % 6) + 1;

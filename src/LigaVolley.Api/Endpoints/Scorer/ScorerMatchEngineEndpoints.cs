@@ -47,6 +47,11 @@ internal static class ScorerMatchEngineEndpoints
         // Example: POST /api/scorer/matches/123/close
         // Body: { "closeUuid": "7f88581e-acbe-4232-8917-f6a94011b3d3" }
         group.MapPost("/close",async(int matchId,CloseMatchRequest request,MatchEngineService service,CancellationToken ct)=>Results.Ok(await service.CloseAsync(matchId,request,ct))).Produces<CloseMatchResult>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
+        // Example: POST /api/scorer/matches/123/sets/1/substitution-requests
+        // Body: { "eventUuid": "6b6db725-b93f-41be-b431-f21b1a2673e0", "side": "Home", "replacements": [{ "playerOutMatchPlayerId": 101, "playerInMatchPlayerId": 109 }], "confirmedRuleWarnings": [] }
+        group.MapPost("/sets/{setNumber:int}/substitution-requests", async (int matchId, byte setNumber, SubstitutionRequest request, MatchEngineService service, CancellationToken ct) => Results.Ok(await service.SubstituteRequestAsync(matchId, setNumber, request, ct)))
+            .WithSummary("Record one atomic substitution request. Unconfirmed sporting warnings return 409 rule_confirmation_required with warnings; retry the same UUID with specific confirmedRuleWarnings.")
+            .Produces<MatchEngineCommandResult>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
         return endpoints;
     }
 }

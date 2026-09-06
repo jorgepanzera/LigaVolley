@@ -42,9 +42,9 @@ public sealed class DemoMatchSeederTests(LigaVolleyApiFactory factory) : IClassF
         var oldSheet = await factory.Client.GetFromJsonAsync<MatchSheetSnapshotDto>($"{route}/sheet", Json);
         var oldSheetId = await db.MatchSheets.Where(x => x.MatchId == demo.MatchId).Select(x => x.MatchSheetId).SingleAsync();
         (await factory.Client.PostAsync($"{route}/sets/prepare", null)).EnsureSuccessStatusCode();
-        foreach (var side in new[] { "HOME", "AWAY" })
+        foreach (var side in new[] { MatchSide.Home, MatchSide.Away })
         {
-            var players = (side == "HOME" ? oldSheet!.Home : oldSheet!.Away).Players.Select(x => x.MatchPlayerId).ToArray();
+            var players = (side == MatchSide.Home ? oldSheet!.Home : oldSheet!.Away).Players.Select(x => x.MatchPlayerId).ToArray();
             (await factory.Client.PutAsJsonAsync($"{route}/sets/1/lineups/{side}",
                 new SetLineupRequest(players[0], players[1], players[2], players[3], players[4], players[5]), Json)).EnsureSuccessStatusCode();
         }

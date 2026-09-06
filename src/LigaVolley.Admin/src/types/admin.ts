@@ -1,5 +1,6 @@
+import type { CompetitionMatchRules } from '../components/CompetitionMatchRules';
 export type Status='Draft'|'Scheduled'|'InProgress'|'Finished'|'Cancelled';
-export type Competition={competitionId:number;name:string;season:{seasonId:number;year:number;name:string};division:{divisionId:number;name:string;gender:string};format:{competitionFormatId:number;name:string;minTeams:number;maxTeams:number};periodType:string;startDate?:string;endDate?:string;status:Status;scheduledAt?:string;completedAt?:string};
+export type Competition={matchRules?:CompetitionMatchRules;competitionId:number;name:string;season:{seasonId:number;year:number;name:string};division:{divisionId:number;name:string;gender:string};format:{competitionFormatId:number;name:string;minTeams:number;maxTeams:number};periodType:string;startDate?:string;endDate?:string;status:Status;scheduledAt?:string;completedAt?:string};
 export type CompetitionSummary={competitionId:number;name:string;seasonYear:number;divisionName:string;gender:string;formatName:string;periodType:string;status:Status};
 export type SchedulePreview={competitionId:number;status:Status;canSchedule:boolean;activeTeamEntries:number;minTeams:number;maxTeams:number;initialMatches:number;scheduledMatches:number;unscheduledMatches:number;blockers:{code:string;message:string;teamEntryIds?:number[];matchIds?:number[]}[]};
 export type Entry={teamEntryId:number;teamId:number;teamName:string;seed?:number;status:'Registered'|'Active'|'Withdrawn'|'Disqualified'};

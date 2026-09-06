@@ -31,6 +31,14 @@ public sealed class CompetitionFormat
     public string? Description { get; private set; }
     public short MinTeams { get; private set; }
     public short MaxTeams { get; private set; }
+    public int MaxSubstitutionsPerSet { get; private set; } = 6;
+    public int MaxTimeoutsPerSet { get; private set; } = 2;
+    public void ConfigureMatchRules(int substitutions, int timeouts)
+    {
+        MatchSheets.RulesSnapshot.ValidateLimit(substitutions);
+        MatchSheets.RulesSnapshot.ValidateLimit(timeouts);
+        MaxSubstitutionsPerSet = substitutions; MaxTimeoutsPerSet = timeouts;
+    }
     public bool Active { get; private set; }
     public List<FormatPhase> Phases { get; private set; } = [];
     public List<FormatQualificationRule> QualificationRules { get; private set; } = [];
@@ -58,6 +66,7 @@ public sealed class CompetitionFormat
     public void ReplaceWith(CompetitionFormat replacement)
     {
         UpdateMetadata(replacement.Code, replacement.Name, replacement.Description, replacement.MinTeams, replacement.MaxTeams);
+        ConfigureMatchRules(replacement.MaxSubstitutionsPerSet, replacement.MaxTimeoutsPerSet);
         Phases = replacement.Phases;
         QualificationRules = replacement.QualificationRules;
         ScoringRules = replacement.ScoringRules;

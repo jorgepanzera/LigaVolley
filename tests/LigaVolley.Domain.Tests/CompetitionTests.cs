@@ -9,6 +9,22 @@ namespace LigaVolley.Domain.Tests;
 public sealed class CompetitionTests
 {
     [Fact]
+    public void Match_rules_resolve_nullable_overrides_without_mutating_frozen_snapshot()
+    {
+        var competition = Create();
+        Assert.Equal(6, competition.EffectiveMatchRules().MaxSubstitutionsPerSet);
+        competition.ConfigureMatchRules(8, null);
+        var frozen = competition.EffectiveMatchRules();
+        Assert.Equal(8, frozen.MaxSubstitutionsPerSet);
+        Assert.Equal(2, frozen.MaxTimeoutsPerSet);
+        competition.ConfigureMatchRules(null, 3);
+        Assert.Equal(6, competition.EffectiveMatchRules().MaxSubstitutionsPerSet);
+        Assert.Equal(3, competition.EffectiveMatchRules().MaxTimeoutsPerSet);
+        Assert.Equal(8, frozen.MaxSubstitutionsPerSet);
+        Assert.Throws<DomainValidationException>(() => competition.ConfigureMatchRules(0, null));
+        Assert.Throws<DomainValidationException>(() => competition.ConfigureMatchRules(null, 100));
+    }
+    [Fact]
     public void Constructor_RequiresValidDatesAndStartsInDraft()
     {
         var competition = Create();

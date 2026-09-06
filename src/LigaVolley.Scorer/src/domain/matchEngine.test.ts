@@ -22,6 +22,7 @@ const ready = () => {
         ),
       },
     });
+  s.declaredLiberoMatchPlayerIds.HOME = [88];
   return applyCommand(s, { type: 'START_SET', payload: { initialServingSide: 'HOME' } });
 };
 const points = (s: MatchState, side: Side, n: number) => {
@@ -76,17 +77,17 @@ describe('local MatchEngine', () => {
     expect(s.sets[0].substitutions).toHaveLength(1);
     s = applyCommand(s, {
       type: 'LIBERO_ENTER',
-      payload: { side: 'HOME', liberoMatchPlayerId: 88, replacedMatchPlayerId: 99 },
+      payload: { side: 'HOME', liberoMatchPlayerId: 88, replacedMatchPlayerId: 99, confirmedRuleWarnings: ['libero_service_not_allowed'] },
     });
     s = applyCommand(s, {
       type: 'LIBERO_EXIT',
-      payload: { side: 'HOME', liberoMatchPlayerId: 88 },
+      payload: { side: 'HOME', liberoMatchPlayerId: 88, confirmedRuleWarnings: ['libero_replacement_without_completed_rally'] },
     });
     s = applyCommand(s, { type: 'TIMEOUT', payload: { side: 'HOME' } });
     expect(s.sets[0].homeTimeouts).toBe(1);
     expect(s.sets[0].liberoReplacements[0].active).toBe(false);
   });
-  it('rejects normal substitutions when either player is a declared libero', () => {
+  it('requires confirmation for a libero substitute and rejects an absent outgoing player', () => {
     const state = ready();
     state.declaredLiberoMatchPlayerIds.HOME = [88];
     expect(() =>
@@ -94,13 +95,13 @@ describe('local MatchEngine', () => {
         type: 'SUBSTITUTION',
         payload: { side: 'HOME', playerOutMatchPlayerId: 10, playerInMatchPlayerId: 88 },
       }),
-    ).toThrow('substitution_player_is_libero');
+    ).toThrow('rule_confirmation_required');
     expect(() =>
       applyCommand(state, {
         type: 'SUBSTITUTION',
         payload: { side: 'HOME', playerOutMatchPlayerId: 88, playerInMatchPlayerId: 99 },
       }),
-    ).toThrow('substitution_player_is_libero');
+    ).toThrow('invalid_substitution');
     expect(state.sets[0].substitutions).toHaveLength(0);
   });
   it('keeps normal substitutions aligned with the backend starter-substitute pair', () => {
@@ -114,7 +115,7 @@ describe('local MatchEngine', () => {
         type: 'SUBSTITUTION',
         payload: { side: 'HOME', playerOutMatchPlayerId: 99, playerInMatchPlayerId: 98 },
       }),
-    ).toThrow('invalid_substitution_pair');
+    ).toThrow('rule_confirmation_required');
     state = applyCommand(state, {
       type: 'SUBSTITUTION',
       payload: { side: 'HOME', playerOutMatchPlayerId: 99, playerInMatchPlayerId: 10 },
@@ -157,6 +158,7 @@ describe('local MatchEngine', () => {
   });
   it('derives pre-serve libero state but keeps the regular player as server at P1', () => {
     let s = applyCommand(initialState(), { type: 'PREPARE_SET', payload: {} });
+    s.declaredLiberoMatchPlayerIds.HOME = [88];
     s = applyCommand(s, {
       type: 'SET_LINEUP',
       payload: {
@@ -197,12 +199,12 @@ describe('local MatchEngine', () => {
     });
     s = applyCommand(s, {
       type: 'LIBERO_ENTER',
-      payload: { side: 'HOME', liberoMatchPlayerId: 88, replacedMatchPlayerId: 99 },
+      payload: { side: 'HOME', liberoMatchPlayerId: 88, replacedMatchPlayerId: 99, confirmedRuleWarnings: ['libero_service_not_allowed'] },
     });
     expect(effectivePlayers(s.sets[0], 'HOME')[0]).toBe(88);
     s = applyCommand(s, {
       type: 'LIBERO_EXIT',
-      payload: { side: 'HOME', liberoMatchPlayerId: 88 },
+      payload: { side: 'HOME', liberoMatchPlayerId: 88, confirmedRuleWarnings: ['libero_replacement_without_completed_rally'] },
     });
     expect(effectivePlayers(s.sets[0], 'HOME')[0]).toBe(99);
   });

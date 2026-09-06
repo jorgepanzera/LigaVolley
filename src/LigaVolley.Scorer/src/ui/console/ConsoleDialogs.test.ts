@@ -54,7 +54,7 @@ describe('normal substitution candidates', () => {
       normalSubstitutionCandidates(snapshot, 'HOME', state.sets[0], 0).map((x) => x.matchPlayerId),
     ).toEqual([10]);
   });
-  it('does not allow an active libero to be selected as the outgoing normal player', () => {
+  it('allows substituting the logical regular while a libero covers the slot', () => {
     const state = playing();
     state.sets[0].liberoPlans.HOME = {
       enabled: true,
@@ -68,9 +68,7 @@ describe('normal substitution candidates', () => {
       replacedMatchPlayerId: 10,
       active: true,
     });
-    expect(canNormalSubstituteFromPosition(state.sets[0], 'HOME', 0)).toBe(false);
-    expect(normalSubstitutionBlockReason(state.sets[0], 'HOME', 0)).toContain(
-      'no pueden participar en sustituciones normales',
-    );
+    expect(canNormalSubstituteFromPosition(state.sets[0], 'HOME', 0)).toBe(true);
+    expect(normalSubstitutionBlockReason(state.sets[0], 'HOME', 0)).toBeUndefined();
   });
 });

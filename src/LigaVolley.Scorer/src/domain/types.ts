@@ -1,3 +1,4 @@
+import type { RulesSnapshot } from './rulesAssistant';
 export type Side = 'HOME' | 'AWAY';
 export type RuntimeState = 'BOOTSTRAPPING' | 'READY' | 'SYNCING' | 'OFFLINE' | 'BLOCKED' | 'CLOSED';
 export type SyncStatus = 'PENDING' | 'SYNCING' | 'ACCEPTED';
@@ -8,6 +9,7 @@ export type EventType =
   | 'START_SET'
   | 'POINT'
   | 'CORRECT_LAST_POINT'
+  | 'SUBSTITUTION_REQUEST'
   | 'SUBSTITUTION'
   | 'LIBERO_ENTER'
   | 'LIBERO_EXIT'
@@ -24,6 +26,7 @@ export interface Substitution {
   playerInMatchPlayerId: number;
 }
 export interface LiberoReplacement {
+  automatic?: boolean;
   side: Side;
   position: number;
   liberoMatchPlayerId: number;
@@ -45,7 +48,8 @@ export interface SportingConsequence {
     | 'TIMEOUT'
     | 'SUBSTITUTION'
     | 'CORRECTION'
-    | 'SET_FINISHED';
+    | 'SET_FINISHED'
+    | 'REMINDER';
   side?: Side;
   playerMatchPlayerId?: number;
   replacedMatchPlayerId?: number;
@@ -68,10 +72,16 @@ export interface SetState {
   substitutions: Substitution[];
   liberoReplacements: LiberoReplacement[];
   points: Side[];
+  lastLiberoRally?: Partial<Record<Side, number | null>>;
+  lastLiberoRegular?: Partial<Record<Side, number | null>>;
   lastSportingEvent?: EventType;
   lastConsequences: SportingConsequence[];
 }
 export interface MatchState {
+  rulesSnapshot?: RulesSnapshot;
+  matchPlayerIds?: Record<Side, number[]>;
+  trackSubstitutions?: boolean;
+  trackLiberoReplacements?: boolean;
   status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
   homeSets: number;
   awaySets: number;
@@ -121,6 +131,7 @@ export interface SnapshotRecord {
   updatedAt: string;
 }
 export interface ServerSheetSnapshot {
+  rulesSnapshot?: RulesSnapshot;
   sheet: { matchSheetId: number; sheetUuid: string; status: string; openedAt: string };
   match: { matchId: number; status: string; homeTeamEntryId: number; awayTeamEntryId: number };
   competition?: {

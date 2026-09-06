@@ -6,6 +6,7 @@ import {
   type ServerSheetSnapshot,
   type SessionRecord,
 } from '../domain/types';
+import { legacyRules } from '../domain/rulesAssistant';
 import { applyCommand } from '../domain/matchEngine';
 export class MatchRepository {
   constructor(private database: ScorerDatabase) {}
@@ -78,7 +79,7 @@ export class MatchRepository {
           sessionUuid: local.session.sessionUuid,
           sequence,
           type: command.type,
-          payload: command.payload,
+          payload: { ...command.payload, confirmedRuleWarnings: command.payload.confirmedRuleWarnings ?? [] },
           occurredAt: now,
           syncStatus: 'PENDING',
           createdAt: now,
@@ -136,10 +137,10 @@ export class MatchRepository {
           local.sheet.bootstrap,
         );
         for (const event of events.slice(0, index))
-          state = applyCommand(state, { type: event.type, payload: event.payload });
+          state = applyCommand(state, { type: event.type, payload: event.payload }, 'PERSISTED');
 
         try {
-          applyCommand(state, { type: events[index].type, payload: events[index].payload });
+          applyCommand(state, { type: events[index].type, payload: events[index].payload }, 'PERSISTED');
         } catch (error) {
           if (error instanceof Error && error.message === rejected.code) {
             await this.database.snapshots.update(matchId, {
@@ -192,6 +193,12 @@ export function fromServer(s: ServerSheetSnapshot): MatchState {
 }
 
 export function normalizeState(state: MatchState, server?: ServerSheetSnapshot): MatchState {
+  state.rulesSnapshot ??= server?.rulesSnapshot ?? { ...legacyRules };
+  if (server) {
+    state.matchPlayerIds = { HOME: server.home.players.map(x => x.matchPlayerId), AWAY: server.away.players.map(x => x.matchPlayerId) };
+    state.trackSubstitutions = server.trackSubstitutions ?? true;
+    state.trackLiberoReplacements = server.trackLiberoReplacements ?? true;
+  }
   if (server)
     state.declaredLiberoMatchPlayerIds = {
       HOME: server.home.liberos.map((x) => x.matchPlayerId),

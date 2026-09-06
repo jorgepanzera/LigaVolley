@@ -46,11 +46,13 @@ public sealed class CompetitionFormatServiceTests
     public async Task Create_AndCloneProduceIndependentAggregates()
     {
         var repository = new FakeCompetitionFormatRepository(); var unit = new FakeUnitOfWork(); var service = new CompetitionFormatService(repository, unit);
-        var created = await service.CreateAsync(new("RR8", "Eight", null, 8, 8, EightTeamDefinition()), default);
+        var created = await service.CreateAsync(new("RR8", "Eight", null, 8, 8, EightTeamDefinition(), 8, 3), default);
         Assert.Equal("RR8", created.Code); Assert.False(created.Active); Assert.Equal(1, unit.SaveCount);
         repository.Seed(1, repository.Added!);
         var clone = await service.CloneAsync(1, new("RR8_V2", "Eight v2", null), default);
         Assert.Equal("RR8_V2", clone.Code); Assert.False(clone.Active); Assert.NotSame(repository.Added, repository.GetAsync(1, false, default).Result);
+        Assert.Equal(8, clone.MaxSubstitutionsPerSet);
+        Assert.Equal(3, clone.MaxTimeoutsPerSet);
     }
 
     [Fact]
@@ -68,6 +70,15 @@ public sealed class CompetitionFormatServiceTests
         var metadata=await service.UpdateAsync(1,new("LOCK","Renamed","Description",8,8,EightTeamDefinition()),default);
         Assert.Equal("Renamed",metadata.Name);Assert.True(metadata.IsStructurallyLocked);
         await Assert.ThrowsAsync<ResourceConflictException>(()=>service.UpdateAsync(1,new("LOCK2","Renamed",null,8,8,EightTeamDefinition()),default));
+        await Assert.ThrowsAsync<ResourceConflictException>(()=>service.UpdateAsync(1,new("LOCK","Renamed",null,8,8,EightTeamDefinition(),8,2),default));
+    }
+
+    [Fact]
+    public async Task Validate_includes_invalid_match_rule_limits()
+    {
+        var result = await Service().ValidateAsync(new(8, 8, EightTeamDefinition(), MaxSubstitutionsPerSet: 0, MaxTimeoutsPerSet: 100));
+        Assert.False(result.IsValid);
+        Assert.Equal(2, result.Errors.Count(x => x.Code == "invalid_match_rule_limit"));
     }
 
     [Fact]

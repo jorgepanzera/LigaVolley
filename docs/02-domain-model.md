@@ -89,3 +89,7 @@ Match Readiness es una evaluación sin persistencia que reutiliza las precondici
 ## Match-specific jersey number and captain
 
 `CompetitionRosterPlayer` conserva la habilitación competitiva y el rol contextual. El dorsal y la capitanía pertenecen exclusivamente a `MatchPlayer`, se capturan en `OpenMatchSheet` y quedan congelados para esa acta.
+
+## SCORER RULES ASSISTANT v1
+
+La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.

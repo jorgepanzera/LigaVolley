@@ -12,7 +12,7 @@ public sealed record CompetitionStructureSourceDto(CompetitionStructureSourceTyp
 public sealed record CreateCompetitionRequest(string Name, int SeasonId, int DivisionId, CompetitionPeriodType PeriodType, DateOnly? StartDate, DateOnly? EndDate, CompetitionStructureSourceDto StructureSource);
 public sealed record UpdateCompetitionRequest(string Name, CompetitionPeriodType PeriodType, DateOnly? StartDate, DateOnly? EndDate);
 public sealed record ChangeCompetitionStatusRequest(CompetitionStatus Status);
-public sealed record CompetitionDto(int CompetitionId, string Name, SeasonSummaryDto Season, DivisionSummaryDto Division, CompetitionFormatSummaryDto Format, CompetitionPeriodType PeriodType, DateOnly? StartDate, DateOnly? EndDate, CompetitionStatus Status, DateTimeOffset? ScheduledAt, DateTimeOffset? CompletedAt);
+public sealed record CompetitionDto(int CompetitionId, string Name, SeasonSummaryDto Season, DivisionSummaryDto Division, CompetitionFormatSummaryDto Format, CompetitionPeriodType PeriodType, DateOnly? StartDate, DateOnly? EndDate, CompetitionStatus Status, DateTimeOffset? ScheduledAt, DateTimeOffset? CompletedAt, CompetitionMatchRulesDto? MatchRules = null);
 public sealed record CompetitionSummaryDto(int CompetitionId, string Name, short SeasonYear, string DivisionName, Gender Gender, string FormatName, CompetitionPeriodType PeriodType, CompetitionStatus Status);
 public sealed record CompetitionStructureDto(int CompetitionId, IReadOnlyList<CompetitionPhaseDto> Phases);
 public sealed record CompetitionPhaseDto(int PhaseId, string Code, string Name, PhaseType PhaseType, PhaseRole PhaseRole, short Sequence, short? Rounds, FixtureMode? FixtureMode, CompetitionPhaseStatus Status, IReadOnlyList<CompetitionPhaseGroupDto> Groups, IReadOnlyList<CompetitionPlayoffSeriesDto> Series);
@@ -22,3 +22,6 @@ public sealed record CompetitionSeriesParticipantSourceDto(int SeriesParticipant
 public sealed record CompetitionScheduleBlockerDto(string Code, string Message, IReadOnlyList<int>? TeamEntryIds = null, IReadOnlyList<int>? MatchIds = null);
 public sealed record CompetitionSchedulePreviewDto(int CompetitionId, CompetitionStatus Status, bool CanSchedule, int ActiveTeamEntries, int MinTeams, int MaxTeams, int InitialMatches, int ScheduledMatches, int UnscheduledMatches, IReadOnlyList<CompetitionScheduleBlockerDto> Blockers);
 public sealed record CompetitionScheduleResultDto(int CompetitionId, CompetitionStatus Status, DateTimeOffset ScheduledAt, bool AlreadyScheduled, int ActiveTeamEntries, int InitialMatches, int ScheduledMatches, int UnscheduledMatches);
+
+public sealed record UpdateCompetitionMatchRulesRequest(int? MaxSubstitutionsPerSetOverride, int? MaxTimeoutsPerSetOverride);
+public sealed record CompetitionMatchRulesDto(int? MaxSubstitutionsPerSetOverride, int? MaxTimeoutsPerSetOverride, int DefaultMaxSubstitutionsPerSet, int DefaultMaxTimeoutsPerSet, int EffectiveMaxSubstitutionsPerSet, int EffectiveMaxTimeoutsPerSet);

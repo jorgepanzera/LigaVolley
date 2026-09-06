@@ -33,6 +33,7 @@ export class SyncService {
     if (!local || local.session.status !== 'ACTIVE') return;
     const events = await repo.pending(local.session.sessionUuid);
     if (!events.length) return;
+    let accepted = false;
     this.phase = 'SYNCING';
     this.changed();
     await this.database.events
@@ -68,6 +69,7 @@ export class SyncService {
       await this.database.appMeta.delete(`syncBlocked:${matchId}`);
       this.phase = response.snapshot.sheet.status === 'CLOSED' ? 'BLOCKED' : 'IDLE';
       this.lastError = undefined;
+      accepted = true;
     } catch (error) {
       const p = error as ApiProblem;
       await this.database.events
@@ -105,5 +107,15 @@ export class SyncService {
     } finally {
       this.changed();
     }
+    // An action may be persisted while this batch is in flight. Drain that continuation
+    // without waiting for another sporting action or connectivity transition.
+    if (
+      accepted &&
+      this.phase === 'IDLE' &&
+      (await repo.pending(local.session.sessionUuid)).some(
+        (x) => x.sequence > events[events.length - 1].sequence,
+      )
+    )
+      await this.sync(matchId);
   }
 }

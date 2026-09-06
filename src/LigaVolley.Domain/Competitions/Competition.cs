@@ -37,6 +37,19 @@ public sealed class Competition
     public CompetitionPeriodType PeriodType { get; private set; }
     public DateOnly? StartDate { get; private set; }
     public DateOnly? EndDate { get; private set; }
+    public int? MaxSubstitutionsPerSetOverride { get; private set; }
+    public int? MaxTimeoutsPerSetOverride { get; private set; }
+    public void ConfigureMatchRules(int? substitutions, int? timeouts)
+    {
+        if (Status is CompetitionStatus.Finished or CompetitionStatus.Cancelled)
+            throw new DomainValidationException("Match rules cannot change for a finished or cancelled competition.");
+        MatchSheets.RulesSnapshot.ValidateLimit(substitutions);
+        MatchSheets.RulesSnapshot.ValidateLimit(timeouts);
+        MaxSubstitutionsPerSetOverride = substitutions; MaxTimeoutsPerSetOverride = timeouts;
+    }
+    public MatchSheets.RulesSnapshot EffectiveMatchRules() => MatchSheets.RulesSnapshot.Create(
+        MaxSubstitutionsPerSetOverride ?? CompetitionFormat.MaxSubstitutionsPerSet,
+        MaxTimeoutsPerSetOverride ?? CompetitionFormat.MaxTimeoutsPerSet);
     public CompetitionStatus Status { get; private set; }
     public DateTimeOffset? ScheduledAt { get; private set; }
     public DateTimeOffset? CompletedAt { get; private set; }

@@ -28,12 +28,12 @@ export function normalSubstitutionCandidates(
   );
 }
 export function canNormalSubstituteFromPosition(set: SetState, side: Side, logical: number) {
-  return effectivePlayers(set, side)[logical] === regularPlayers(set, side)[logical];
+  return regularPlayers(set, side)[logical] !== undefined;
 }
 export function normalSubstitutionBlockReason(set: SetState, side: Side, logical: number) {
   return canNormalSubstituteFromPosition(set, side, logical)
     ? undefined
-    : 'El jugador en cancha es un líbero. Los líberos no pueden participar en sustituciones normales.';
+    : 'No se puede determinar el regular de esta plaza.';
 }
 export function PlayerActionSheet({
   side,
@@ -44,6 +44,10 @@ export function PlayerActionSheet({
   error,
   onClose,
   onSubstitute,
+  onSubstitutionRequest,
+  onLiberoEnter,
+  onLiberoExit,
+  onObservedServer,
 }: {
   side: Side;
   logical: number;
@@ -53,14 +57,30 @@ export function PlayerActionSheet({
   error?: string;
   onClose: () => void;
   onSubstitute: (outId: number, inId: number) => void;
+  onSubstitutionRequest?: (
+    pairs: Array<{ playerOutMatchPlayerId: number; playerInMatchPlayerId: number }>,
+  ) => void;
+  onLiberoEnter?: (libero: number, replaced: number) => void;
+  onLiberoExit?: (libero: number) => void;
+  onObservedServer?: (server: number, winner: Side) => void;
 }) {
   useEscape(onClose);
   const [candidate, setCandidate] = useState<number>();
+  const [exceptional, setExceptional] = useState(false);
+  const [additional, setAdditional] = useState<
+    Array<{ playerOutMatchPlayerId: number; playerInMatchPlayerId: number }>
+  >([]);
   const regular = regularPlayers(set, side)[logical],
     effective = effectivePlayers(set, side)[logical],
     current = player(snapshot, side, effective),
     under = player(snapshot, side, regular),
-    available = normalSubstitutionCandidates(snapshot, side, set, logical),
+    available = exceptional
+      ? (team(snapshot, side)?.players.filter(
+          (x) =>
+            !effectivePlayers(set, side).includes(x.matchPlayerId) &&
+            !regularPlayers(set, side).includes(x.matchPlayerId),
+        ) ?? [])
+      : normalSubstitutionCandidates(snapshot, side, set, logical),
     blockReason = normalSubstitutionBlockReason(set, side, logical);
   return (
     <div className="backdrop" onMouseDown={onClose}>
@@ -86,13 +106,22 @@ export function PlayerActionSheet({
               {shortName(under?.displayName)}
             </p>
             <p className="action-warning" role="status">
-              {blockReason}
+              {blockReason ??
+                'La sustitución cambia al regular de esta plaza y conserva al líbero en cancha.'}
             </p>
           </>
         )}
         {trackSubstitutions && canNormalSubstituteFromPosition(set, side, logical) && (
           <>
-            <h3>Sustituir</h3>
+            <h3>Sustituir al regular #{under?.jerseyNumber}</h3>
+            <button
+              onClick={() => {
+                setExceptional(!exceptional);
+                setCandidate(undefined);
+              }}
+            >
+              {exceptional ? 'Opciones habituales' : 'Otra opción por decisión del juez'}
+            </button>
             <div className="selector-list">
               {available.map((p) => (
                 <button
@@ -122,12 +151,117 @@ export function PlayerActionSheet({
                   #{player(snapshot, side, candidate)?.jerseyNumber}{' '}
                   {player(snapshot, side, candidate)?.displayName}
                 </b>
-                <button onClick={() => onSubstitute(regular, candidate)}>
+                {additional.map((pair, index) => (
+                  <div key={index}>
+                    <select
+                      aria-label={`Sale en cambio ${index + 2}`}
+                      value={pair.playerOutMatchPlayerId}
+                      onChange={(e) =>
+                        setAdditional(
+                          additional.map((x, i) =>
+                            i === index
+                              ? { ...x, playerOutMatchPlayerId: Number(e.target.value) }
+                              : x,
+                          ),
+                        )
+                      }
+                    >
+                      <option value={0}>Sale...</option>
+                      {regularPlayers(set, side)
+                        .filter((id) => id !== regular)
+                        .map((id) => (
+                          <option key={id} value={id}>
+                            #{player(snapshot, side, id)?.jerseyNumber}
+                          </option>
+                        ))}
+                    </select>
+                    <select
+                      aria-label={`Entra en cambio ${index + 2}`}
+                      value={pair.playerInMatchPlayerId}
+                      onChange={(e) =>
+                        setAdditional(
+                          additional.map((x, i) =>
+                            i === index
+                              ? { ...x, playerInMatchPlayerId: Number(e.target.value) }
+                              : x,
+                          ),
+                        )
+                      }
+                    >
+                      <option value={0}>Entra...</option>
+                      {team(snapshot, side)
+                        ?.players.filter(
+                          (x) =>
+                            !effectivePlayers(set, side).includes(x.matchPlayerId) &&
+                            !regularPlayers(set, side).includes(x.matchPlayerId),
+                        )
+                        .map((x) => (
+                          <option key={x.matchPlayerId} value={x.matchPlayerId}>
+                            #{x.jerseyNumber}
+                          </option>
+                        ))}
+                    </select>
+                    <button onClick={() => setAdditional(additional.filter((_, i) => i !== index))}>
+                      Quitar
+                    </button>
+                  </div>
+                ))}
+                {onSubstitutionRequest && (
+                  <button
+                    onClick={() =>
+                      setAdditional([
+                        ...additional,
+                        { playerOutMatchPlayerId: 0, playerInMatchPlayerId: 0 },
+                      ])
+                    }
+                  >
+                    + Agregar otro cambio
+                  </button>
+                )}
+                <button
+                  onClick={() =>
+                    onSubstitutionRequest
+                      ? onSubstitutionRequest([
+                          { playerOutMatchPlayerId: regular, playerInMatchPlayerId: candidate },
+                          ...additional,
+                        ])
+                      : onSubstitute(regular, candidate)
+                  }
+                >
                   Confirmar sustitución
                 </button>
               </div>
             )}
           </>
+        )}
+        {snapshot.trackLiberoReplacements !== false && (
+          <details>
+            <summary>Reemplazo de líbero</summary>
+            {team(snapshot, side)
+              ?.liberos.filter((x) => !effectivePlayers(set, side).includes(x.matchPlayerId))
+              .map((x) => (
+                <button
+                  key={x.matchPlayerId}
+                  onClick={() => onLiberoEnter?.(x.matchPlayerId, effective)}
+                >
+                  Entra líbero #{player(snapshot, side, x.matchPlayerId)?.jerseyNumber}
+                </button>
+              ))}
+            {effective !== regular && (
+              <button onClick={() => onLiberoExit?.(effective)}>Sale líbero</button>
+            )}
+          </details>
+        )}
+        {set.servingSide === side && (
+          <details>
+            <summary>Servidor observado</summary>
+            <p>Registrar este servidor observado para el siguiente punto.</p>
+            {(['HOME', 'AWAY'] as Side[]).map((winner) => (
+              <button key={winner} onClick={() => onObservedServer?.(effective, winner)}>
+                Registrar punto {winner}
+              </button>
+            ))}
+          </details>
         )}
         {!trackSubstitutions && <p>Sustituciones no registradas</p>}
       </aside>
@@ -211,6 +345,13 @@ export function HistoryDrawer({ events, onClose }: { events: LocalEvent[]; onClo
                   minute: '2-digit',
                 })}
               </time>
+              {Array.isArray(event.payload.confirmedRuleWarnings) &&
+                event.payload.confirmedRuleWarnings.length > 0 && (
+                  <details>
+                    <summary>Decisión confirmada por el juez</summary>
+                    <p>{event.payload.confirmedRuleWarnings.join(', ')}</p>
+                  </details>
+                )}
             </article>
           ))
         )}
@@ -224,7 +365,7 @@ function eventLabel(event: LocalEvent) {
     ? `Punto ${side}`
     : event.type === 'TIMEOUT'
       ? `Timeout ${side}`
-      : event.type === 'SUBSTITUTION'
+      : event.type === 'SUBSTITUTION' || event.type === 'SUBSTITUTION_REQUEST'
         ? `Sustitución ${side}`
         : event.type === 'CORRECT_LAST_POINT'
           ? 'Último punto corregido'
@@ -281,7 +422,9 @@ export function MatchReview({
           )}
         </div>
         <p>
-          Timeouts del último set: HOME {set.homeTimeouts}/2 · AWAY {set.awayTimeouts}/2
+          Timeouts del último set: HOME {set.homeTimeouts}/
+          {snapshot.rulesSnapshot?.maxTimeoutsPerSet ?? 2} · AWAY {set.awayTimeouts}/
+          {snapshot.rulesSnapshot?.maxTimeoutsPerSet ?? 2}
         </p>
         <footer>
           <button onClick={onHistory}>Ver historial</button>

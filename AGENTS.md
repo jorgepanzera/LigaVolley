@@ -233,7 +233,7 @@ LigaVolley.Scorer PWA Core v1 está cerrado: React + TypeScript + Vite, Service 
 
 ### Electronic Scoresheet Match Engine v1
 
-Electronic Scoresheet Match Engine v1 está cerrado: Match best-of-5, primero a tres sets; sets 1..4 a 25 y set 5 a 15, siempre diferencia mínima de dos. Los sets se preparan secuencialmente, las lineups P1..P6 sólo se editan en READY, el saque/servidor/rotación son derivados y Point finaliza el set automáticamente. CorrectLastPoint sólo cancela el último evento deportivo efectivo y reconstruye el estado. Sustituciones y reemplazos de líbero son seguimientos configurables por MatchSheet; timeouts son obligatorios y máximo dos por equipo/set. El tercer set ganado decide el resultado pero sólo CloseMatch deja MatchSheet CLOSED y Match FINISHED y dispara la progresión existente. CLOSED es definitivo. Offline/sync no pertenece a este slice.
+Electronic Scoresheet Match Engine v1 está cerrado: Match best-of-5, primero a tres sets; sets 1..4 a 25 y set 5 a 15, siempre diferencia mínima de dos. Los sets se preparan secuencialmente, las lineups P1..P6 sólo se editan en READY, el saque/servidor/rotación son derivados y Point finaliza el set automáticamente. CorrectLastPoint sólo cancela el último evento deportivo efectivo y reconstruye el estado. Sustituciones y reemplazos de líbero son seguimientos configurables por MatchSheet; timeouts son obligatorios con default dos por equipo/set, efectivo congelado y exceso confirmable por Rules Assistant v1. El tercer set ganado decide el resultado pero sólo CloseMatch deja MatchSheet CLOSED y Match FINISHED y dispara la progresión existente. CLOSED es definitivo. Offline/sync no pertenece a este slice.
 
 ### Demo Match Seed
 
@@ -274,3 +274,7 @@ CompetitionRosterPlayer define la habilitación competitiva y el PLAYER_ROLE con
 Cada ejecución de `--seed-demo-match` elimina transaccionalmente el acta anterior del partido demo y sus datos deportivos (eventos, sesiones, auditoría/snapshot, convocados, alineaciones, líberos, sustituciones, timeouts y sets), limpia el resultado y lo devuelve a `SCHEDULED`. Conserva ID, fixture, fecha, sede, planteles y oficiales; no reinicia otros partidos ni la competición. El ID se resuelve mediante los marcadores DEMO, no se fija a 160.
 
 El seeder no puede borrar IndexedDB del navegador. Después de reiniciarlo, cerrar las pestañas del Scorer y limpiar los datos de `http://localhost:5174` en DevTools > Application > Storage > Clear site data antes de volver a abrirlo. Esto descarta también las pruebas offline guardadas en ese origen.
+
+## SCORER RULES ASSISTANT v1
+
+La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](docs/09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.

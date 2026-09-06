@@ -7,6 +7,7 @@ const syncEventTypes = {
   POINT: 'Point',
   CORRECT_LAST_POINT: 'CorrectLastPoint',
   SUBSTITUTION: 'Substitution',
+  SUBSTITUTION_REQUEST: 'SubstitutionRequest',
   LIBERO_ENTER: 'LiberoEnter',
   LIBERO_EXIT: 'LiberoExit',
   TIMEOUT: 'Timeout',

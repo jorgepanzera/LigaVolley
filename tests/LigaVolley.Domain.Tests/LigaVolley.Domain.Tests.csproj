@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\LigaVolley.Domain\LigaVolley.Domain.csproj" />
+    <None Include="..\shared\rules-assistant-v1.json" Link="rules-assistant-v1.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

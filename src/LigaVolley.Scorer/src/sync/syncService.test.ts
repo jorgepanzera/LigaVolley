@@ -4,10 +4,20 @@ import { ScorerDatabase } from '../persistence/database';
 import { MatchRepository } from '../persistence/matchRepository';
 import { SyncService } from './syncService';
 import type { ServerSheetSnapshot } from '../domain/types';
+import { applyCommand } from '../domain/matchEngine';
 const snapshot: ServerSheetSnapshot = {
   sheet: { matchSheetId: 1, sheetUuid: 'sheet', status: 'OPEN', openedAt: '' },
   match: { matchId: 1, status: 'SCHEDULED', homeTeamEntryId: 1, awayTeamEntryId: 2 },
-  home: { teamName: 'H', players: [], liberos: [] },
+  home: {
+    teamName: 'H',
+    players: Array.from({ length: 6 }, (_, i) => ({
+      matchPlayerId: i + 1,
+      jerseyNumber: i + 1,
+      displayName: `H${i}`,
+      isMatchCaptain: i === 0,
+    })),
+    liberos: [],
+  },
   away: { teamName: 'A', players: [], liberos: [] },
   session: {
     sessionUuid: 'session',
@@ -71,6 +81,50 @@ describe('SyncService', () => {
     await service.sync(1);
     expect((await db.events.toArray())[0].syncStatus).toBe('PENDING');
     expect(service.phase).toBe('IDLE');
+  });
+  it('drains events persisted during an accepted batch without another user action', async () => {
+    const repo = await setup();
+    const state = (await db.snapshots.get(1))!.state;
+    const command = {
+      type: 'SET_LINEUP' as const,
+      payload: {
+        side: 'HOME',
+        p1MatchPlayerId: 1,
+        p2MatchPlayerId: 2,
+        p3MatchPlayerId: 3,
+        p4MatchPlayerId: 4,
+        p5MatchPlayerId: 5,
+        p6MatchPlayerId: 6,
+      },
+    };
+    const api = {
+      sync: vi.fn().mockImplementation(async (_id, body) => {
+        if (body.events[0].sequence === 1) {
+          await repo.mutate(1, command);
+        }
+        const sequence = body.events.at(-1).sequence;
+        return {
+          sheetUuid: 'sheet',
+          sessionUuid: 'session',
+          lastAcceptedSequence: sequence,
+          results: body.events.map((x: any) => ({
+            eventUuid: x.eventUuid,
+            sequence: x.sequence,
+            status: 'APPLIED',
+          })),
+          snapshot: {
+            ...snapshot,
+            operationalState: sequence === 1 ? state : applyCommand(state, command),
+            session: { ...snapshot.session, lastAcceptedSequence: sequence },
+          },
+        };
+      }),
+      takeOver: vi.fn(),
+      sheet: vi.fn(),
+    };
+    await new SyncService(db, api as never).sync(1);
+    expect(api.sync).toHaveBeenCalledTimes(2);
+    expect((await db.events.toArray()).map((x) => x.syncStatus)).toEqual(['ACCEPTED', 'ACCEPTED']);
   });
   it('blocks and preserves the causal queue on a permanent domain 400', async () => {
     await setup();

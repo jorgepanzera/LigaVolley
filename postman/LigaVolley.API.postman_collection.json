@@ -270,6 +270,22 @@
     {
       "key": "winningSide",
       "value": ""
+    },
+    {
+      "key": "rulesEventUuid",
+      "value": "61ac55cd-e542-4b9f-a6e2-3946219e4cc3"
+    },
+    {
+      "key": "rulesSyncUuid",
+      "value": "af481a5e-47fa-4649-b072-8b5a2e097a21"
+    },
+    {
+      "key": "rulesSequence",
+      "value": "1"
+    },
+    {
+      "key": "rulesSubstitutionUuid",
+      "value": ""
     }
   ],
   "item": [
@@ -951,10 +967,38 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\"code\":\"EDITOR_{{runSuffix}}\",\"name\":\"Editor\",\"minTeams\":2,\"maxTeams\":2,\"definition\":{\"phases\":[{\"code\":\"REGULAR\",\"name\":\"Regular\",\"phaseType\":\"RoundRobin\",\"phaseRole\":\"Regular\",\"sequence\":1,\"rounds\":1,\"fixtureMode\":\"BalancedRandom\",\"groups\":[],\"series\":[]}],\"qualificationRules\":[],\"scoringRules\":[{\"winnerSets\":3,\"loserSets\":0,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":1,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":2,\"winnerTablePoints\":2,\"loserTablePoints\":1}],\"tiebreakRules\":[{\"sequence\":1,\"criterion\":\"TablePoints\",\"sortDirection\":\"Desc\"}],\"movementRules\":[]}}"
+                  "raw": "{\n  \"code\": \"EDITOR_{{runSuffix}}\",\n  \"name\": \"Editor\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [\n      {\n        \"code\": \"REGULAR\",\n        \"name\": \"Regular\",\n        \"phaseType\": \"RoundRobin\",\n        \"phaseRole\": \"Regular\",\n        \"sequence\": 1,\n        \"rounds\": 1,\n        \"fixtureMode\": \"BalancedRandom\",\n        \"groups\": [],\n        \"series\": []\n      }\n    ],\n    \"qualificationRules\": [],\n    \"scoringRules\": [\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 0,\n        \"winnerTablePoints\": 3,\n        \"loserTablePoints\": 0\n      },\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 1,\n        \"winnerTablePoints\": 3,\n        \"loserTablePoints\": 0\n      },\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 2,\n        \"winnerTablePoints\": 2,\n        \"loserTablePoints\": 1\n      }\n    ],\n    \"tiebreakRules\": [\n      {\n        \"sequence\": 1,\n        \"criterion\": \"TablePoints\",\n        \"sortDirection\": \"Desc\"\n      }\n    ],\n    \"movementRules\": []\n  },\n  \"maxSubstitutionsPerSet\": 6,\n  \"maxTimeoutsPerSet\": 2\n}"
                 },
                 "url": "{{baseUrl}}/api/admin/competition-formats/validate"
               }
+            },
+            {
+              "name": "Validate invalid match rule limits",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"EDITOR_{{runSuffix}}\",\n  \"name\": \"Editor\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [\n      {\n        \"code\": \"REGULAR\",\n        \"name\": \"Regular\",\n        \"phaseType\": \"RoundRobin\",\n        \"phaseRole\": \"Regular\",\n        \"sequence\": 1,\n        \"rounds\": 1,\n        \"fixtureMode\": \"BalancedRandom\",\n        \"groups\": [],\n        \"series\": []\n      }\n    ],\n    \"qualificationRules\": [],\n    \"scoringRules\": [\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 0,\n        \"winnerTablePoints\": 3,\n        \"loserTablePoints\": 0\n      },\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 1,\n        \"winnerTablePoints\": 3,\n        \"loserTablePoints\": 0\n      },\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 2,\n        \"winnerTablePoints\": 2,\n        \"loserTablePoints\": 1\n      }\n    ],\n    \"tiebreakRules\": [\n      {\n        \"sequence\": 1,\n        \"criterion\": \"TablePoints\",\n        \"sortDirection\": \"Desc\"\n      }\n    ],\n    \"movementRules\": []\n  },\n  \"maxSubstitutionsPerSet\": 0,\n  \"maxTimeoutsPerSet\": 100\n}"
+                },
+                "url": "{{baseUrl}}/api/admin/competition-formats/validate"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Invalid rule limits are reported without persistence', () => { pm.response.to.have.status(200); const r = pm.response.json(); pm.expect(r.isValid).to.eql(false); pm.expect(r.errors.filter(x => x.code === 'invalid_match_rule_limit')).to.have.length(2); });"
+                    ]
+                  }
+                }
+              ]
             },
             {
               "name": "Validate invalid",
@@ -968,7 +1012,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\"code\":\"\",\"name\":\"\",\"minTeams\":1,\"maxTeams\":0,\"definition\":{\"phases\":[],\"qualificationRules\":[],\"scoringRules\":[],\"tiebreakRules\":[],\"movementRules\":[]}}"
+                  "raw": "{\n  \"code\": \"\",\n  \"name\": \"\",\n  \"minTeams\": 1,\n  \"maxTeams\": 0,\n  \"definition\": {\n    \"phases\": [],\n    \"qualificationRules\": [],\n    \"scoringRules\": [],\n    \"tiebreakRules\": [],\n    \"movementRules\": []\n  },\n  \"maxSubstitutionsPerSet\": 6,\n  \"maxTimeoutsPerSet\": 2\n}"
                 },
                 "url": "{{baseUrl}}/api/admin/competition-formats/validate"
               }
@@ -1036,7 +1080,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\"code\":\"LOCKED_CHANGED\",\"name\":\"Locked\",\"description\":null,\"minTeams\":2,\"maxTeams\":2,\"definition\":{\"phases\":[],\"qualificationRules\":[],\"scoringRules\":[],\"tiebreakRules\":[],\"movementRules\":[]}}"
+                  "raw": "{\n  \"code\": \"LOCKED_CHANGED\",\n  \"name\": \"Locked\",\n  \"description\": null,\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [],\n    \"qualificationRules\": [],\n    \"scoringRules\": [],\n    \"tiebreakRules\": [],\n    \"movementRules\": []\n  },\n  \"maxSubstitutionsPerSet\": 6,\n  \"maxTimeoutsPerSet\": 2\n}"
                 },
                 "url": "{{baseUrl}}/api/admin/competition-formats/{{lockedFormatId}}"
               }
@@ -1053,7 +1097,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"code\": \"PM_{{runSuffix}}\", \"name\": \"Postman\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [{ \"code\": \"REGULAR\", \"name\": \"Regular\", \"phaseType\": \"RoundRobin\", \"phaseRole\": \"Regular\", \"sequence\": 1, \"rounds\": 1, \"fixtureMode\": \"BalancedRandom\", \"groups\": [], \"series\": [] }],\n    \"qualificationRules\": [], \"scoringRules\": [{\"winnerSets\":3,\"loserSets\":0,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":1,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":2,\"winnerTablePoints\":2,\"loserTablePoints\":1}], \"tiebreakRules\": [{\"sequence\":1,\"criterion\":\"TablePoints\",\"sortDirection\":\"Desc\"}], \"movementRules\": []\n  }\n}"
+                  "raw": "{\n  \"code\": \"PM_{{runSuffix}}\",\n  \"name\": \"Postman\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [\n      {\n        \"code\": \"REGULAR\",\n        \"name\": \"Regular\",\n        \"phaseType\": \"RoundRobin\",\n        \"phaseRole\": \"Regular\",\n        \"sequence\": 1,\n        \"rounds\": 1,\n        \"fixtureMode\": \"BalancedRandom\",\n        \"groups\": [],\n        \"series\": []\n      }\n    ],\n    \"qualificationRules\": [],\n    \"scoringRules\": [\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 0,\n        \"winnerTablePoints\": 3,\n        \"loserTablePoints\": 0\n      },\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 1,\n        \"winnerTablePoints\": 3,\n        \"loserTablePoints\": 0\n      },\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 2,\n        \"winnerTablePoints\": 2,\n        \"loserTablePoints\": 1\n      }\n    ],\n    \"tiebreakRules\": [\n      {\n        \"sequence\": 1,\n        \"criterion\": \"TablePoints\",\n        \"sortDirection\": \"Desc\"\n      }\n    ],\n    \"movementRules\": []\n  },\n  \"maxSubstitutionsPerSet\": 6,\n  \"maxTimeoutsPerSet\": 2\n}"
                 },
                 "url": "{{baseUrl}}/api/admin/competition-formats/validate"
               },
@@ -1081,7 +1125,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"code\": \"PM_{{runSuffix}}\",\n  \"name\": \"Postman {{runSuffix}}\",\n  \"description\": \"Formato de prueba\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [{ \"code\": \"REGULAR\", \"name\": \"Regular\", \"phaseType\": \"RoundRobin\", \"phaseRole\": \"Regular\", \"sequence\": 1, \"rounds\": 1, \"fixtureMode\": \"BalancedRandom\", \"groups\": [], \"series\": [] }],\n    \"qualificationRules\": [], \"scoringRules\": [{\"winnerSets\":3,\"loserSets\":0,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":1,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":2,\"winnerTablePoints\":2,\"loserTablePoints\":1}], \"tiebreakRules\": [{\"sequence\":1,\"criterion\":\"TablePoints\",\"sortDirection\":\"Desc\"}], \"movementRules\": []\n  }\n}"
+                  "raw": "{\n  \"code\": \"PM_{{runSuffix}}\",\n  \"name\": \"Postman {{runSuffix}}\",\n  \"description\": \"Formato de prueba\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [\n      {\n        \"code\": \"REGULAR\",\n        \"name\": \"Regular\",\n        \"phaseType\": \"RoundRobin\",\n        \"phaseRole\": \"Regular\",\n        \"sequence\": 1,\n        \"rounds\": 1,\n        \"fixtureMode\": \"BalancedRandom\",\n        \"groups\": [],\n        \"series\": []\n      }\n    ],\n    \"qualificationRules\": [],\n    \"scoringRules\": [\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 0,\n        \"winnerTablePoints\": 3,\n        \"loserTablePoints\": 0\n      },\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 1,\n        \"winnerTablePoints\": 3,\n        \"loserTablePoints\": 0\n      },\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 2,\n        \"winnerTablePoints\": 2,\n        \"loserTablePoints\": 1\n      }\n    ],\n    \"tiebreakRules\": [\n      {\n        \"sequence\": 1,\n        \"criterion\": \"TablePoints\",\n        \"sortDirection\": \"Desc\"\n      }\n    ],\n    \"movementRules\": []\n  },\n  \"maxSubstitutionsPerSet\": 6,\n  \"maxTimeoutsPerSet\": 2\n}"
                 },
                 "url": "{{baseUrl}}/api/admin/competition-formats"
               },
@@ -1093,6 +1137,15 @@
                     "exec": [
                       "pm.test('201 Created', () => pm.response.to.have.status(201));",
                       "if (pm.response.code === 201) pm.collectionVariables.set('formatId', pm.response.json().competitionFormatId);"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Format exposes match rule defaults', () => { const r = pm.response.json(); pm.expect(r.maxSubstitutionsPerSet).to.eql(6); pm.expect(r.maxTimeoutsPerSet).to.eql(2); });"
                     ]
                   }
                 }
@@ -1957,6 +2010,86 @@
               ]
             }
           ]
+        },
+        {
+          "name": "Match Rules",
+          "item": [
+            {
+              "name": "Competition effective rules",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                      "pm.test('Resolved rules',()=>pm.expect(pm.response.json().matchRules.effectiveMaxSubstitutionsPerSet).to.be.above(0));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Override substitutions and inherit timeouts",
+              "request": {
+                "method": "PUT",
+                "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/match-rules",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"maxSubstitutionsPerSetOverride\": 8,\n  \"maxTimeoutsPerSetOverride\": null\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Restore inherited defaults",
+              "request": {
+                "method": "PUT",
+                "url": "{{baseUrl}}/api/admin/competitions/{{competitionId}}/match-rules",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"maxSubstitutionsPerSetOverride\": null,\n  \"maxTimeoutsPerSetOverride\": null\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -2538,6 +2671,315 @@
               }
             }
           ]
+        },
+        {
+          "name": "Rules Assistant v1",
+          "description": "Independent scenarios on a prepared IN_PROGRESS demo. Use Frozen rules first. Substitution examples require the indicated regular players on court and incoming players outside court. Timeout confirmation requires HOME at its frozen limit. Run the timeout warning, confirmation and retry in that order. Refresh rulesSequence before a new sync scenario. Each initial action creates a UUID; confirmation and retry preserve it.",
+          "item": [
+            {
+              "name": "Frozen rules and current sequence",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sheet"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                      "pm.test('Frozen rules',()=>{const s=pm.response.json();pm.expect(s.rulesSnapshot.rulesProtocolVersion).to.eql(1);pm.expect(s.rulesSnapshot.maxTimeoutsPerSet).to.be.above(0);pm.collectionVariables.set('rulesSequence',s.session.lastAcceptedSequence+1);});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Atomic single substitution",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/substitution-requests",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"eventUuid\": \"{{rulesSubstitutionUuid}}\",\n  \"side\": \"Home\",\n  \"replacements\": [\n    {\n      \"playerOutMatchPlayerId\": {{homeP1}},\n      \"playerInMatchPlayerId\": {{homeSubstitute}}\n    }\n  ],\n  \"confirmedRuleWarnings\": []\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.collectionVariables.set('rulesSubstitutionUuid', pm.variables.replaceIn('{{$guid}}'));"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Atomic multiple substitution with explicit confirmations",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/substitution-requests",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"eventUuid\": \"{{$guid}}\",\n  \"side\": \"Home\",\n  \"replacements\": [\n    {\n      \"playerOutMatchPlayerId\": {{homeP1}},\n      \"playerInMatchPlayerId\": {{homeSubstitute}}\n    },\n    {\n      \"playerOutMatchPlayerId\": {{homeP2}},\n      \"playerInMatchPlayerId\": {{homeLibero}}\n    }\n  ],\n  \"confirmedRuleWarnings\": [\n    \"libero_used_as_regular_substitute\",\n    \"substitution_limit_exceeded\",\n    \"substitution_reentry_irregular\",\n    \"substitution_player_already_bound\",\n    \"substitution_original_player_mismatch\"\n  ]\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Timeout at limit requires confirmation",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/timeouts",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"timeoutUuid\": \"{{rulesEventUuid}}\",\n  \"side\": \"Home\",\n  \"confirmedRuleWarnings\": []\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.collectionVariables.set('rulesEventUuid', pm.variables.replaceIn('{{$guid}}'));"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 409',()=>pm.response.to.have.status(409));",
+                      "pm.test('Confirmation contract',()=>{const p=pm.response.json();pm.expect(p.code).to.eql('rule_confirmation_required');pm.expect(p.warnings.map(w=>w.code)).to.include('timeout_limit_exceeded');});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Confirm exceeded timeout with same UUID",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/timeouts",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"timeoutUuid\": \"{{rulesEventUuid}}\",\n  \"side\": \"Home\",\n  \"confirmedRuleWarnings\": [\n    \"timeout_limit_exceeded\"\n  ]\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Idempotent timeout retry",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/timeouts",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"timeoutUuid\": \"{{rulesEventUuid}}\",\n  \"side\": \"Home\",\n  \"confirmedRuleWarnings\": [\n    \"timeout_limit_exceeded\"\n  ]\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                      "pm.test('Exactly once',()=>pm.expect(pm.response.json().alreadyApplied).to.be.true);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Observed libero server preserves expected rotation",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/points",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"pointUuid\": \"{{$guid}}\",\n  \"winningSide\": \"Home\",\n  \"observedServerMatchPlayerId\": {{homeLibero}},\n  \"confirmedRuleWarnings\": [\n    \"unexpected_server\",\n    \"libero_service_not_allowed\"\n  ]\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Sync persisted sporting decision",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sheetUuid\": \"{{sheetUuid}}\",\n  \"sessionUuid\": \"{{sessionUuid}}\",\n  \"deviceId\": \"{{deviceId}}\",\n  \"events\": [\n    {\n      \"eventUuid\": \"{{rulesSyncUuid}}\",\n      \"sequence\": {{rulesSequence}},\n      \"type\": \"TIMEOUT\",\n      \"occurredAt\": \"{{$isoTimestamp}}\",\n      \"payload\": {\n        \"setNumber\": {{setNumber}},\n        \"side\": \"Home\",\n        \"confirmedRuleWarnings\": [\n          \"timeout_limit_exceeded\"\n        ]\n      }\n    }\n  ]\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.collectionVariables.set('rulesSyncUuid', pm.variables.replaceIn('{{$guid}}'));"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                      "pm.test('Accepted despite sporting warnings',()=>pm.expect(pm.response.json().results[0].status).to.eql('APPLIED'));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Idempotent sync retry",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sheetUuid\": \"{{sheetUuid}}\",\n  \"sessionUuid\": \"{{sessionUuid}}\",\n  \"deviceId\": \"{{deviceId}}\",\n  \"events\": [\n    {\n      \"eventUuid\": \"{{rulesSyncUuid}}\",\n      \"sequence\": {{rulesSequence}},\n      \"type\": \"TIMEOUT\",\n      \"occurredAt\": \"{{$isoTimestamp}}\",\n      \"payload\": {\n        \"setNumber\": {{setNumber}},\n        \"side\": \"Home\",\n        \"confirmedRuleWarnings\": [\n          \"timeout_limit_exceeded\"\n        ]\n      }\n    }\n  ]\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                      "pm.test('Already accepted',()=>pm.expect(pm.response.json().results[0].status).to.eql('ALREADY_ACCEPTED'));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "HARD cross-team reference (refresh rulesSequence first)",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sheetUuid\": \"{{sheetUuid}}\",\n  \"sessionUuid\": \"{{sessionUuid}}\",\n  \"deviceId\": \"{{deviceId}}\",\n  \"events\": [\n    {\n      \"eventUuid\": \"{{$guid}}\",\n      \"sequence\": {{rulesSequence}},\n      \"type\": \"SUBSTITUTION_REQUEST\",\n      \"occurredAt\": \"{{$isoTimestamp}}\",\n      \"payload\": {\n        \"setNumber\": {{setNumber}},\n        \"side\": \"Home\",\n        \"replacements\": [\n          {\n            \"playerOutMatchPlayerId\": {{homeP1}},\n            \"playerInMatchPlayerId\": {{awayP1}}\n          }\n        ],\n        \"confirmedRuleWarnings\": []\n      }\n    }\n  ]\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 409',()=>pm.response.to.have.status(409));",
+                      "pm.test('Integrity rejection',()=>pm.expect(pm.response.json().code).to.eql('invalid_substitution'));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -2846,7 +3288,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"code\": \"PM_{{runSuffix}}\", \"name\": \"Postman\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [{ \"code\": \"REGULAR\", \"name\": \"Regular\", \"phaseType\": \"RoundRobin\", \"phaseRole\": \"Regular\", \"sequence\": 1, \"rounds\": 1, \"fixtureMode\": \"BalancedRandom\", \"groups\": [], \"series\": [] }],\n    \"qualificationRules\": [], \"scoringRules\": [{\"winnerSets\":3,\"loserSets\":0,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":1,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":2,\"winnerTablePoints\":2,\"loserTablePoints\":1}], \"tiebreakRules\": [{\"sequence\":1,\"criterion\":\"TablePoints\",\"sortDirection\":\"Desc\"}], \"movementRules\": []\n  }\n}"
+                  "raw": "{\n  \"code\": \"PM_{{runSuffix}}\",\n  \"name\": \"Postman\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [\n      {\n        \"code\": \"REGULAR\",\n        \"name\": \"Regular\",\n        \"phaseType\": \"RoundRobin\",\n        \"phaseRole\": \"Regular\",\n        \"sequence\": 1,\n        \"rounds\": 1,\n        \"fixtureMode\": \"BalancedRandom\",\n        \"groups\": [],\n        \"series\": []\n      }\n    ],\n    \"qualificationRules\": [],\n    \"scoringRules\": [\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 0,\n        \"winnerTablePoints\": 3,\n        \"loserTablePoints\": 0\n      },\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 1,\n        \"winnerTablePoints\": 3,\n        \"loserTablePoints\": 0\n      },\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 2,\n        \"winnerTablePoints\": 2,\n        \"loserTablePoints\": 1\n      }\n    ],\n    \"tiebreakRules\": [\n      {\n        \"sequence\": 1,\n        \"criterion\": \"TablePoints\",\n        \"sortDirection\": \"Desc\"\n      }\n    ],\n    \"movementRules\": []\n  },\n  \"maxSubstitutionsPerSet\": 6,\n  \"maxTimeoutsPerSet\": 2\n}"
                 },
                 "url": "{{baseUrl}}/api/admin/competition-formats/validate"
               },
@@ -2874,7 +3316,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"code\": \"PM_{{runSuffix}}\",\n  \"name\": \"Postman {{runSuffix}}\",\n  \"description\": \"Formato de prueba\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [{ \"code\": \"REGULAR\", \"name\": \"Regular\", \"phaseType\": \"RoundRobin\", \"phaseRole\": \"Regular\", \"sequence\": 1, \"rounds\": 1, \"fixtureMode\": \"BalancedRandom\", \"groups\": [], \"series\": [] }],\n    \"qualificationRules\": [], \"scoringRules\": [{\"winnerSets\":3,\"loserSets\":0,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":1,\"winnerTablePoints\":3,\"loserTablePoints\":0},{\"winnerSets\":3,\"loserSets\":2,\"winnerTablePoints\":2,\"loserTablePoints\":1}], \"tiebreakRules\": [{\"sequence\":1,\"criterion\":\"TablePoints\",\"sortDirection\":\"Desc\"}], \"movementRules\": []\n  }\n}"
+                  "raw": "{\n  \"code\": \"PM_{{runSuffix}}\",\n  \"name\": \"Postman {{runSuffix}}\",\n  \"description\": \"Formato de prueba\",\n  \"minTeams\": 2,\n  \"maxTeams\": 2,\n  \"definition\": {\n    \"phases\": [\n      {\n        \"code\": \"REGULAR\",\n        \"name\": \"Regular\",\n        \"phaseType\": \"RoundRobin\",\n        \"phaseRole\": \"Regular\",\n        \"sequence\": 1,\n        \"rounds\": 1,\n        \"fixtureMode\": \"BalancedRandom\",\n        \"groups\": [],\n        \"series\": []\n      }\n    ],\n    \"qualificationRules\": [],\n    \"scoringRules\": [\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 0,\n        \"winnerTablePoints\": 3,\n        \"loserTablePoints\": 0\n      },\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 1,\n        \"winnerTablePoints\": 3,\n        \"loserTablePoints\": 0\n      },\n      {\n        \"winnerSets\": 3,\n        \"loserSets\": 2,\n        \"winnerTablePoints\": 2,\n        \"loserTablePoints\": 1\n      }\n    ],\n    \"tiebreakRules\": [\n      {\n        \"sequence\": 1,\n        \"criterion\": \"TablePoints\",\n        \"sortDirection\": \"Desc\"\n      }\n    ],\n    \"movementRules\": []\n  },\n  \"maxSubstitutionsPerSet\": 6,\n  \"maxTimeoutsPerSet\": 2\n}"
                 },
                 "url": "{{baseUrl}}/api/admin/competition-formats"
               },
@@ -2886,6 +3328,15 @@
                     "exec": [
                       "pm.test('201 Created', () => pm.response.to.have.status(201));",
                       "if (pm.response.code === 201) pm.collectionVariables.set('formatId', pm.response.json().competitionFormatId);"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Format exposes match rule defaults', () => { const r = pm.response.json(); pm.expect(r.maxSubstitutionsPerSet).to.eql(6); pm.expect(r.maxTimeoutsPerSet).to.eql(2); });"
                     ]
                   }
                 }

@@ -37,6 +37,11 @@ internal static class CompetitionEndpoints
         // Example: POST /api/admin/competitions/1/schedule
         group.MapPost("/{id:int}/schedule", async (int id, CompetitionSchedulingService service, CancellationToken ct) => Results.Ok(await service.ScheduleAsync(id, ct)))
             .Produces<CompetitionScheduleResultDto>().ProducesProblem(404).ProducesProblem(409);
+        // Example: PUT /api/admin/competitions/1/match-rules
+        // Body: { "maxSubstitutionsPerSetOverride": 8, "maxTimeoutsPerSetOverride": null }
+        group.MapPut("/{id:int}/match-rules", async (int id, UpdateCompetitionMatchRulesRequest request, CompetitionService service, CancellationToken ct) => Results.Ok(await service.UpdateMatchRulesAsync(id, request, ct)))
+            .WithSummary("Configure match rule overrides; null inherits the format default. Open sheets retain their frozen rules.")
+            .Produces<CompetitionDto>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
         return endpoints;
     }
 }
