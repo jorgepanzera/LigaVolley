@@ -45,6 +45,6 @@ internal sealed class SheetMatchRulesConfiguration : IEntityTypeConfiguration<Ma
         });
         b.Navigation(x => x.RulesSnapshot).IsRequired();
         b.ToTable("MATCH_SHEET", "dbo", t => t.HasCheckConstraint("CK_MATCH_SHEET_rules_snapshot",
-            "[rules_snapshot_version] IN (0,1) AND [rules_protocol_version] = 1 AND ([rules_snapshot_version] = 0 OR [max_substitutions_per_set] BETWEEN 1 AND 99 AND [max_substitutions_per_set] IS NOT NULL) AND [max_timeouts_per_set] BETWEEN 1 AND 99"));
+            "(([rules_snapshot_version] IN (0,1) AND [rules_protocol_version] = 1) OR ([rules_snapshot_version] = 2 AND [rules_protocol_version] = 2)) AND ([rules_snapshot_version] = 0 OR [max_substitutions_per_set] BETWEEN 1 AND 99 AND [max_substitutions_per_set] IS NOT NULL) AND [max_timeouts_per_set] BETWEEN 1 AND 99"));
     }
 }

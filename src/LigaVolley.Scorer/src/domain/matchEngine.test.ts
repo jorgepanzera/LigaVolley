@@ -148,15 +148,15 @@ describe('local MatchEngine', () => {
     expect(s.closed).toBe(false);
     expect(applyCommand(s, { type: 'MATCH_CLOSE', payload: {} }).closed).toBe(true);
   });
-  it('rejects a libero plan that could cover two positions simultaneously', () => {
+  it('accepts multiple optional suggestion slots without requiring simultaneous coverage', () => {
     expect(() =>
       validateLiberoPlan(
         { enabled: true, liberoMatchPlayerId: 88, logicalPositions: [0, 1] },
         [10, 11, 12, 13, 14, 15],
       ),
-    ).toThrow('ambiguous_libero_plan');
+    ).not.toThrow();
   });
-  it('derives pre-serve libero state but keeps the regular player as server at P1', () => {
+  it('keeps six regulars before serve despite a plan', () => {
     let s = applyCommand(initialState(), { type: 'PREPARE_SET', payload: {} });
     s.declaredLiberoMatchPlayerIds.HOME = [88];
     s = applyCommand(s, {
@@ -186,7 +186,8 @@ describe('local MatchEngine', () => {
       },
     });
     s = applyCommand(s, { type: 'START_SET', payload: { initialServingSide: 'AWAY' } });
-    expect(effectivePlayers(s.sets[0], 'HOME')[0]).toBe(88);
+    expect(effectivePlayers(s.sets[0], 'HOME')[0]).toBe(10);
+    expect(s.sets[0].liberoReplacements).toEqual([]);
     expect(serverPlayer(s.sets[0], 'AWAY')).toBe(20);
     s = applyCommand(s, { type: 'POINT', payload: { winningSide: 'HOME' } });
     expect(serverPlayer(s.sets[0], 'HOME')).not.toBe(88);

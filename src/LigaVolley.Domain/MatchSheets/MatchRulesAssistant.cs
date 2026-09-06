@@ -78,6 +78,7 @@ public static class MatchRulesAssistant
                 if (final.Distinct().Count() != 6) Hard("substitution_player_already_on_court");
                 foreach (var l in team.ActiveLiberos) final[l.Position] = l.LiberoMatchPlayerId;
                 if (final.Distinct().Count() != 6) Hard("duplicate_effective_player");
+                if (final.Count(team.Liberos.Contains) > 1) Hard("invalid_libero_replacement");
                 if (rules.MaxSubstitutionsPerSet is { } max && team.Substitutions.Count + pairs.Count > max)
                     Warn("substitution_limit_exceeded", ("used", team.Substitutions.Count), ("requested", pairs.Count),
                         ("projected", team.Substitutions.Count + pairs.Count), ("maximum", max));
@@ -89,6 +90,14 @@ public static class MatchRulesAssistant
                 break;
             case "POINT":
             {
+                if (state.TrackLiberoReplacements)
+                    foreach (var (courtTeam, side) in new[] { (state.Home, "HOME"), (state.Away, "AWAY") })
+                        foreach (var active in courtTeam.ActiveLiberos)
+                        {
+                            var physical = ((active.Position - courtTeam.RotationOffset + 6) % 6) + 1;
+                            if (physical is 2 or 3 or 4) Warn("libero_in_front_row", ("physicalPosition", physical));
+                            if (physical == 1 && state.ServingSide == side && !rules.LiberoCanServe) Warn("libero_service_not_allowed");
+                        }
                 if (command.ObservedServerMatchPlayerId is not { } observed) break;
                 if (state.ServingSide is not "HOME" and not "AWAY") { Hard("invalid_court_state"); break; }
                 var serving = state.ServingSide == "HOME" ? state.Home : state.Away;
@@ -108,11 +117,12 @@ public static class MatchRulesAssistant
                 var position = Array.IndexOf(effective, replaced);
                 if (position < 0 || !team.Players.Contains(replaced)) { Hard("libero_invalid_replaced_player"); break; }
                 if (effective.Contains(libero)) { Hard("libero_already_on_court"); break; }
+                if (effective.Where((_, i) => i != position).Count(team.Liberos.Contains) > 0) { Hard("invalid_libero_replacement"); break; }
                 var current = team.ActiveLiberos.SingleOrDefault(x => x.Position == position);
                 // Switching the acting libero preserves the regular logical occupant.
                 if (team.ActiveLiberos.Count > 0 && current is null)
-                    Warn("libero_irregular_second_libero_replacement");
-                if (team.LastLiberoRegular.HasValue && team.LastLiberoRegular != regular[position])
+                    Hard("invalid_libero_replacement");
+                if (current is null && team.LastLiberoRegular.HasValue && team.LastLiberoRegular != regular[position])
                     Warn("libero_wrong_regular_replacement", ("expectedMatchPlayerId", team.LastLiberoRegular.Value));
                 if (team.LastLiberoRally == state.RallyCount) Warn("libero_replacement_without_completed_rally");
                 var physical = ((position - team.RotationOffset + 6) % 6) + 1;

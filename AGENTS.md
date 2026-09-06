@@ -167,7 +167,7 @@ El sistema debe poder responder en cualquier momento:
 
 Scorer contempla funcionamiento offline/intermitente y sincronización posterior. Ninguna decisión de dominio o UI debe asumir conectividad permanente.
 
-Scorer Console UI v1 está cerrada: la consola mantiene HOME a la izquierda y AWAY a la derecha, muestra marcador/cancha P1..P6 y usa los puntos como acción primaria. PrepareSet permite carga rápida, copiar y rotar la alineación inicial. Los flags de tracking son estables por partido. El uso de líbero se decide por equipo y set mediante un líbero activo y plazas lógicas; sus entradas/salidas naturales y el estado pre-saque se derivan automáticamente. P1 es elegible al recibir, pero el líbero nunca sirve. Un plan que pudiera requerir dos reemplazos simultáneos se rechaza en READY. Timeout, corrección del último punto, revisión, cierre offline y recuperación IndexedDB forman parte del recorrido cerrado.
+Scorer Console UI v1 está cerrada: la consola mantiene HOME a la izquierda y AWAY a la derecha, muestra marcador/cancha P1..P6 y usa los puntos como acción primaria. PrepareSet permite carga rápida, copiar y rotar la alineación inicial. Los flags de tracking son estables por partido. Observed Libero Replacements v1 sustituye el automatismo original: el plan es opcional y sólo sugiere; cada entrada, salida o intercambio se registra explícitamente. Sólo un líbero es efectivo por equipo. Frente y saque irregular son warnings confirmables; dos efectivos son HARD. Timeout, corrección del último punto, revisión, cierre offline y recuperación IndexedDB forman parte del recorrido cerrado.
 
 Scorer UX/UI v2 está cerrada: un shell persistente de consola deportiva mantiene HOME a la izquierda y AWAY a la derecha, con marcador y cancha efectiva P1..P6 como centro visual. En juego, el banco muestra sólo jugadores fuera de cancha; los puntos son las acciones dominantes y los sets anteriores quedan al pie. Sidebar, drawers y modals concentran consultas y decisiones secundarias. Offline conserva las acciones deportivas válidas, SYNCING no bloquea y BLOCKED deshabilita toda mutación sin ocultar el estado. Apertura, set pendiente, READY, set en curso, fin de set, partido decidido y CLOSED tienen estados visuales explícitos. El objetivo responsive principal es landscape desde 1024x768.
 
@@ -278,3 +278,8 @@ El seeder no puede borrar IndexedDB del navegador. Después de reiniciarlo, cerr
 ## SCORER RULES ASSISTANT v1
 
 La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](docs/09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.
+
+
+## Observed Libero Replacements & Effective Court v1
+
+La decisión más reciente es [Observed Libero Replacements](docs/10-observed-libero-replacements.md). Sustituye la cobertura automática: planes opcionales sólo sugieren; StartSet, Point y CorrectLastPoint no crean reemplazos observados. LIBERO_ENTER/EXIT registran entrada, salida e intercambio directo de hasta dos declarados con máximo uno efectivo por lado. Se conserva historia automática y compatibilidad explícita de replay/sync.

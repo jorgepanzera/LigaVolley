@@ -22,7 +22,7 @@ internal static class MatchEndpoints
 
         // GET /api/admin/matches/123/match-sheet
         group.MapGet("/{matchId:int}/match-sheet", async (int matchId, MatchOperationsService service, CancellationToken ct) => Results.Ok(await service.GetMatchSheetAsync(matchId, ct)))
-            .WithSummary("Get the read-only Admin MatchSheet oversight projection")
+            .WithSummary("Get confirmed effective court, underlying regulars and observed/legacy libero history (read-only)")
             .Produces<AdminMatchSheetDto>().ProducesProblem(404).ProducesProblem(409);
 
         return endpoints;

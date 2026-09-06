@@ -1,8 +1,9 @@
+import { LiberoSuggestions } from './console/LiberoSuggestions';
 import { RuleWarningDialog } from './console/RuleWarningDialog';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { createScorerController } from '../application/composition';
 import type { ViewState } from '../application/scorerController';
-import type { ServerSheetSnapshot, SetState, Side } from '../domain/types';
+import type { MatchCommand, ServerSheetSnapshot, SetState, Side } from '../domain/types';
 import type { OpenMatchContext, OpenTeamContext } from '../api/scorerApi';
 import { currentSet, effectivePlayers } from '../domain/matchEngine';
 import { Court } from './console/Court';
@@ -113,6 +114,7 @@ export default function App() {
               setSelected({ side, logical });
             }}
             onDialog={setDialog}
+            onCommand={(command) => controller.command(command)}
           />
         )}
       </section>
@@ -340,7 +342,7 @@ function ScorerShell({
       </aside>
       {children}
       {panel === 'history' && (
-        <HistoryDrawer events={view.events} onClose={() => onPanel(undefined)} />
+        <HistoryDrawer snapshot={view.bootstrap!} events={view.events} onClose={() => onPanel(undefined)} />
       )}
       {panel === 'sheet' && (
         <InfoDrawer title="ACTA" onClose={() => onPanel(undefined)}>
@@ -367,6 +369,7 @@ function MatchWorkspace({
   onPrepare,
   onPosition,
   onDialog,
+  onCommand,
 }: {
   view: ViewState;
   set?: SetState;
@@ -378,6 +381,7 @@ function MatchWorkspace({
   onPrepare: () => void;
   onPosition: (side: Side, logical: number) => void;
   onDialog: (dialog: Dialog) => void;
+  onCommand: (command: MatchCommand) => Promise<void>;
 }) {
   const state = view.state!;
   const snapshot = view.bootstrap!;
@@ -496,6 +500,7 @@ function MatchWorkspace({
           <b>{snapshot.away.teamName}</b>
         </button>
       </section>
+      <LiberoSuggestions state={state} snapshot={snapshot} disabled={blocked} onCommand={onCommand} />
       <section className="secondary-actions">
         <button disabled={blocked} onClick={() => onDialog('timeout')}>
           ◷ Timeout{' '}
@@ -911,7 +916,7 @@ function OpenSheetWorkspace({
               />
               <span>
                 <b>Registrar reemplazos de líbero</b>
-                <small>Aplica automáticamente el plan del set</small>
+                <small>Registra entradas y salidas observadas</small>
               </span>
             </label>
           </div>

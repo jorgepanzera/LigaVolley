@@ -92,7 +92,7 @@ El servidor persiste estado operacional canónico y eventos de trazabilidad; no 
 - `CorrectLastPoint` cancela únicamente el último evento deportivo efectivo y reconstruye el estado; nunca borra el POINT.
 - Rules Assistant v1 conserva las parejas como guía y evalúa sus irregularidades como warnings confirmables. Las actas nuevas congelan el límite efectivo (default seis); las históricas conservan sustituciones ilimitadas. La UI ofrece candidatos habituales y una opción explícita por decisión del juez. Una solicitud puede contener varias parejas atómicas y cada pareja cuenta. Usar un líbero como regular requiere confirmación; un líbero no puede integrar la alineación inicial.
 - `TrackSubstitutions` y `TrackLiberoReplacements` pertenecen a MatchSheet. Si están deshabilitados no bloquean puntos.
-- El plan automático usa P1/P5/P6 elegibles, conserva el servidor regular y restaura el regular lógico vigente. Las decisiones manuales representables, incluida la entrada de un segundo líbero, se evalúan con warnings específicos. Se admiten hasta dos declarados.
+- El plan opcional sugiere P1/P5/P6 elegibles sin modificar cancha. Entradas, salidas e intercambios requieren registro observado y conservan el regular lógico vigente. Las decisiones manuales representables, incluida la entrada de un segundo líbero, se evalúan con warnings específicos. Se admiten hasta dos declarados.
 - Timeouts siempre se registran; el límite efectivo congelado tiene default dos. Superarlo exige confirmación directa y se conserva al sincronizar una decisión local persistida.
 - Tres sets ganados sólo marcan `MatchDecided`; `CloseMatch` explícito deja MatchSheet CLOSED y Match FINISHED. CLOSED no se reabre.
 - CloseMatch reutiliza la progresión de playoffs dentro de la misma transacción; los partidos de liga quedan disponibles para standings.
@@ -173,3 +173,8 @@ El seeder no puede borrar IndexedDB del navegador. Después de reiniciarlo, cerr
 ## SCORER RULES ASSISTANT v1
 
 La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.
+
+
+## Observed Libero Replacements & Effective Court v1
+
+La decisión más reciente es [Observed Libero Replacements](10-observed-libero-replacements.md). Sustituye la cobertura automática: planes opcionales sólo sugieren; StartSet, Point y CorrectLastPoint no crean reemplazos observados. LIBERO_ENTER/EXIT registran entrada, salida e intercambio directo de hasta dos declarados con máximo uno efectivo por lado. Se conserva historia automática y compatibilidad explícita de replay/sync.

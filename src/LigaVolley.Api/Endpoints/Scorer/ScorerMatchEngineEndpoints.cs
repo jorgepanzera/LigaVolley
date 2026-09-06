@@ -18,7 +18,7 @@ internal static class ScorerMatchEngineEndpoints
 
         // Example: POST /api/scorer/matches/123/sets/1/start
         // Body: { "initialServingSide": "HOME" }
-        group.MapPost("/sets/{setNumber:int}/start",async(int matchId,byte setNumber,StartSetRequest request,MatchEngineService service,CancellationToken ct)=>Results.Ok(await service.StartSetAsync(matchId,setNumber,request,ct))).Produces<MatchEngineCommandResult>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
+        group.MapPost("/sets/{setNumber:int}/start",async(int matchId,byte setNumber,StartSetRequest request,MatchEngineService service,CancellationToken ct)=>Results.Ok(await service.StartSetAsync(matchId,setNumber,request,ct))).WithSummary("Start with six regulars per side; observed libero entry is available before the first point.").Produces<MatchEngineCommandResult>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
 
         // Example: POST /api/scorer/matches/123/sets/1/points
         // Body: { "pointUuid": "0b757aaf-1455-480b-8558-024ac051c05e", "winningSide": "HOME" }
@@ -34,11 +34,11 @@ internal static class ScorerMatchEngineEndpoints
 
         // Example: POST /api/scorer/matches/123/sets/1/libero/enter
         // Body: { "eventUuid": "865139a2-05c8-47b2-a25e-6dd624850847", "liberoMatchPlayerId": 112, "replacedMatchPlayerId": 108 }
-        group.MapPost("/sets/{setNumber:int}/libero/enter",async(int matchId,byte setNumber,LiberoEnterRequest request,MatchEngineService service,CancellationToken ct)=>Results.Ok(await service.EnterLiberoAsync(matchId,setNumber,request,ct))).Produces<MatchEngineCommandResult>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
+        group.MapPost("/sets/{setNumber:int}/libero/enter",async(int matchId,byte setNumber,LiberoEnterRequest request,MatchEngineService service,CancellationToken ct)=>Results.Ok(await service.EnterLiberoAsync(matchId,setNumber,request,ct))).WithSummary("Record observed libero entry or direct exchange of acting liberos on the same logical slot.").Produces<MatchEngineCommandResult>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
 
         // Example: POST /api/scorer/matches/123/sets/1/libero/exit
         // Body: { "eventUuid": "0d73a738-8281-460a-a183-50c15549fc37", "liberoMatchPlayerId": 112 }
-        group.MapPost("/sets/{setNumber:int}/libero/exit",async(int matchId,byte setNumber,LiberoExitRequest request,MatchEngineService service,CancellationToken ct)=>Results.Ok(await service.ExitLiberoAsync(matchId,setNumber,request,ct))).Produces<MatchEngineCommandResult>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
+        group.MapPost("/sets/{setNumber:int}/libero/exit",async(int matchId,byte setNumber,LiberoExitRequest request,MatchEngineService service,CancellationToken ct)=>Results.Ok(await service.ExitLiberoAsync(matchId,setNumber,request,ct))).WithSummary("Record observed libero exit and restore the current underlying regular.").Produces<MatchEngineCommandResult>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
 
         // Example: POST /api/scorer/matches/123/sets/1/timeouts
         // Body: { "timeoutUuid": "4bc868ec-5d72-4995-8765-38df5310ecc2", "side": "AWAY" }

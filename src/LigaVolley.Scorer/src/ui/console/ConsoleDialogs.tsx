@@ -111,6 +111,19 @@ export function PlayerActionSheet({
             </p>
           </>
         )}
+        {snapshot.trackLiberoReplacements !== false && (
+          <section className="libero-quick-actions" aria-label="Reemplazo observado de líbero">
+            <h3>Reemplazo observado de líbero</h3>
+            {effective !== regular && <button onClick={() => onLiberoExit?.(effective)}>Sale líbero / vuelve regular #{under?.jerseyNumber}</button>}
+            {(!set.liberoReplacements.some(x => x.side === side && x.active) || effective !== regular) && team(snapshot, side)?.liberos
+              .filter(x => !effectivePlayers(set, side).includes(x.matchPlayerId))
+              .sort((a, b) => Number(b.matchPlayerId === set.liberoPlans[side]?.liberoMatchPlayerId) - Number(a.matchPlayerId === set.liberoPlans[side]?.liberoMatchPlayerId))
+              .map(x => <button key={x.matchPlayerId} onClick={() => onLiberoEnter?.(x.matchPlayerId, effective)}>
+                {effective !== regular ? 'Cambiar por segundo líbero' : 'Ingresar líbero'} #{player(snapshot, side, x.matchPlayerId)?.jerseyNumber} · sale #{current?.jerseyNumber}
+              </button>)}
+            <small>No consume sustituciones. Confirma sólo si el reemplazo ocurrió.</small>
+          </section>
+        )}
         {trackSubstitutions && canNormalSubstituteFromPosition(set, side, logical) && (
           <>
             <h3>Sustituir al regular #{under?.jerseyNumber}</h3>
@@ -234,24 +247,6 @@ export function PlayerActionSheet({
             )}
           </>
         )}
-        {snapshot.trackLiberoReplacements !== false && (
-          <details>
-            <summary>Reemplazo de líbero</summary>
-            {team(snapshot, side)
-              ?.liberos.filter((x) => !effectivePlayers(set, side).includes(x.matchPlayerId))
-              .map((x) => (
-                <button
-                  key={x.matchPlayerId}
-                  onClick={() => onLiberoEnter?.(x.matchPlayerId, effective)}
-                >
-                  Entra líbero #{player(snapshot, side, x.matchPlayerId)?.jerseyNumber}
-                </button>
-              ))}
-            {effective !== regular && (
-              <button onClick={() => onLiberoExit?.(effective)}>Sale líbero</button>
-            )}
-          </details>
-        )}
         {set.servingSide === side && (
           <details>
             <summary>Servidor observado</summary>
@@ -307,7 +302,7 @@ export function ConfirmDialog({
     </div>
   );
 }
-export function HistoryDrawer({ events, onClose }: { events: LocalEvent[]; onClose: () => void }) {
+export function HistoryDrawer({ events, snapshot, onClose }: { events: LocalEvent[]; snapshot?: ServerSheetSnapshot; onClose: () => void }) {
   useEscape(onClose);
   const correctedPoint = events
     .map(
@@ -336,7 +331,7 @@ export function HistoryDrawer({ events, onClose }: { events: LocalEvent[]; onClo
               key={event.eventUuid}
             >
               <b>
-                {eventLabel(event)}
+                {eventLabel(event, snapshot)}
                 {events.indexOf(event) === correctedPoint && <small> CORREGIDO</small>}
               </b>
               <time>
@@ -359,7 +354,12 @@ export function HistoryDrawer({ events, onClose }: { events: LocalEvent[]; onClo
     </div>
   );
 }
-function eventLabel(event: LocalEvent) {
+function eventLabel(event: LocalEvent, snapshot?: ServerSheetSnapshot) {
+  if (event.type === 'LIBERO_ENTER' || event.type === 'LIBERO_EXIT') {
+    const side = String(event.payload.side).toUpperCase() as Side;
+    const label = (id: unknown) => { const p = snapshot && player(snapshot, side, Number(id)); return p ? `#${p.jerseyNumber} ${p.displayName}` : `jugador ${id}`; };
+    return event.type === 'LIBERO_ENTER' ? `${side}: sale ${label(event.payload.replacedMatchPlayerId)} → entra líbero ${label(event.payload.liberoMatchPlayerId)}` : `${side}: sale líbero ${label(event.payload.liberoMatchPlayerId)} → vuelve regular vigente`;
+  }
   const side = String(event.payload.winningSide ?? event.payload.side ?? '');
   return event.type === 'POINT'
     ? `Punto ${side}`

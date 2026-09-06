@@ -76,7 +76,7 @@ Separar entidades permanentes (por ejemplo Team o Person) de su participación c
 
 La cancha efectiva se deriva centralmente como alineación inicial + sustituciones + `rotation_offset` + reemplazo activo de líbero. El servidor es siempre el jugador regular vigente en P1 del lado que posee el saque; el líbero nunca se convierte en servidor.
 
-`MATCH_SET_LIBERO_PLAN` guarda, por lado y set, el líbero elegido y una máscara de plazas lógicas cubiertas. El plan se configura en READY y se rechaza si alguna combinación de rotación/saque pudiera requerir dos reemplazos simultáneos. P5/P6 son elegibles; P1 sólo lo es cuando el equipo recibe. P2/P3/P4 restauran automáticamente al regular vigente de la plaza.
+`MATCH_SET_LIBERO_PLAN` guarda, por lado y set, el líbero elegido y una máscara de plazas lógicas cubiertas. El plan opcional se configura en READY como preferencias de sugerencias. P5/P6 y P1 receptor son candidatos habituales. Ninguna posición retira ni inserta al líbero automáticamente; se requiere una acción observada.
 
 ## Sesiones de Scorer y sincronización
 
@@ -84,7 +84,7 @@ La cancha efectiva se deriva centralmente como alineación inicial + sustitucion
 
 ## Proyecciones administrativas del partido
 
-Match Readiness es una evaluación sin persistencia que reutiliza las precondiciones comunes de OpenMatchSheet. Admin MatchSheet Oversight proyecta MatchSheet, sesión relevante y estado operacional resumido sin exponer eventos, lineups ni estado offline local. No agrega tablas ni estado de dominio.
+Match Readiness es una evaluación sin persistencia que reutiliza las precondiciones comunes de OpenMatchSheet. Admin MatchSheet Oversight proyecta MatchSheet, sesión relevante y estado operacional resumido con cancha efectiva, regular subyacente e historial de reemplazos centrales, sin estado offline local. No agrega tablas ni estado de dominio.
 
 ## Match-specific jersey number and captain
 
@@ -93,3 +93,8 @@ Match Readiness es una evaluación sin persistencia que reutiliza las precondici
 ## SCORER RULES ASSISTANT v1
 
 La decisión cerrada más reciente está en [SCORER RULES ASSISTANT v1](09-scorer-rules-assistant.md). Sustituye los rechazos deportivos anteriores por evaluación y confirmación explícita cuando la transición sea representable; sync conserva decisiones locales y BLOCKED protege exclusivamente integridad, autoridad y causalidad. Las reglas efectivas se congelan al abrir el acta; la UI aprobada y los cinco stores se conservan.
+
+
+## Observed Libero Replacements & Effective Court v1
+
+La decisión más reciente es [Observed Libero Replacements](10-observed-libero-replacements.md). Sustituye la cobertura automática: planes opcionales sólo sugieren; StartSet, Point y CorrectLastPoint no crean reemplazos observados. LIBERO_ENTER/EXIT registran entrada, salida e intercambio directo de hasta dos declarados con máximo uno efectivo por lado. Se conserva historia automática y compatibilidad explícita de replay/sync.

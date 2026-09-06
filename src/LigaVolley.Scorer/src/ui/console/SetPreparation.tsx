@@ -234,8 +234,9 @@ function LiberoConfiguration({
   const liberos = team(snapshot, side)?.liberos ?? [];
   return (
     <div className="libero-config">
+      <small>El plan no cambia la cancha. Registra cada reemplazo observado durante el set.</small>
       <label>
-        Líbero del set
+        Líbero sugerido (opcional)
         <select
           value={plan.liberoMatchPlayerId ?? ''}
           onChange={(e) =>
@@ -246,7 +247,7 @@ function LiberoConfiguration({
             )
           }
         >
-          <option value="">Ninguno</option>
+          <option value="">Sin plan previo</option>
           {liberos.map((l) => (
             <option key={l.matchPlayerId} value={l.matchPlayerId}>
               #
@@ -260,7 +261,7 @@ function LiberoConfiguration({
       </label>
       {plan.enabled ? (
         <div>
-          <span>Plazas cubiertas</span>
+          <span>Plazas sugeridas</span>
           {lineup.map((_, i) => (
             <button
               className={plan.logicalPositions.includes(i) ? 'selected' : ''}
@@ -280,7 +281,7 @@ function LiberoConfiguration({
         </div>
       ) : (
         <div>
-          <span>Plazas cubiertas</span>
+          <span>Plazas sugeridas</span>
           <small>No aplica sin líbero.</small>
         </div>
       )}

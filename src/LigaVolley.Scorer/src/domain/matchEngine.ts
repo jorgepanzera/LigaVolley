@@ -23,6 +23,7 @@ export function applyCommand(source: MatchState, command: MatchCommand, origin: 
   assertEvaluation(evaluateCommand(source, command), command, origin);
   if (source.closed) throw new Error('match_closed');
   const state = clone(source);
+  const legacyAutomatic = origin === 'PERSISTED' && (source.rulesSnapshot?.rulesProtocolVersion ?? 1) < 2 && command.payload.observedLiberoReplacements !== true;
   switch (command.type) {
     case 'PREPARE_SET':
       prepare(state);
@@ -31,13 +32,13 @@ export function applyCommand(source: MatchState, command: MatchCommand, origin: 
       setLineup(state, command.payload);
       break;
     case 'START_SET':
-      start(state, command.payload);
+      start(state, command.payload, legacyAutomatic);
       break;
     case 'POINT':
-      point(state, parseSide(command.payload, 'winningSide'));
+      point(state, parseSide(command.payload, 'winningSide'), legacyAutomatic);
       break;
     case 'CORRECT_LAST_POINT':
-      correct(state);
+      correct(state, legacyAutomatic);
       break;
     case 'SUBSTITUTION_REQUEST':
     case 'SUBSTITUTION':
@@ -110,17 +111,9 @@ export function validateLiberoPlan(plan: LiberoPlan, lineup: number[]) {
     plan.logicalPositions.some((x) => !Number.isInteger(x) || x < 0 || x > 5)
   )
     throw new Error('invalid_libero_plan');
-  for (let r = 0; r < 6; r++)
-    for (const serving of [true, false])
-      if (
-        plan.logicalPositions.filter((logical) => {
-          const physical = physicalPosition(logical, r);
-          return physical === 5 || physical === 6 || (physical === 1 && !serving);
-        }).length > 1
-      )
-        throw new Error('ambiguous_libero_plan');
+
 }
-function start(state: MatchState, p: Record<string, unknown>) {
+function start(state: MatchState, p: Record<string, unknown>, legacyAutomatic: boolean) {
   const set = currentSet(state);
   if (set.status !== 'READY' || set.lineups.HOME.length !== 6 || set.lineups.AWAY.length !== 6)
     throw new Error('match_set_invalid_state');
@@ -128,9 +121,9 @@ function start(state: MatchState, p: Record<string, unknown>) {
   set.servingSide = set.initialServingSide;
   set.status = 'IN_PROGRESS';
   state.status = 'IN_PROGRESS';
-  set.lastConsequences = reconcileAutomaticLiberos(set);
+  set.lastConsequences = legacyAutomatic ? reconcileAutomaticLiberos(set) : [];
 }
-function point(state: MatchState, winner: Side) {
+function point(state: MatchState, winner: Side, legacyAutomatic: boolean) {
   const set = currentSet(state);
   if (set.status !== 'IN_PROGRESS') throw new Error('match_set_invalid_state');
   const consequences: SportingConsequence[] = [
@@ -150,7 +143,7 @@ function point(state: MatchState, winner: Side) {
   if (winner === 'HOME') set.homePoints++;
   else set.awayPoints++;
   set.points.push(winner);
-  consequences.push(...reconcileAutomaticLiberos(set));
+  if (legacyAutomatic) consequences.push(...reconcileAutomaticLiberos(set));
   set.lastSportingEvent = 'POINT';
   const target = set.setNumber === 5 ? 15 : 25;
   if (
@@ -192,7 +185,7 @@ function rebuildPoints(set: SetState) {
   set.status = 'IN_PROGRESS';
   set.winnerSide = undefined;
 }
-function correct(state: MatchState) {
+function correct(state: MatchState, legacyAutomatic: boolean) {
   const set = currentSet(state);
   if (set.lastSportingEvent !== 'POINT' || !set.points.length)
     throw new Error('point_not_last_effective_event');
@@ -200,12 +193,12 @@ function correct(state: MatchState) {
   if (set.winnerSide === 'AWAY') state.awaySets--;
   set.points.pop();
   rebuildPoints(set);
-  set.liberoReplacements.filter(x => x.automatic !== false).forEach((x) => (x.active = false));
+  if (legacyAutomatic) set.liberoReplacements.filter(x => x.automatic !== false).forEach((x) => (x.active = false));
   state.matchDecided = state.homeSets === 3 || state.awaySets === 3;
   set.lastSportingEvent = 'CORRECT_LAST_POINT';
   set.lastConsequences = [
     { kind: 'CORRECTION', text: 'Último punto corregido' },
-    ...reconcileAutomaticLiberos(set),
+    ...(legacyAutomatic ? reconcileAutomaticLiberos(set) : []),
   ];
 }
 export function regularPlayers(set: SetState, team: Side) {
@@ -331,4 +324,31 @@ export function logicalAtPhysical(physical: number, rotationOffset: number) {
 }
 export function serverPlayer(set: SetState, team: Side) {
   return regularPlayers(set, team)[logicalAtPhysical(1, rotation(set, team))];
+}
+
+// Ephemeral candidates, never part of the operational snapshot or event queue.
+export function liberoSuggestions(state: MatchState): Array<{ side: Side; logical: number; command: MatchCommand }> {
+  if (state.closed || state.trackLiberoReplacements === false) return [];
+  const set = state.sets.find(x => x.setNumber === state.currentSetNumber);
+  if (!set || set.status !== 'IN_PROGRESS') return [];
+  return (['HOME', 'AWAY'] as Side[]).flatMap<{ side: Side; logical: number; command: MatchCommand }>(side => {
+    const active = set.liberoReplacements.find(x => x.side === side && x.active);
+    if (active) {
+      const physical = physicalPosition(active.position, rotation(set, side));
+      if ([2, 3, 4].includes(physical) || (physical === 1 && set.servingSide === side && !state.rulesSnapshot?.liberoCanServe))
+        return [{ side, logical: active.position, command: { type: 'LIBERO_EXIT' as const, payload: { setNumber: set.setNumber, side, liberoMatchPlayerId: active.liberoMatchPlayerId } } }];
+      return [];
+    }
+    const plan = set.liberoPlans[side];
+    const last = set.liberoReplacements.filter(x => x.side === side).at(-1);
+    const libero = plan?.enabled ? plan.liberoMatchPlayerId : last?.liberoMatchPlayerId;
+    if (!libero || !state.declaredLiberoMatchPlayerIds[side].includes(libero) || effectivePlayers(set, side).includes(libero)) return [];
+    // Avoid immediately suggesting reentry after an observed exit.
+    if (set.lastLiberoRally?.[side] === set.points.length) return [];
+    const positions = plan?.enabled ? plan.logicalPositions : last ? [last.position] : [];
+    return positions.filter(logical => {
+      const physical = physicalPosition(logical, rotation(set, side));
+      return physical === 5 || physical === 6 || (physical === 1 && set.servingSide !== side);
+    }).map(logical => ({ side, logical, command: { type: 'LIBERO_ENTER' as const, payload: { setNumber: set.setNumber, side, liberoMatchPlayerId: libero, replacedMatchPlayerId: regularPlayers(set, side)[logical] } } }));
+  });
 }

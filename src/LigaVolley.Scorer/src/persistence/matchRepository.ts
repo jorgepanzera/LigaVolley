@@ -58,6 +58,7 @@ export class MatchRepository {
     return sheet && session && snapshot ? { sheet, session, snapshot } : undefined;
   }
   async mutate(matchId: number, command: MatchCommand) {
+    command = { ...command, payload: { ...command.payload, observedLiberoReplacements: true } };
     return this.database.transaction(
       'rw',
       this.database.matchSheets,

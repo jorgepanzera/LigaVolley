@@ -30,34 +30,38 @@ public sealed partial class MatchEngineService(IMatchSheetRepository sheets, IUn
         lineup.Replace(players); ConfigureLiberoPlan(sheet, set, team, request, ids); sheet.TouchOperationalState(DateTimeOffset.UtcNow); await unit.SaveChangesAsync(ct); return Result(false, sheet, set);
     }, ct);
 
-    public Task<MatchEngineCommandResult> StartSetAsync(int matchId, byte setNumber, StartSetRequest request, CancellationToken ct) => Mutate(matchId, async sheet =>
+    public Task<MatchEngineCommandResult> StartSetAsync(int matchId, byte setNumber, StartSetRequest request, CancellationToken ct) => StartSetCore(matchId, setNumber, request, ct);
+
+    internal Task<MatchEngineCommandResult> StartSetCore(int matchId, byte setNumber, StartSetRequest request, CancellationToken ct, bool legacyAutomatic = false) => Mutate(matchId, async sheet =>
     {
         Mutable(sheet); if (!Enum.IsDefined(request.InitialServingSide)) throw Invalid("invalid_side", "Invalid serving side.");
         var set = Set(sheet, setNumber); if (set.Status == MatchSetStatus.InProgress) return Result(true, sheet, set); if (set.Status != MatchSetStatus.Ready) throw Conflict("match_set_invalid_state", "Only a Ready set can start.");
         if (set.Lineups.Count != 2 || set.Lineups.Any(x => x.Positions.Count != 6)) throw Conflict("lineup_incomplete", $"Both complete lineups are required (lineups={set.Lineups.Count}, positions={string.Join(',', set.Lineups.Select(x => x.Positions.Count))}).");
         if (sheet.Sets.Any(x => x != set && x.Status == MatchSetStatus.InProgress)) throw Conflict("match_set_already_active", "Another set is in progress.");
-        var now = DateTimeOffset.UtcNow; set.Start(request.InitialServingSide, now); ReconcileAutomaticLiberos(sheet, set, now); sheet.TouchOperationalState(now);
+        var now = DateTimeOffset.UtcNow; set.Start(request.InitialServingSide, now); if (legacyAutomatic) ReconcileAutomaticLiberos(sheet, set, now); sheet.TouchOperationalState(now);
         if (setNumber == 1) { sheet.StartFirstSet(now); sheet.Match.Start(); sheet.Match.Competition.MarkInProgressAfterMatchStart(); }
         await unit.SaveChangesAsync(ct); return Result(false, sheet, set);
     }, ct);
 
     public Task<MatchEngineCommandResult> AddPointAsync(int matchId, byte setNumber, AddPointRequest request, CancellationToken ct) => AddPointCore(matchId, setNumber, request, SportingDecisionOrigin.Direct, ct);
 
-    internal Task<MatchEngineCommandResult> AddPointCore(int matchId, byte setNumber, AddPointRequest request, SportingDecisionOrigin origin, CancellationToken ct) => Mutate(matchId, async sheet =>
+    internal Task<MatchEngineCommandResult> AddPointCore(int matchId, byte setNumber, AddPointRequest request, SportingDecisionOrigin origin, CancellationToken ct, bool legacyAutomatic = false) => Mutate(matchId, async sheet =>
     {
         RequiredUuid(request.PointUuid, "point_duplicate"); var set = Set(sheet, setNumber);
         if (CommandRetry(sheet, request.PointUuid, MatchEventType.Point, request, origin)) return Result(true, sheet, set);
         EvaluateDecision(sheet, set, new("POINT", request.WinningSide.ToString().ToUpperInvariant(), ObservedServerMatchPlayerId: request.ObservedServerMatchPlayerId), request.ConfirmedRuleWarnings, origin);
-        var now = DateTimeOffset.UtcNow; set.ApplyPoint(request.WinningSide, now); ReconcileAutomaticLiberos(sheet, set, now); sheet.AddEvent(request.PointUuid, MatchEventType.Point, set, request.WinningSide, null, now).RecordCommand(System.Text.Json.JsonSerializer.Serialize(request, CommandJson)); sheet.RecalculateSets(); await unit.SaveChangesAsync(ct); return Result(false, sheet, set);
+        var now = DateTimeOffset.UtcNow; set.ApplyPoint(request.WinningSide, now); if (legacyAutomatic) ReconcileAutomaticLiberos(sheet, set, now); sheet.AddEvent(request.PointUuid, MatchEventType.Point, set, request.WinningSide, null, now).RecordCommand(System.Text.Json.JsonSerializer.Serialize(request, CommandJson)); sheet.RecalculateSets(); await unit.SaveChangesAsync(ct); return Result(false, sheet, set);
     }, ct);
 
-    public Task<MatchEngineCommandResult> CorrectLastPointAsync(int matchId, byte setNumber, CorrectLastPointRequest request, CancellationToken ct) => Mutate(matchId, async sheet =>
+    public Task<MatchEngineCommandResult> CorrectLastPointAsync(int matchId, byte setNumber, CorrectLastPointRequest request, CancellationToken ct) => CorrectLastPointCore(matchId, setNumber, request, ct);
+
+    internal Task<MatchEngineCommandResult> CorrectLastPointCore(int matchId, byte setNumber, CorrectLastPointRequest request, CancellationToken ct, bool legacyAutomatic = false) => Mutate(matchId, async sheet =>
     {
         RequiredUuid(request.CorrectionUuid, "point_duplicate"); var set = Set(sheet, setNumber); var existing = sheet.Events.SingleOrDefault(x => x.EventUuid == request.CorrectionUuid); if (existing is not null) { if (existing.EventType != MatchEventType.PointCorrection) throw Conflict("point_duplicate", "EventUuid is already used."); return Result(true, sheet, set); }
         Mutable(sheet); if (sheet.Sets.Any(x => x.SetNumber > setNumber)) throw Conflict("match_set_invalid_state", "A later set has already been prepared.");
         var sports = sheet.Events.Where(x => x.MatchSetId == set.MatchSetId && x.Status == MatchEventStatus.Active && x.EventType is MatchEventType.Point or MatchEventType.SubstitutionRequest or MatchEventType.Substitution or MatchEventType.LiberoEnter or MatchEventType.LiberoExit or MatchEventType.Timeout).OrderByDescending(x => x.SequenceNumber).FirstOrDefault();
         if (sports is null) throw Conflict("no_point_to_correct", "There is no active point to correct."); if (sports.EventType != MatchEventType.Point) throw Conflict("point_not_last_effective_event", "The last effective sporting event is not a point.");
-        var now = DateTimeOffset.UtcNow; sports.Cancel(); sheet.AddEvent(request.CorrectionUuid, MatchEventType.PointCorrection, set, null, null, now, sports); var rebuilt = MatchSetRebuilder.Rebuild(set.InitialServingSide!.Value, sheet.Events.Where(x => x.MatchSetId == set.MatchSetId)); set.Rebuild(rebuilt.Home, rebuilt.Away, rebuilt.Serving, rebuilt.HomeOffset, rebuilt.AwayOffset, now); foreach (var active in set.LiberoReplacements.Where(x => !x.ExitedAt.HasValue && !sheet.Events.Any(e => e.EventUuid == x.ReplacementUuid && e.EventType == MatchEventType.LiberoEnter))) active.Exit(now); ReconcileAutomaticLiberos(sheet, set, now); sheet.RecalculateSets(); await unit.SaveChangesAsync(ct); return Result(false, sheet, set);
+        var now = DateTimeOffset.UtcNow; sports.Cancel(); sheet.AddEvent(request.CorrectionUuid, MatchEventType.PointCorrection, set, null, null, now, sports); var rebuilt = MatchSetRebuilder.Rebuild(set.InitialServingSide!.Value, sheet.Events.Where(x => x.MatchSetId == set.MatchSetId)); set.Rebuild(rebuilt.Home, rebuilt.Away, rebuilt.Serving, rebuilt.HomeOffset, rebuilt.AwayOffset, now); if (legacyAutomatic) foreach (var active in set.LiberoReplacements.Where(x => !x.ExitedAt.HasValue && !sheet.Events.Any(e => e.EventUuid == x.ReplacementUuid && e.EventType == MatchEventType.LiberoEnter))) active.Exit(now); if (legacyAutomatic) ReconcileAutomaticLiberos(sheet, set, now); sheet.RecalculateSets(); await unit.SaveChangesAsync(ct); return Result(false, sheet, set);
     }, ct);
 
     public async Task<CloseMatchResult> CloseAsync(int matchId, CloseMatchRequest request, CancellationToken ct)
@@ -82,13 +86,9 @@ public sealed partial class MatchEngineService(IMatchSheetRepository sheets, IUn
         var current = set.LiberoPlans.SingleOrDefault(x => x.MatchTeamId == team.MatchTeamId);
         if (!sheet.TrackLiberoReplacements || !request.LiberoMatchPlayerId.HasValue || (request.LiberoLogicalPositions?.Count ?? 0) == 0) { if (current is not null) set.LiberoPlans.Remove(current); return; }
         var liberoId = request.LiberoMatchPlayerId.Value; var libero = team.Players.SingleOrDefault(x => x.MatchPlayerId == liberoId); if (libero is null || !team.Liberos.Any(x => x.MatchPlayerId == liberoId)) throw Invalid("invalid_libero_plan", "The selected player is not a declared libero for this team."); if (lineup.Contains(liberoId)) throw Invalid("invalid_libero_plan", "The libero cannot be part of the regular lineup.");
-        var positions = request.LiberoLogicalPositions!.Distinct().Order().ToArray(); if (positions.Any(x => x > 5)) throw Invalid("invalid_libero_plan", "Logical positions must be between 0 (P1) and 5 (P6)."); ValidateLiberoPlan(positions); var mask = (byte)positions.Aggregate(0, (value, p) => value | (1 << p)); if (current is null) set.LiberoPlans.Add(new MatchSetLiberoPlan(set, team, libero, mask)); else current.Replace(libero, mask);
+        var positions = request.LiberoLogicalPositions!.Distinct().Order().ToArray(); if (positions.Any(x => x > 5)) throw Invalid("invalid_libero_plan", "Logical positions must be between 0 (P1) and 5 (P6)."); var mask = (byte)positions.Aggregate(0, (value, p) => value | (1 << p)); if (current is null) set.LiberoPlans.Add(new MatchSetLiberoPlan(set, team, libero, mask)); else current.Replace(libero, mask);
     }
-    private static void ValidateLiberoPlan(IReadOnlyList<byte> positions)
-    {
-        for (byte offset = 0; offset < 6; offset++) foreach (var serving in new[] { true, false })
-            { var eligible = positions.Count(p => { var physical = MatchCourtStateCalculator.ToPhysical((LineupPosition)(p + 1), offset); return physical is LineupPosition.P5 or LineupPosition.P6 || (physical == LineupPosition.P1 && !serving); }); if (eligible > 1) throw Invalid("ambiguous_libero_plan", "The libero plan would require two simultaneous replacements."); }
-    }
+    // Compatibility only: called for unmarked persisted events from protocol v0/v1 sheets.
     private static void ReconcileAutomaticLiberos(MatchSheet sheet, MatchSet set, DateTimeOffset now)
     {
         if (!sheet.TrackLiberoReplacements) return;

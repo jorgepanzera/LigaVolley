@@ -2,8 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 
 // Opt-in: use only a freshly reset demo match. All API responses come from the real backend.
-const matchId = Number(process.env.RULES_E2E_MATCH_ID);
-const api = process.env.RULES_E2E_API ?? 'http://127.0.0.1:5295';
+const matchId = Number(process.env.OBSERVED_E2E_MATCH_ID);
+const api = process.env.OBSERVED_E2E_API ?? 'http://127.0.0.1:5295';
 async function stored(page: Page, store: string): Promise<any[]> {
   return page.evaluate(
     (store) =>
@@ -23,12 +23,12 @@ async function stored(page: Page, store: string): Promise<any[]> {
   );
 }
 
-test('real SQL demo: warnings, cancel/confirm, offline reentry, sync, Public and takeover', async ({
+test('real SQL demo: observed libero, court/bench, offline reload, sync, Public and takeover', async ({
   page,
   context,
   request,
 }, info) => {
-  test.skip(!matchId, 'Set RULES_E2E_MATCH_ID after explicitly resetting the demo.');
+  test.skip(!matchId, 'Set OBSERVED_E2E_MATCH_ID after explicitly resetting the demo.');
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 1280, height: 800 });
   let disconnected = false;
@@ -72,87 +72,62 @@ test('real SQL demo: warnings, cancel/confirm, offline reentry, sync, Public and
     .toBe(true);
   const initial = await (await request.get(`${root}/sheet`)).json();
   expect(initial.rulesSnapshot.maxSubstitutionsPerSet).toBe(6);
-  const regulars = opening.home.players.filter((x: any) => x.role.toUpperCase() !== 'LIBERO');
-  const original = regulars[0].displayName,
-    substitute = regulars[6].displayName;
+  const libero = initial.home.players.find((p: any) => initial.home.liberos.some((l: any) => l.matchPlayerId === p.matchPlayerId));
+  const original = initial.home.players.find((p: any) => p.matchPlayerId === initial.operationalState.sets[0].lineups.HOME[4]);
+  const court = (position: number) => page.locator('.team-court.home .court-position').filter({ has: page.locator('.position-label', { hasText: `P${position}` }) });
+  const liveCourt = async () => (await (await request.get(`${api}/api/public/matches/${matchId}/live`)).json()).homeCourt.positions;
+  expect(initial.operationalState.sets[0].liberoReplacements).toEqual([]);
+  expect((await liveCourt()).find((p: any) => p.position === 5).player.isLibero).toBe(false);
   disconnected = true;
   await context.setOffline(true);
-  for (let count = 1; count <= 7; count++) {
-    await page
-      .locator('.team-court.home .court-position')
-      .filter({ has: page.locator('.position-label', { hasText: 'P1' }) })
-      .click();
-    const action = page.locator('.action-sheet');
-    if (count >= 3)
-      await action.getByRole('button', { name: 'Otra opción por decisión del juez' }).click();
-    await action
-      .getByRole('button', { name: new RegExp(count % 2 ? substitute : original) })
-      .click();
-    await action.getByRole('button', { name: 'Confirmar sustitución' }).click();
-    if (count >= 3) {
-      const warning = page.getByRole('dialog', { name: 'Advertencia reglamentaria' });
-      await expect(warning).toBeVisible();
-      if (count === 7) {
-        const before = await stored(page, 'events');
-        await expect(warning).toContainText('6/6 a 7/6');
-        await page.screenshot({ path: info.outputPath('seventh-substitution-warning.png') });
-        await warning.getByRole('button', { name: 'Cancelar' }).click();
-        expect(await stored(page, 'events')).toEqual(before);
-        await page
-          .locator('.team-court.home .court-position')
-          .filter({ hasText: original.split(' ').at(-1)! })
-          .click();
-        await action.getByRole('button', { name: 'Otra opción por decisión del juez' }).click();
-        await action.getByRole('button', { name: new RegExp(substitute) }).click();
-        await action.getByRole('button', { name: 'Confirmar sustitución' }).click();
-      }
-      await warning.getByRole('button', { name: 'Registrar igualmente' }).click();
-    }
-    await expect
-      .poll(
-        async () =>
-          (await stored(page, 'events')).filter((x) => x.type === 'SUBSTITUTION_REQUEST').length,
-      )
-      .toBe(count);
-  }
-  for (let count = 1; count <= 3; count++) {
-    await page
-      .locator('.secondary-actions')
-      .getByRole('button', { name: /Timeout/ })
-      .click();
-    await page.getByRole('button', { name: 'Timeout HOME', exact: true }).click();
-    if (count === 3) await page.getByRole('button', { name: 'Registrar igualmente' }).click();
-  }
-  await page.locator('.point-button.home').click();
-  const offlineEvents = await stored(page, 'events');
-  expect(
-    offlineEvents.filter((x) =>
-      x.payload.confirmedRuleWarnings?.includes('substitution_limit_exceeded'),
-    ),
-  ).toHaveLength(1);
+  await court(5).click();
+  await page.getByRole('button', { name: new RegExp(`Ingresar líbero #${libero.jerseyNumber}`) }).click();
+  await expect(court(5)).toContainText(`L #${libero.jerseyNumber}`);
+  await expect(page.locator('.bench-side.home')).toContainText(original.displayName);
+  await expect(page.locator('.bench-side.home')).not.toContainText(libero.displayName);
+  expect((await liveCourt()).find((p: any) => p.position === 5).player.isLibero).toBe(false);
+  const initialEvents = await stored(page, 'events');
+  expect(initialEvents.filter(x => x.type === 'LIBERO_ENTER')).toHaveLength(1);
+  expect(initialEvents.find(x => x.type === 'LIBERO_ENTER').syncStatus).toBe('PENDING');
   await page.reload();
-  await expect(page.locator('.secondary-actions')).toContainText('7/6');
-  expect(await stored(page, 'events')).toEqual(offlineEvents);
+  await expect(court(5)).toContainText(`L #${libero.jerseyNumber}`);
+  expect(await stored(page, 'events')).toEqual(initialEvents);
   disconnected = false;
   await context.setOffline(false);
-  await expect
-    .poll(async () => (await stored(page, 'events')).every((x) => x.syncStatus === 'ACCEPTED'), {
-      timeout: 20_000,
-    })
-    .toBe(true);
+  await expect.poll(async () => (await stored(page, 'events')).every(x => x.syncStatus === 'ACCEPTED'), { timeout: 20_000 }).toBe(true);
+  expect((await liveCourt()).find((p: any) => p.position === 5).player.isLibero).toBe(true);
+  await page.locator('.point-button.away').click();
+  await expect(page.locator('.point-button.home')).toBeEnabled();
+  await page.locator('.point-button.home').click();
+  await expect(court(4)).toContainText(`L #${libero.jerseyNumber}`);
+  const beforeDiscard = await stored(page, 'events');
+  await page.getByRole('button', {name:'Descartar sugerencia HOME P4'}).click();
+  expect((await stored(page, 'events')).map(x=>x.eventUuid)).toEqual(beforeDiscard.map(x=>x.eventUuid));
+  await court(4).click();
+  await page.getByRole('button', {name:/Sale líbero \/ vuelve regular/}).click();
+  await expect(court(4)).not.toContainText('L #');
+  await expect(page.locator('.point-button.away')).toBeEnabled();
+  await page.locator('.point-button.away').click();
+  await court(1).click();
+  await page.getByRole('button', {name:new RegExp(`Ingresar líbero #${libero.jerseyNumber}`)}).click();
+  const warning = page.getByRole('dialog', {name:'Advertencia reglamentaria'});
+  await expect(warning).toBeVisible();
+  const beforeCancel = await stored(page, 'events');
+  await warning.getByRole('button', {name:'Cancelar'}).click();
+  expect((await stored(page, 'events')).map(x=>x.eventUuid)).toEqual(beforeCancel.map(x=>x.eventUuid));
+  await court(1).click();
+  await page.getByRole('button', {name:new RegExp(`Ingresar líbero #${libero.jerseyNumber}`)}).click();
+  await warning.getByRole('button', {name:'Registrar igualmente'}).click();
+  await expect(court(1)).toContainText(`L #${libero.jerseyNumber}`);
+  await expect.poll(async () => (await stored(page, 'events')).every(x=>x.syncStatus==='ACCEPTED'), {timeout:20_000}).toBe(true);
+  const offlineEvents = await stored(page, 'events');
   const central = await (await request.get(`${root}/sheet`)).json();
-  expect(central.currentState.homeTimeouts).toBe(3);
-  expect(central.rulesSnapshot).toEqual(initial.rulesSnapshot);
-  expect(central.operationalState.sets[0].substitutions).toHaveLength(7);
-  const live = await (await request.get(`${api}/api/public/matches/${matchId}/live`)).json();
-  expect(live.sets[0].homePoints).toBe(1);
-  expect(live.servingPlayer.displayName).toBe(substitute);
-  await info.attach('canonical-live.json', {
-    body: JSON.stringify(live, null, 2),
-    contentType: 'application/json',
-  });
-  await page.screenshot({ path: info.outputPath('accepted-offline-decisions.png') });
-
+  expect(central.operationalState.sets[0].liberoReplacements.filter((x:any)=>x.active)).toHaveLength(1);
+  expect(central.operationalState.sets[0].liberoReplacements.every((x:any)=>x.automatic===false)).toBe(true);
+  expect(central.operationalState.sets[0].substitutions).toEqual([]);
+  expect((await liveCourt()).find((p:any)=>p.position===1).player.isLibero).toBe(true);
+  await page.screenshot({path:info.outputPath('observed-court.png')});
+  await info.attach('canonical-sheet.json',{body:JSON.stringify(central,null,2),contentType:'application/json'});
   // Another real device takes authority; the first device's next event must BLOCK, not merge.
   const takeover = await request.post(`${root}/take-over`, {
     data: {
@@ -183,5 +158,6 @@ test('real SQL demo: warnings, cancel/confirm, offline reentry, sync, Public and
   await page.locator('.point-button.home').click();
   await expect
     .poll(async () => (await (await request.get(`${root}/sheet`)).json()).currentState.homePoints)
-    .toBe(2);
+    .toBe(central.currentState.homePoints + 1);
+  expect(after.operationalState.sets[0].liberoReplacements).toEqual(central.operationalState.sets[0].liberoReplacements);
 });

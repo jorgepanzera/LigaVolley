@@ -116,6 +116,10 @@ test('avisa sobre el líbero activo y permite una sustitución regular válida',
   await page.getByRole('button', { name: 'AWAY SACA' }).click();
   await page.getByRole('button', { name: 'Iniciar Set 1' }).click();
 
+  // The optional plan only suggests coverage. Record the observed entry explicitly.
+  await page.locator('.team-court.home .court-position').filter({ hasText: 'H0' }).click();
+  await page.locator('.libero-quick-actions').getByRole('button', { name: /Ingresar líbero #8/ }).click();
+  await expect(page.locator('.team-court.home .court-position').filter({ hasText: 'H7' })).toBeVisible();
   await page.locator('.team-court.home .court-position').filter({ hasText: 'H7' }).click();
   await expect(
     page.getByText(/La sustitución cambia al regular de esta plaza/),

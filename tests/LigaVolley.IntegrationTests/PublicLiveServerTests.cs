@@ -29,7 +29,9 @@ public sealed partial class MatchEngineEndpointsTests
             new SetLineupRequest(x.Home[0], x.Home[1], x.Home[2], x.Home[3], x.Home[4], x.Home[5], x.Home[7], [0]), HttpMethod.Put);
         await Lineup(x.MatchId, 1, MatchSide.Away, x.Away.Take(6).ToArray());
         var started = await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/start", new StartSetRequest(MatchSide.Away));
-        var first = await AssertPublicServer(x.MatchId, started.State);
+        Assert.DoesNotContain((await AssertPublicServer(x.MatchId, started.State)).HomeCourt!.Positions, p => p.Player.IsLibero);
+        var observed = await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/libero/enter", new LiberoEnterRequest(Guid.NewGuid(), x.Home[7], x.Home[0]));
+        var first = await AssertPublicServer(x.MatchId, observed.State);
         Assert.Contains(first.HomeCourt!.Positions, p => p.Player.IsLibero);
 
         var rotated = await Point(x.MatchId, 1, MatchSide.Home);

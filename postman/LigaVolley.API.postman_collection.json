@@ -1995,7 +1995,8 @@
               "name": "Admin MatchSheet - no sheet/open/in progress",
               "request": {
                 "method": "GET",
-                "url": "{{baseUrl}}/api/admin/matches/{{matchId}}/match-sheet"
+                "url": "{{baseUrl}}/api/admin/matches/{{matchId}}/match-sheet",
+                "description": "Admin read-only confirmed effective court (including underlying regular), libero history, origin and recorded decision."
               },
               "event": [
                 {
@@ -2004,6 +2005,15 @@
                     "type": "text/javascript",
                     "exec": [
                       "pm.test('Oversight is 200 even before opening',()=>{pm.response.to.have.status(200);pm.expect(pm.response.json()).to.have.property('exists');});"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 200 && pm.response.json().exists) { pm.test(\"Admin includes central court and replacement history\",()=>{ const s=pm.response.json().sheet.operationalState; pm.expect(s.court).to.be.an(\"array\"); pm.expect(s.liberoReplacements).to.be.an(\"array\"); }); }"
                     ]
                   }
                 }
@@ -2287,7 +2297,8 @@
                   "mode": "raw",
                   "raw": "{ \"p1MatchPlayerId\": {{homeP1}}, \"p2MatchPlayerId\": {{homeP2}}, \"p3MatchPlayerId\": {{homeP3}}, \"p4MatchPlayerId\": {{homeP4}}, \"p5MatchPlayerId\": {{homeP5}}, \"p6MatchPlayerId\": {{homeP6}}, \"liberoMatchPlayerId\": {{homeLibero}}, \"liberoLogicalPositions\": [0, 3] }"
                 },
-                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/lineups/HOME"
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/lineups/HOME",
+                "description": "Six regulars. Optional libero plan supplies suggestions only; no automatic entries. Positions 0..5, multiple candidates allowed."
               }
             },
             {
@@ -2304,7 +2315,8 @@
                   "mode": "raw",
                   "raw": "{ \"p1MatchPlayerId\": {{awayP1}}, \"p2MatchPlayerId\": {{awayP2}}, \"p3MatchPlayerId\": {{awayP3}}, \"p4MatchPlayerId\": {{awayP4}}, \"p5MatchPlayerId\": {{awayP5}}, \"p6MatchPlayerId\": {{awayP6}} }"
                 },
-                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/lineups/AWAY"
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/lineups/AWAY",
+                "description": "Six regulars. Optional libero plan supplies suggestions only; no automatic entries. Positions 0..5, multiple candidates allowed."
               }
             },
             {
@@ -2322,7 +2334,18 @@
                   "raw": "{ \"initialServingSide\": \"HOME\" }"
                 },
                 "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/start"
-              }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 200 && !pm.response.json().alreadyApplied) { const s=pm.response.json().state; pm.test(\"Start never invents a libero replacement\",()=>pm.expect([...s.homeCourtState,...s.awayCourtState].some(p=>p.isLiberoReplacement)).to.eql(false)); }"
+                    ]
+                  }
+                }
+              ]
             },
             {
               "name": "Point (Runner loop)",
@@ -2403,8 +2426,20 @@
                   "mode": "raw",
                   "raw": "{ \"eventUuid\": \"{{$guid}}\", \"liberoMatchPlayerId\": {{homeLibero}}, \"replacedMatchPlayerId\": {{homeP1}} }"
                 },
-                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/libero/enter"
-              }
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/libero/enter",
+                "description": "Observed entry or direct acting-libero exchange. replacedMatchPlayerId is the effective outgoing player; preserves the underlying regular. Allowed before first point after StartSet. Confirm specific warnings; never consumes substitutions."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 200) { const s=pm.response.json().state; pm.test(\"At most one effective libero per team\",()=>{ [s.homeCourtState,s.awayCourtState].forEach(c=>pm.expect(c.filter(p=>p.isLiberoReplacement).length).to.be.at.most(1)); }); }"
+                    ]
+                  }
+                }
+              ]
             },
             {
               "name": "Libero exit",
@@ -2420,8 +2455,20 @@
                   "mode": "raw",
                   "raw": "{ \"eventUuid\": \"{{$guid}}\", \"liberoMatchPlayerId\": {{homeLibero}} }"
                 },
-                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/libero/exit"
-              }
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/libero/exit",
+                "description": "Observed exit restores the current logical regular (including substitutions under coverage). No automatic exit occurs on points."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 200) { const s=pm.response.json().state; pm.test(\"At most one effective libero per team\",()=>{ [s.homeCourtState,s.awayCourtState].forEach(c=>pm.expect(c.filter(p=>p.isLiberoReplacement).length).to.be.at.most(1)); }); }"
+                    ]
+                  }
+                }
+              ]
             },
             {
               "name": "Timeout HOME",
@@ -2536,9 +2583,10 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\"sheetUuid\":\"{{sheetUuid}}\",\"sessionUuid\":\"{{sessionUuid}}\",\"deviceId\":\"{{deviceId}}\",\"events\":[{\"eventUuid\":\"{{$guid}}\",\"sequence\":1,\"type\":\"PREPARE_SET\",\"occurredAt\":\"{{$isoTimestamp}}\",\"payload\":{}}]}"
+                  "raw": "{\n  \"sheetUuid\": \"{{sheetUuid}}\",\n  \"sessionUuid\": \"{{sessionUuid}}\",\n  \"deviceId\": \"{{deviceId}}\",\n  \"events\": [\n    {\n      \"eventUuid\": \"{{$guid}}\",\n      \"sequence\": 1,\n      \"type\": \"PREPARE_SET\",\n      \"occurredAt\": \"{{$isoTimestamp}}\",\n      \"payload\": {\n        \"observedLiberoReplacements\": true\n      }\n    }\n  ]\n}"
                 },
-                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync"
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync",
+                "description": "Atomic local events; payload.observedLiberoReplacements=true for new clients. Required on v2 START_SET/POINT/CORRECT_LAST_POINT; suggestions never consume UUID/sequence. Preserves original warnings and retries."
               },
               "event": [
                 {
@@ -2556,21 +2604,24 @@
               "name": "03 - Retry Same Batch",
               "request": {
                 "method": "POST",
-                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync"
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync",
+                "description": "Atomic local events; payload.observedLiberoReplacements=true for new clients. Required on v2 START_SET/POINT/CORRECT_LAST_POINT; suggestions never consume UUID/sequence. Preserves original warnings and retries."
               }
             },
             {
               "name": "04 - Sync Overlapping Batch",
               "request": {
                 "method": "POST",
-                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync"
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync",
+                "description": "Atomic local events; payload.observedLiberoReplacements=true for new clients. Required on v2 START_SET/POINT/CORRECT_LAST_POINT; suggestions never consume UUID/sequence. Preserves original warnings and retries."
               }
             },
             {
               "name": "05 - Sequence Gap Conflict",
               "request": {
                 "method": "POST",
-                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync"
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync",
+                "description": "Atomic local events; payload.observedLiberoReplacements=true for new clients. Required on v2 START_SET/POINT/CORRECT_LAST_POINT; suggestions never consume UUID/sequence. Preserves original warnings and retries."
               },
               "event": [
                 {
@@ -2588,7 +2639,8 @@
               "name": "06 - UUID Conflict",
               "request": {
                 "method": "POST",
-                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync"
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync",
+                "description": "Atomic local events; payload.observedLiberoReplacements=true for new clients. Required on v2 START_SET/POINT/CORRECT_LAST_POINT; suggestions never consume UUID/sequence. Preserves original warnings and retries."
               },
               "event": [
                 {
@@ -2642,14 +2694,16 @@
               "name": "09 - Old Session Duplicate Retry",
               "request": {
                 "method": "POST",
-                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync"
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync",
+                "description": "Atomic local events; payload.observedLiberoReplacements=true for new clients. Required on v2 START_SET/POINT/CORRECT_LAST_POINT; suggestions never consume UUID/sequence. Preserves original warnings and retries."
               }
             },
             {
               "name": "10 - Old Session New Event Rejected",
               "request": {
                 "method": "POST",
-                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync"
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync",
+                "description": "Atomic local events; payload.observedLiberoReplacements=true for new clients. Required on v2 START_SET/POINT/CORRECT_LAST_POINT; suggestions never consume UUID/sequence. Preserves original warnings and retries."
               },
               "event": [
                 {
@@ -2667,7 +2721,8 @@
               "name": "11 - Sync From New Session",
               "request": {
                 "method": "POST",
-                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync"
+                "url": "{{baseUrl}}/api/scorer/matches/{{matchId}}/sync",
+                "description": "Atomic local events; payload.observedLiberoReplacements=true for new clients. Required on v2 START_SET/POINT/CORRECT_LAST_POINT; suggestions never consume UUID/sequence. Preserves original warnings and retries."
               }
             }
           ]
@@ -2897,7 +2952,8 @@
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"sheetUuid\": \"{{sheetUuid}}\",\n  \"sessionUuid\": \"{{sessionUuid}}\",\n  \"deviceId\": \"{{deviceId}}\",\n  \"events\": [\n    {\n      \"eventUuid\": \"{{rulesSyncUuid}}\",\n      \"sequence\": {{rulesSequence}},\n      \"type\": \"TIMEOUT\",\n      \"occurredAt\": \"{{$isoTimestamp}}\",\n      \"payload\": {\n        \"setNumber\": {{setNumber}},\n        \"side\": \"Home\",\n        \"confirmedRuleWarnings\": [\n          \"timeout_limit_exceeded\"\n        ]\n      }\n    }\n  ]\n}"
-                }
+                },
+                "description": "Atomic local events; payload.observedLiberoReplacements=true for new clients. Required on v2 START_SET/POINT/CORRECT_LAST_POINT; suggestions never consume UUID/sequence. Preserves original warnings and retries."
               },
               "event": [
                 {
@@ -2935,7 +2991,8 @@
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"sheetUuid\": \"{{sheetUuid}}\",\n  \"sessionUuid\": \"{{sessionUuid}}\",\n  \"deviceId\": \"{{deviceId}}\",\n  \"events\": [\n    {\n      \"eventUuid\": \"{{rulesSyncUuid}}\",\n      \"sequence\": {{rulesSequence}},\n      \"type\": \"TIMEOUT\",\n      \"occurredAt\": \"{{$isoTimestamp}}\",\n      \"payload\": {\n        \"setNumber\": {{setNumber}},\n        \"side\": \"Home\",\n        \"confirmedRuleWarnings\": [\n          \"timeout_limit_exceeded\"\n        ]\n      }\n    }\n  ]\n}"
-                }
+                },
+                "description": "Atomic local events; payload.observedLiberoReplacements=true for new clients. Required on v2 START_SET/POINT/CORRECT_LAST_POINT; suggestions never consume UUID/sequence. Preserves original warnings and retries."
               },
               "event": [
                 {
@@ -2964,7 +3021,8 @@
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"sheetUuid\": \"{{sheetUuid}}\",\n  \"sessionUuid\": \"{{sessionUuid}}\",\n  \"deviceId\": \"{{deviceId}}\",\n  \"events\": [\n    {\n      \"eventUuid\": \"{{$guid}}\",\n      \"sequence\": {{rulesSequence}},\n      \"type\": \"SUBSTITUTION_REQUEST\",\n      \"occurredAt\": \"{{$isoTimestamp}}\",\n      \"payload\": {\n        \"setNumber\": {{setNumber}},\n        \"side\": \"Home\",\n        \"replacements\": [\n          {\n            \"playerOutMatchPlayerId\": {{homeP1}},\n            \"playerInMatchPlayerId\": {{awayP1}}\n          }\n        ],\n        \"confirmedRuleWarnings\": []\n      }\n    }\n  ]\n}"
-                }
+                },
+                "description": "Atomic local events; payload.observedLiberoReplacements=true for new clients. Required on v2 START_SET/POINT/CORRECT_LAST_POINT; suggestions never consume UUID/sequence. Preserves original warnings and retries."
               },
               "event": [
                 {

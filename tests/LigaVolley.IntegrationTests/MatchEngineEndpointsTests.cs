@@ -74,17 +74,17 @@ public sealed partial class MatchEngineEndpointsTests(LigaVolleyApiFactory facto
     }
 
     [Fact]
-    public async Task Libero_plan_is_by_logical_position_and_transitions_automatically()
+    public async Task Libero_plan_is_optional_and_never_changes_effective_court()
     {
         var x=await Open();await Prepare(x.MatchId);
         var home=new SetLineupRequest(x.Home[0],x.Home[1],x.Home[2],x.Home[3],x.Home[4],x.Home[5],x.Home[7],[0,3]);
         await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/lineups/{MatchSide.Home}",home,HttpMethod.Put);
         await Lineup(x.MatchId,1,MatchSide.Away,x.Away.Take(6).ToArray());
         var started=await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/start",new StartSetRequest(MatchSide.Away));
-        Assert.Contains(started.State.HomeCourtState,p=>p.LogicalLineupPosition==LineupPosition.P1&&p.EffectiveMatchPlayerId==x.Home[7]);
+        Assert.Contains(started.State.HomeCourtState,p=>p.LogicalLineupPosition==LineupPosition.P1&&p.EffectiveMatchPlayerId==x.Home[0]);
         var regained=await Point(x.MatchId,1,MatchSide.Home);
         Assert.NotEqual(x.Home[7],regained.State.ServerMatchPlayerId);
-        Assert.Single(regained.State.HomeCourtState.Where(p=>p.IsLiberoReplacement));
+        Assert.Empty(regained.State.HomeCourtState.Where(p=>p.IsLiberoReplacement));
         var invalid=await factory.Client.PutAsJsonAsync($"/api/scorer/matches/{x.MatchId}/sets/1/lineups/{MatchSide.Away}",new SetLineupRequest(x.Away[0],x.Away[1],x.Away[2],x.Away[3],x.Away[4],x.Away[5],x.Away[7],[0,1]),Json);
         Assert.Equal(HttpStatusCode.Conflict,invalid.StatusCode);
     }
@@ -107,7 +107,13 @@ public sealed partial class MatchEngineEndpointsTests(LigaVolleyApiFactory facto
     private Task<MatchEngineCommandResult> Prepare(int id)=>Post<MatchEngineCommandResult>($"/api/scorer/matches/{id}/sets/prepare",new{});
     private Task<MatchEngineCommandResult> Lineup(int id,byte set,MatchSide side,int[] p)=>Post<MatchEngineCommandResult>($"/api/scorer/matches/{id}/sets/{set}/lineups/{side}",new SetLineupRequest(p[0],p[1],p[2],p[3],p[4],p[5]),HttpMethod.Put);
     private async Task<T> Post<T>(string url,object body,HttpMethod? method=null){var response=method==HttpMethod.Put?await factory.Client.PutAsJsonAsync(url,body,Json):await factory.Client.PostAsJsonAsync(url,body,Json);if(!response.IsSuccessStatusCode)throw new HttpRequestException($"{response.StatusCode}: {await response.Content.ReadAsStringAsync()}");return(await response.Content.ReadFromJsonAsync<T>(Json))!;}
-    private static SyncMatchSheetRequest Sync(MatchSheetSnapshotDto sheet,IEnumerable<(Guid Id,long Sequence,ScorerSyncEventType Type,object Payload)> events)=>new(sheet.Sheet.SheetUuid,sheet.Session.SessionUuid,sheet.Session.DeviceId,events.Select(x=>new ScorerSyncEvent(x.Id,x.Sequence,x.Type,DateTimeOffset.UtcNow,JsonSerializer.SerializeToElement(x.Payload,Json))).ToArray());
+    private static SyncMatchSheetRequest Sync(MatchSheetSnapshotDto sheet,IEnumerable<(Guid Id,long Sequence,ScorerSyncEventType Type,object Payload)> events)=>new(sheet.Sheet.SheetUuid,sheet.Session.SessionUuid,sheet.Session.DeviceId,events.Select(x=>new ScorerSyncEvent(x.Id,x.Sequence,x.Type,DateTimeOffset.UtcNow,ObservedPayload(x.Payload))).ToArray());
+
+    private static JsonElement ObservedPayload(object payload) {
+        var values = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(JsonSerializer.Serialize(payload, Json), Json)!;
+        values["observedLiberoReplacements"] = JsonSerializer.SerializeToElement(true);
+        return JsonSerializer.SerializeToElement(values, Json);
+    }
 
     private async Task<Data> Open(bool trackSubstitutions=true,bool trackLiberos=true,int? maxSubstitutions=null,int? maxTimeouts=null,bool twoLiberos=false)
     {

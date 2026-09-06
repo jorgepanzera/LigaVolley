@@ -1542,3 +1542,8 @@ button:disabled {
     grid-template-columns: minmax(0, 1fr) 100px;
   }
 }
+
+.libero-suggestions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .4rem 0; }
+.libero-suggestions > div { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
+.libero-suggestions button, .libero-quick-actions button { min-height:44px; }
+.libero-quick-actions { display:grid; gap:.5rem; padding:.5rem 0; }

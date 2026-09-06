@@ -17,7 +17,7 @@ public sealed record RulesSnapshot(
     {
         ValidateLimit(substitutions);
         ValidateLimit(timeouts);
-        return new(1, 1, substitutions, timeouts, true, 2, false, 8);
+        return new(2, 2, substitutions, timeouts, true, 2, false, 8);
     }
 
     public static void ValidateLimit(int? value)

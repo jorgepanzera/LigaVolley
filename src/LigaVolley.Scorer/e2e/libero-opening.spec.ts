@@ -60,9 +60,9 @@ for (const liberoCount of [0, 1, 2]) {
     await page.getByRole('button', { name: 'Preparar Set 1' }).click();
     for (const [index, side] of (['home', 'away'] as const).entries()) {
       const team = page.locator('.prep-grid article').nth(index);
-      const select = team.getByLabel('Líbero del set');
+      const select = team.getByLabel('Líbero sugerido (opcional)');
       await expect(select.locator('option')).toHaveCount(liberoCount + 1);
-      await expect(select.locator('option')).toHaveText(['Ninguno', ...[42, 99].slice(0, liberoCount).map(n => `#${n}`)]);
+      await expect(select.locator('option')).toHaveText(['Sin plan previo', ...[42, 99].slice(0, liberoCount).map(n => `#${n}`)]);
       if (index === 1) await team.locator('.lineup-slots button').filter({ hasText: 'P1' }).click();
       for (let player = 1; player <= 6; player++) await team.getByRole('button', { name: new RegExp(`${side.toUpperCase()} Regular ${player}`) }).click();
       if (liberoCount) {
@@ -73,7 +73,7 @@ for (const liberoCount of [0, 1, 2]) {
     }
     await page.reload();
     for (const [index, side] of (['home', 'away'] as const).entries()) {
-      const select = page.locator('.prep-grid article').nth(index).getByLabel('Líbero del set');
+      const select = page.locator('.prep-grid article').nth(index).getByLabel('Líbero sugerido (opcional)');
       await expect(select.locator('option')).toHaveCount(liberoCount + 1);
       await expect(select).toHaveValue(liberoCount ? String(opening[side].players[6].competitionRosterPlayerId + 100) : '');
     }
@@ -81,7 +81,7 @@ for (const liberoCount of [0, 1, 2]) {
     await page.route('**/api/scorer/matches/1/sheet', route => route.abort('internetdisconnected'));
     await page.reload();
     for (const [index, side] of (['home', 'away'] as const).entries()) {
-      const select = page.locator('.prep-grid article').nth(index).getByLabel('Líbero del set');
+      const select = page.locator('.prep-grid article').nth(index).getByLabel('Líbero sugerido (opcional)');
       await expect(select.locator('option')).toHaveCount(liberoCount + 1);
       await expect(select).toHaveValue(liberoCount ? String(opening[side].players[6].competitionRosterPlayerId + 100) : '');
     }

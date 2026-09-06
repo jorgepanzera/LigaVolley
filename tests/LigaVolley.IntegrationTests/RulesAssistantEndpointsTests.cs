@@ -43,7 +43,7 @@ public sealed partial class MatchEngineEndpointsTests
         await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/libero/exit", new LiberoExitRequest(Guid.NewGuid(), x.Home[7], ["libero_replacement_without_completed_rally"]));
         var id = Guid.NewGuid();
         var multiple = Sync(sheet, [(id, 2L, ScorerSyncEventType.SubstitutionRequest,
-            new { setNumber=1, side="HOME", replacements=new[]{new {playerOutMatchPlayerId=x.Home[0],playerInMatchPlayerId=x.Home[6]},new {playerOutMatchPlayerId=x.Home[1],playerInMatchPlayerId=x.Home[7]}}, confirmedRuleWarnings=Array.Empty<string>() })]);
+            new { setNumber=1, side="HOME", replacements=new[]{new {playerOutMatchPlayerId=x.Home[0],playerInMatchPlayerId=x.Home[1]},new {playerOutMatchPlayerId=x.Home[1],playerInMatchPlayerId=x.Home[0]}}, confirmedRuleWarnings=Array.Empty<string>() })]);
         var accepted = await Post<SyncMatchSheetResponse>($"/api/scorer/matches/{x.MatchId}/sync", multiple);
         Assert.Equal(2, accepted.Snapshot.OperationalState!.Sets[0].Substitutions.Count);
         Assert.Equal(2, accepted.LastAcceptedSequence);
@@ -69,7 +69,7 @@ public sealed partial class MatchEngineEndpointsTests
         var sheet = await PlayingRulesMatch(x.MatchId);
         Assert.Equal(8, sheet.RulesSnapshot!.MaxSubstitutionsPerSet);
         Assert.Equal(1, sheet.RulesSnapshot.MaxTimeoutsPerSet);
-        Assert.Equal(1, sheet.RulesSnapshot.RulesSnapshotVersion);
+        Assert.Equal(2, sheet.RulesSnapshot.RulesSnapshotVersion);
         var updated = await Post<CompetitionDto>($"/api/admin/competitions/{sheet.Competition.CompetitionId}/match-rules",
             new UpdateCompetitionMatchRulesRequest(null, 4), HttpMethod.Put);
         Assert.Equal(6, updated.MatchRules!.EffectiveMaxSubstitutionsPerSet);

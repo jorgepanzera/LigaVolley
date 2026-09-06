@@ -188,6 +188,7 @@ export function evaluateCommand(state: MatchState, command: MatchCommand): RuleE
           final[x.position] = x.liberoMatchPlayerId;
         });
       if (new Set(final).size !== 6) hard('duplicate_effective_player');
+      if (final.filter(id => liberos.includes(id)).length > 1) hard('invalid_libero_replacement');
       if (
         rules.maxSubstitutionsPerSet !== null &&
         substitutions.length + pairs.length > rules.maxSubstitutionsPerSet
@@ -207,6 +208,12 @@ export function evaluateCommand(state: MatchState, command: MatchCommand): RuleE
       break;
     }
     case 'POINT': {
+      if (state.trackLiberoReplacements !== false)
+        for (const active of set.liberoReplacements.filter(x => x.active)) {
+          const physical = physicalPosition(active.position, active.side === 'HOME' ? set.homeRotationOffset : set.awayRotationOffset);
+          if ([2, 3, 4].includes(physical)) warn('libero_in_front_row', { physicalPosition: physical });
+          if (physical === 1 && set.servingSide === active.side && !rules.liberoCanServe) warn('libero_service_not_allowed');
+        }
       if (p.observedServerMatchPlayerId == null) break;
       const serving = set.servingSide;
       if (!serving) {
@@ -248,11 +255,15 @@ export function evaluateCommand(state: MatchState, command: MatchCommand): RuleE
         hard('libero_already_on_court');
         break;
       }
+      if (effective.some((id, index) => index !== position && liberos.includes(id))) {
+        hard('invalid_libero_replacement');
+        break;
+      }
       const active = set.liberoReplacements.filter((x) => x.side === side && x.active);
       if (active.length > 0 && !active.some((x) => x.position === position))
-        warn('libero_irregular_second_libero_replacement');
+        hard('invalid_libero_replacement');
       const lastRegular = set.lastLiberoRegular?.[side];
-      if (lastRegular != null && lastRegular !== regular[position])
+      if (!active.some(x => x.position === position) && lastRegular != null && lastRegular !== regular[position])
         warn('libero_wrong_regular_replacement', { expectedMatchPlayerId: lastRegular });
       if (set.lastLiberoRally?.[side] === set.points.length)
         warn('libero_replacement_without_completed_rally');

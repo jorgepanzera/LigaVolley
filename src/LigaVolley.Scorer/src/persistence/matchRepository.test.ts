@@ -54,6 +54,35 @@ const server = (id = 1): ServerSheetSnapshot => ({
 describe('Dexie repository', () => {
   let db: ScorerDatabase;
   afterEach(() => db?.delete());
+  it('persists observed two-libero exchanges atomically across database close and pending replay', async () => {
+    const name = `observed-${crypto.randomUUID()}`;
+    db = new ScorerDatabase(name);
+    const snapshot = server();
+    snapshot.home.players.push(...[88, 89].map(id => ({ matchPlayerId: id, jerseyNumber: id, isMatchCaptain: false, displayName: `Libero ${id}` })));
+    snapshot.home.liberos = [{ matchPlayerId: 88 }, { matchPlayerId: 89 }];
+    const repo = new MatchRepository(db);
+    await repo.bootstrap(1, snapshot, 'device');
+    await repo.mutate(1, { type: 'PREPARE_SET', payload: {} });
+    for (const side of ['HOME', 'AWAY'] as const)
+      await repo.mutate(1, { type: 'SET_LINEUP', payload: { side, setNumber: 1,
+        ...Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`p${i+1}MatchPlayerId`, i + (side === 'HOME' ? 1 : 11)])),
+      } });
+    await repo.mutate(1, { type: 'START_SET', payload: { setNumber: 1, initialServingSide: 'HOME' } });
+    await repo.mutate(1, { type: 'LIBERO_ENTER', payload: { setNumber: 1, side: 'HOME', liberoMatchPlayerId: 88, replacedMatchPlayerId: 5 } });
+    const before = await db.events.toArray();
+    await expect(repo.mutate(1, { type: 'LIBERO_ENTER', payload: { setNumber: 1, side: 'HOME', liberoMatchPlayerId: 89, replacedMatchPlayerId: 88 } })).rejects.toThrow('rule_confirmation_required');
+    expect(await db.events.toArray()).toEqual(before);
+    await repo.mutate(1, { type: 'LIBERO_ENTER', payload: { setNumber: 1, side: 'HOME', liberoMatchPlayerId: 89, replacedMatchPlayerId: 88, confirmedRuleWarnings: ['libero_replacement_without_completed_rally'] } });
+    const expected = await repo.active(1), events = await db.events.toArray();
+    expect(expected!.snapshot.state.sets[0].liberoReplacements.filter(x => x.active)).toMatchObject([{ liberoMatchPlayerId: 89, replacedMatchPlayerId: 5, automatic: false }]);
+    expect(events.every(x => x.payload.observedLiberoReplacements === true)).toBe(true);
+    db.close(); db = new ScorerDatabase(name);
+    expect((await new MatchRepository(db).active(1))!.snapshot.state).toEqual(expected!.snapshot.state);
+    await reconcile(db, 1, snapshot, 0);
+    expect((await new MatchRepository(db).active(1))!.snapshot.state).toEqual(expected!.snapshot.state);
+    expect(await db.events.toArray()).toEqual(events);
+    expect((await new MatchRepository(db).active(1))!.session.nextLocalSequence).toBe(7);
+  });
   it('preserves declared candidates and the pending set selection across IndexedDB reentry and reconciliation', async () => {
     const name = `libero-${crypto.randomUUID()}`;
     db = new ScorerDatabase(name);

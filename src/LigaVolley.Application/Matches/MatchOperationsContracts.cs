@@ -23,6 +23,15 @@ public sealed record AdminMatchSheetSessionDto(Guid SessionUuid, MatchSheetSessi
     string? DeviceId, long LastAcceptedSequence);
 public sealed record AdminMatchOperationalSummaryDto(int? CurrentSetNumber, int HomeSets, int AwaySets,
     int? HomePoints, int? AwayPoints, MatchSide? ServingSide, bool MatchDecided, MatchSide? WinnerSide,
-    IReadOnlyList<AdminSetSummaryDto> Sets);
+    IReadOnlyList<AdminSetSummaryDto> Sets,
+    IReadOnlyList<AdminCourtPlayerDto>? Court = null,
+    IReadOnlyList<AdminLiberoReplacementDto>? LiberoReplacements = null);
+public sealed record AdminCourtPlayerDto(MatchSide Side, LineupPosition LogicalPosition, LineupPosition PhysicalPosition,
+    int MatchPlayerId, short? JerseyNumber, string DisplayName, bool IsLibero,
+    int RegularMatchPlayerId, short? RegularJerseyNumber, string RegularDisplayName);
+public sealed record AdminLiberoReplacementDto(Guid ReplacementUuid, int SetNumber, MatchSide Side,
+    LineupPosition LogicalPosition, short? LiberoJerseyNumber, string LiberoDisplayName,
+    short? ReplacedJerseyNumber, string ReplacedDisplayName, DateTimeOffset EnteredAt, DateTimeOffset? ExitedAt,
+    bool Automatic, string? CommandPayload);
 public sealed record AdminSetSummaryDto(int SetNumber, MatchSetStatus Status, int HomePoints, int AwayPoints,
     MatchSide? WinnerSide);

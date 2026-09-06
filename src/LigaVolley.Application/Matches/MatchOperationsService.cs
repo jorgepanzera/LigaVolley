@@ -39,10 +39,38 @@ public sealed class MatchOperationsService(IFixtureRepository fixtures, ICompeti
         MatchSide? winner = sheet.HomeSets == 3 ? MatchSide.Home : sheet.AwaySets == 3 ? MatchSide.Away : null;
         var state = new AdminMatchOperationalSummaryDto(current?.SetNumber, sheet.HomeSets, sheet.AwaySets,
             current?.HomePoints, current?.AwayPoints, current?.CurrentServingSide, decided, winner,
-            sheet.Sets.OrderBy(x => x.SetNumber).Select(x => new AdminSetSummaryDto(x.SetNumber, x.Status, x.HomePoints, x.AwayPoints, x.WinnerSide)).ToArray());
+            sheet.Sets.OrderBy(x => x.SetNumber).Select(x => new AdminSetSummaryDto(x.SetNumber, x.Status, x.HomePoints, x.AwayPoints, x.WinnerSide)).ToArray(),
+            current is null ? [] : sheet.Teams.SelectMany(team => Court(current, team)).ToArray(),
+            sheet.Sets.OrderBy(x => x.SetNumber).SelectMany(set => set.LiberoReplacements.OrderBy(x => x.EnteredAt).Select(x => {
+                var command = sheet.Events.SingleOrDefault(e => e.EventUuid == x.ReplacementUuid && e.EventType == MatchEventType.LiberoEnter);
+                var team = sheet.Teams.Single(t => t.MatchTeamId == x.MatchTeamId);
+                var libero = team.Players.Single(p => p.MatchPlayerId == x.LiberoMatchPlayerId);
+                var replaced = team.Players.Single(p => p.MatchPlayerId == x.ReplacedMatchPlayerId);
+                return new AdminLiberoReplacementDto(x.ReplacementUuid, set.SetNumber, team.Side, x.LineupPosition,
+                    libero.JerseyNumber, Name(libero), replaced.JerseyNumber, Name(replaced), x.EnteredAt, x.ExitedAt,
+                    command is null, command?.CommandPayload);
+            })).ToArray());
         return new(id, true, new(sheet.SheetUuid, sheet.Status, sheet.OpenedAt, sheet.EndedAt,
             sheet.LastOperationalUpdateAt, session is null ? null : new(session.SessionUuid, session.Status, session.DeviceId,
                 session.LastAcceptedSequence), state));
+    }
+
+    private static string Name(MatchPlayer player) => $"{player.CompetitionRosterPlayer.Player.Person.FirstName} {player.CompetitionRosterPlayer.Player.Person.LastName}".Trim();
+
+    private static IEnumerable<AdminCourtPlayerDto> Court(Domain.Fixtures.MatchSet set, MatchTeam team)
+    {
+        var lineup = set.Lineups.SingleOrDefault(x => x.MatchTeamId == team.MatchTeamId);
+        if (lineup is null) return [];
+        var substitutions = set.Substitutions.Where(x => x.MatchTeamId == team.MatchTeamId).ToArray();
+        var offset = team.Side == MatchSide.Home ? set.HomeRotationOffset : set.AwayRotationOffset;
+        var regular = MatchCourtStateCalculator.Calculate(lineup, offset, substitutions, []).ToDictionary(x => x.LogicalLineupPosition);
+        return MatchCourtStateCalculator.Calculate(lineup, offset, substitutions, set.LiberoReplacements.Where(x => x.MatchTeamId == team.MatchTeamId)).Select(x => {
+            var effective = team.Players.Single(p => p.MatchPlayerId == x.EffectiveMatchPlayerId);
+            var under = team.Players.Single(p => p.MatchPlayerId == regular[x.LogicalLineupPosition].EffectiveMatchPlayerId);
+            return new AdminCourtPlayerDto(team.Side, x.LogicalLineupPosition, x.PhysicalPosition, effective.MatchPlayerId,
+                effective.JerseyNumber, Name(effective), team.Liberos.Any(l => l.MatchPlayerId == effective.MatchPlayerId),
+                under.MatchPlayerId, under.JerseyNumber, Name(under));
+        });
     }
 
     private static MatchReadinessTeamDto Team(int entryId, string name, CompetitionRoster? roster)

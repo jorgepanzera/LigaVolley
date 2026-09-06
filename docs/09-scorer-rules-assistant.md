@@ -90,7 +90,7 @@ No hay tablas nuevas ni nueva persistencia de cancha. La sesión/dispositivo y t
 
 ## UX y verificación
 
-El overlay existente muestra advertencia, contexto, `Cancelar` y `Registrar igualmente`. Se conservan HOME/AWAY, geometría de cancha, PrepareSet, puntos dominantes y drawers. La sustitución muestra contadores y permite agregar parejas; la opción excepcional permanece explícita. Líbero manual y servidor observado viven en consultas secundarias de la plaza seleccionada. El historial local identifica las decisiones confirmadas. Corregir un punto conserva una decisión manual de líbero anterior y recalcula las entradas automáticas según el estado reconstruido.
+El overlay existente muestra advertencia, contexto, `Cancelar` y `Registrar igualmente`. Se conservan HOME/AWAY, geometría de cancha, PrepareSet, puntos dominantes y drawers. La sustitución muestra contadores y permite agregar parejas; la opción excepcional permanece explícita. Líbero manual y servidor observado viven en consultas secundarias de la plaza seleccionada. El historial local identifica las decisiones confirmadas. Corregir un punto conserva una decisión manual de líbero anterior y recalcula sólo sugerencias sin modificar reemplazos confirmados.
 
 `tests/shared/rules-assistant-v1.json` reúne los vectores compartidos C#/TypeScript. Las suites cubren límites, parejas múltiples, líbero sobre regular sustituido, segundo líbero, saque observado, timeout, legacy, CLOSED, confirmación/cancelación, replay, discrepancia backend, idempotencia y takeover. Los tests SQL crean bases aisladas; nunca usan LigaVolleyDev como base descartable.
 
@@ -106,3 +106,8 @@ Permanecen fuera del alcance sanciones, reglas finas sobre obligatoriedad de uno
 - Admin: 13/13 tests y build correcto. Public: 33/33 tests y build correcto.
 - Migración aplicada en LigaVolleyDev y en bases aisladas de integración. El reinicio del demo se verificó antes y después del E2E; quedó nuevamente SCHEDULED sin acta. El ID usado se obtuvo del resultado del seeder, que resuelve los marcadores DEMO.
 - Evidencias locales en `TestResults/rules-assistant`: TRX/logs, OpenAPI generado y carpeta `e2e` con screenshots, snapshot canónico y Public Live. En la prueba final se aceptaron siete sustituciones HOME, tres timeouts y una nueva sesión tras takeover; las decisiones anteriores quedaron conservadas.
+
+
+## Observed Libero Replacements & Effective Court v1
+
+La decisión más reciente es [Observed Libero Replacements](10-observed-libero-replacements.md). Sustituye la cobertura automática: planes opcionales sólo sugieren; StartSet, Point y CorrectLastPoint no crean reemplazos observados. LIBERO_ENTER/EXIT registran entrada, salida e intercambio directo de hasta dos declarados con máximo uno efectivo por lado. Se conserva historia automática y compatibilidad explícita de replay/sync.
