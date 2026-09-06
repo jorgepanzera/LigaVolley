@@ -42,6 +42,7 @@ public sealed class MatchSheetService(IFixtureRepository matches, ICompetitionRo
     private static ResourceConflictException OpeningConflict(MatchReadinessIssueDto issue) => issue.Code switch
     {
         "match_readiness_match_not_scheduled" => Conflict("match_not_scheduled", issue.Message),
+        "match_readiness_competition_not_operational" => Conflict("competition_not_operational", issue.Message),
         "match_readiness_roster_missing" or "match_readiness_roster_not_active" => Conflict(issue.Side == MatchSide.Home ? "home_competition_roster_not_active" : "away_competition_roster_not_active", issue.Message),
         "match_readiness_insufficient_active_players" => Conflict("match_roster_insufficient_active_players", issue.Message),
         _ => Conflict("match_officials_incomplete", issue.Message)

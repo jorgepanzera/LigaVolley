@@ -1,4 +1,5 @@
 using LigaVolley.Domain.CompetitionRosters;
+using LigaVolley.Domain.Competitions;
 using LigaVolley.Domain.Fixtures;
 using LigaVolley.Domain.MatchOfficials;
 using LigaVolley.Domain.MatchSheets;
@@ -19,6 +20,8 @@ public sealed class MatchOpeningPrerequisiteEvaluator
         var warnings = new List<MatchReadinessIssueDto>();
         if (match.Status != MatchStatus.Scheduled)
             blockers.Add(new("match_readiness_match_not_scheduled", "Match must be Scheduled.", null));
+        if (match.Competition.Status is not (CompetitionStatus.Scheduled or CompetitionStatus.InProgress))
+            blockers.Add(new("match_readiness_competition_not_operational", "Competition must be Scheduled or InProgress.", null));
         Team(home, MatchSide.Home, blockers, warnings);
         Team(away, MatchSide.Away, blockers, warnings);
         Official(MatchOfficialRole.FirstReferee, "match_readiness_first_referee_missing", "First Referee is missing.");

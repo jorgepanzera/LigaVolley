@@ -1,10 +1,10 @@
-# 05 — Acta electrónica y Scorer
+﻿# 05 — Acta electrónica y Scorer
 
 ## Responsabilidad y apertura
 
 `LigaVolley.Scorer` es la consola operacional del partido. Admin prepara planteles y oficiales y supervisa en lectura; Public sólo proyecta estado canónico. Scorer puede trabajar sin conectividad, pero no decide reglas estructurales de competición.
 
-`GET /api/scorer/matches/{matchId}/open-context` prepara la apertura sin persistir. `POST /open` exige un Match SCHEDULED, rosters ACTIVE, tres oficiales y una convocatoria válida; crea una única `MATCH_SHEET` OPEN de forma transaccional e idempotente. Abrir el acta no inicia el Match ni la Competition.
+`GET /api/scorer/matches/{matchId}/open-context` prepara la apertura sin persistir. `POST /open` exige un Match SCHEDULED dentro de una Competition SCHEDULED o IN_PROGRESS, rosters ACTIVE, tres oficiales y una convocatoria válida; crea una única `MATCH_SHEET` OPEN de forma transaccional e idempotente. Abrir el acta no inicia el Match ni la Competition.
 
 La convocatoria congela `MATCH_PLAYER`, dorsal, capitanía, staff, declaración de líberos y `RulesSnapshot`. Debe haber al menos seis jugadores regulares por lado tras la declaración. `GET /sheet` devuelve el snapshot canónico para reentrada y reconciliación.
 
