@@ -254,16 +254,47 @@ BEGIN TRY
     SELECT @WomenDivisionId=division_id FROM dbo.DIVISION WHERE name=N'International' AND gender='F';
     SELECT @MenDivisionId=division_id FROM dbo.DIVISION WHERE name=N'International' AND gender='M';
 
-    /* Federación/club y Team. Se prefija para no colisionar con clubes locales. */
+    /* Club y Team de selección usan solamente el nombre del país. */
+    IF EXISTS
+    (
+        SELECT 1
+        FROM #Teams t
+        JOIN dbo.CLUB legacy ON legacy.name=N'National Federation - '+t.country_name
+        JOIN dbo.CLUB current_name ON current_name.name=t.country_name
+        WHERE legacy.club_id<>current_name.club_id
+    )
+        THROW 51010, 'Both legacy and country-name clubs exist. Consolidate them explicitly before running this script.', 1;
+
+    UPDATE legacy
+       SET name=t.country_name
+    FROM dbo.CLUB legacy
+    JOIN (SELECT DISTINCT country_name FROM #Teams) t ON legacy.name=N'National Federation - '+t.country_name;
+
     INSERT dbo.CLUB(name,short_name,active)
-    SELECT N'National Federation - '+country_name, country_code, 1 FROM #Teams t
-    WHERE NOT EXISTS (SELECT 1 FROM dbo.CLUB c WHERE c.name=N'National Federation - '+t.country_name)
-    GROUP BY country_name,country_code;
+    SELECT t.country_name, t.country_code, 1
+    FROM (SELECT DISTINCT country_name,country_code FROM #Teams) t
+    WHERE NOT EXISTS (SELECT 1 FROM dbo.CLUB c WHERE c.name=t.country_name);
+
+    IF EXISTS
+    (
+        SELECT 1
+        FROM #Teams t
+        JOIN dbo.TEAM legacy ON legacy.name=t.country_name+N' National Team' AND legacy.gender=t.gender
+        JOIN dbo.TEAM current_name ON current_name.name=t.country_name AND current_name.gender=t.gender
+        WHERE legacy.team_id<>current_name.team_id
+    )
+        THROW 51011, 'Both legacy and country-name teams exist. Consolidate them explicitly before running this script.', 1;
+
+    UPDATE legacy
+       SET name=t.country_name, club_id=c.club_id
+    FROM dbo.TEAM legacy
+    JOIN #Teams t ON legacy.name=t.country_name+N' National Team' AND legacy.gender=t.gender
+    JOIN dbo.CLUB c ON c.name=t.country_name;
 
     INSERT dbo.TEAM(club_id,name,gender,active)
-    SELECT c.club_id, t.country_name+N' National Team', t.gender, 1
-    FROM #Teams t JOIN dbo.CLUB c ON c.name=N'National Federation - '+t.country_name
-    WHERE NOT EXISTS (SELECT 1 FROM dbo.TEAM x WHERE x.name=t.country_name+N' National Team' AND x.gender=t.gender);
+    SELECT c.club_id, t.country_name, t.gender, 1
+    FROM #Teams t JOIN dbo.CLUB c ON c.name=t.country_name
+    WHERE NOT EXISTS (SELECT 1 FROM dbo.TEAM x WHERE x.name=t.country_name AND x.gender=t.gender);
 
     /* Competitions DRAFT. */
     IF NOT EXISTS (SELECT 1 FROM dbo.COMPETITION WHERE season_id=@SeasonId AND name=N'VNL 2026 Women')
@@ -312,7 +343,7 @@ BEGIN TRY
     /* Team entries ACTIVE: el seed reproduce el puesto del corte de ranking. */
     INSERT dbo.TEAM_ENTRY(competition_id,team_id,seed,status)
     SELECT CASE t.gender WHEN 'F' THEN @WomenCompetitionId ELSE @MenCompetitionId END,tm.team_id,t.seed,'ACTIVE'
-    FROM #Teams t JOIN dbo.TEAM tm ON tm.name=t.country_name+N' National Team' AND tm.gender=t.gender
+    FROM #Teams t JOIN dbo.TEAM tm ON tm.name=t.country_name AND tm.gender=t.gender
     WHERE NOT EXISTS(SELECT 1 FROM dbo.TEAM_ENTRY te WHERE te.competition_id=CASE t.gender WHEN 'F' THEN @WomenCompetitionId ELSE @MenCompetitionId END AND te.team_id=tm.team_id);
 
     /* Personas: clave técnica estable y explícita; evita deduplicar homónimos. */
@@ -338,7 +369,7 @@ BEGIN TRY
     JOIN dbo.PERSON pe ON pe.document_type='VNL2026' AND pe.document_number=s.gender+':'+s.country_code+':'+RIGHT('00'+CONVERT(VARCHAR(2),s.ordinal),2)
     JOIN dbo.PLAYER pl ON pl.person_id=pe.person_id
     JOIN #Teams t ON t.gender=s.gender AND t.country_code=s.country_code
-    JOIN dbo.TEAM tm ON tm.name=t.country_name+N' National Team' AND tm.gender=t.gender
+    JOIN dbo.TEAM tm ON tm.name=t.country_name AND tm.gender=t.gender
     JOIN dbo.TEAM_ENTRY te ON te.team_id=tm.team_id AND te.competition_id=CASE s.gender WHEN 'F' THEN @WomenCompetitionId ELSE @MenCompetitionId END
     JOIN dbo.COMPETITION_ROSTER cr ON cr.team_entry_id=te.team_entry_id
     WHERE NOT EXISTS(SELECT 1 FROM dbo.COMPETITION_ROSTER_PLAYER rp WHERE rp.competition_roster_id=cr.competition_roster_id AND rp.player_id=pl.player_id);
