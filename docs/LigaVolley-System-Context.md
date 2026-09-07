@@ -30,8 +30,8 @@ La autoridad canónica es servidor-side. El Scorer puede aceptar una acción loc
 
 ## 3. Stack tecnológico actual
 
-- Backend: .NET 8 (`net8.0`), ASP.NET Core Minimal API y C# con nullable e implicit usings activados.
-- Persistencia: EF Core SQL Server 8.0.1, migraciones EF y SQL Server como única base operativa.
+- Backend: .NET 10 (`net10.0`), ASP.NET Core Minimal API y C# con nullable e implicit usings activados.
+- Persistencia: EF Core SQL Server 10.0.11, migraciones EF y SQL Server como única base operativa.
 - API: Swashbuckle.AspNetCore 6.6.2; Swagger se habilita en Development. Los errores usan RFC Problem Details.
 - Admin: React 18.3.1, TypeScript 5.6.2, Vite 5.4.8, React Router 6.26.2, TanStack Query 5.59.0, React Hook Form, Zod y Vitest.
 - Scorer: React 18.3.1, TypeScript 5.6.2, Vite 5.4.8, Dexie 3.2.7, vite-plugin-pwa 0.16.7, Workbox y Playwright/Vitest.

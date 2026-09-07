@@ -27,7 +27,7 @@ public sealed class LigaVolleyApiFactory : IAsyncLifetime
     {
         try
         {
-            database = new MsSqlBuilder().Build();
+            database = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04").Build();
             await database.StartAsync();
             connectionString = database.GetConnectionString();
             DockerAvailable = true;
