@@ -473,14 +473,17 @@ function MatchWorkspace({
         <BenchSide side="AWAY" snapshot={snapshot} set={set} />
       </section>
       <section className="point-actions">
-        <button
-          className="point-button home"
-          disabled={scoreLocked || blocked}
-          onClick={() => onScore('HOME')}
-        >
-          <span>+ PUNTO</span>
-          <b>{snapshot.home.teamName}</b>
-        </button>
+        <div className="point-side home">
+          <button
+            className="point-button home"
+            disabled={scoreLocked || blocked}
+            onClick={() => onScore('HOME')}
+          >
+            <span>+ PUNTO</span>
+            <b>{snapshot.home.teamName}</b>
+          </button>
+          <LiberoSuggestions state={state} snapshot={snapshot} side="HOME" disabled={blocked} onCommand={onCommand} />
+        </div>
         <div className="match-feedback">
           <button disabled={!canCorrect || blocked} onClick={() => onDialog('correct')}>
             ↶ Corregir último punto
@@ -491,16 +494,18 @@ function MatchWorkspace({
               'Listo para la próxima acción'}
           </small>
         </div>
-        <button
-          className="point-button away"
-          disabled={scoreLocked || blocked}
-          onClick={() => onScore('AWAY')}
-        >
-          <span>+ PUNTO</span>
-          <b>{snapshot.away.teamName}</b>
-        </button>
+        <div className="point-side away">
+          <button
+            className="point-button away"
+            disabled={scoreLocked || blocked}
+            onClick={() => onScore('AWAY')}
+          >
+            <span>+ PUNTO</span>
+            <b>{snapshot.away.teamName}</b>
+          </button>
+          <LiberoSuggestions state={state} snapshot={snapshot} side="AWAY" disabled={blocked} onCommand={onCommand} />
+        </div>
       </section>
-      <LiberoSuggestions state={state} snapshot={snapshot} disabled={blocked} onCommand={onCommand} />
       <section className="secondary-actions">
         <button disabled={blocked} onClick={() => onDialog('timeout')}>
           ◷ Timeout{' '}

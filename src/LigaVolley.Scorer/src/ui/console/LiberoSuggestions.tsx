@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import { liberoSuggestions, regularPlayers, physicalPosition } from '../../domain/matchEngine';
-import type { MatchCommand, MatchState, ServerSheetSnapshot } from '../../domain/types';
+import type { MatchCommand, MatchState, ServerSheetSnapshot, Side } from '../../domain/types';
 import { player } from './model';
 
-export function LiberoSuggestions({ state, snapshot, disabled, onCommand }: {
+export function suggestionsForSide(state: MatchState, side: Side) {
+  return liberoSuggestions(state).filter((suggestion) => suggestion.side === side);
+}
+
+export function LiberoSuggestions({ state, snapshot, side, disabled, onCommand }: {
   state: MatchState; snapshot: ServerSheetSnapshot; disabled: boolean;
+  side: Side;
   onCommand: (command: MatchCommand) => Promise<void>;
 }) {
   const [dismissed, setDismissed] = useState<string[]>([]);
@@ -12,8 +17,8 @@ export function LiberoSuggestions({ state, snapshot, disabled, onCommand }: {
   const set = state.sets.find(x => x.setNumber === state.currentSetNumber);
   if (!set) return null;
   const revision = JSON.stringify([set.setNumber, set.points, set.substitutions, set.liberoReplacements]);
-  return <div className="libero-suggestions" aria-label="Sugerencias de líbero">
-    {liberoSuggestions(state).map(suggestion => {
+  return <div className="libero-suggestions" aria-label={`Sugerencias de líbero ${side}`} data-testid={`libero-suggestions-${side.toLowerCase()}`}>
+    {suggestionsForSide(state, side).map(suggestion => {
       const key = revision + JSON.stringify(suggestion.command);
       if (dismissed.includes(key)) return null;
       const libero = player(snapshot, suggestion.side, Number(suggestion.command.payload.liberoMatchPlayerId));

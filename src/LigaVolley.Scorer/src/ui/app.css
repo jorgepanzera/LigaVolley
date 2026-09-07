@@ -434,6 +434,13 @@ button:disabled {
   gap: 12px;
   margin-top: 12px;
 }
+.point-side {
+  display: grid;
+  align-content: start;
+}
+.point-side .point-button {
+  width: 100%;
+}
 .point-button {
   min-height: 74px;
   border: 0;
