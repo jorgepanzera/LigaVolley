@@ -44,7 +44,9 @@ public sealed class PublicQueryService(IPublicQueryRepository repository, Standi
     {
         var competition=await Competition(id,ct); var teams=await repository.ListTeamsAsync(id,ct); var matches=await repository.ListMatchesAsync(id,ct);
         return new(competition.CompetitionId,competition.Name,Season(competition),Division(competition),competition.PeriodType,competition.StartDate,competition.EndDate,competition.Status,
-            teams.Select(x=>new PublicCompetitionTeamDto(x.TeamEntryId,x.TeamId,x.Team.Name)).ToArray(),competition.Phases.OrderBy(x=>x.Sequence).Select(p=>new PublicCompetitionPhaseDto(p.CompetitionPhaseId,p.Code,p.Name,p.PhaseType,p.PhaseRole,p.Sequence,p.Status,p.Groups.OrderBy(x=>x.Sequence).Select(g=>new PublicCompetitionGroupDto(g.PhaseGroupId,g.Code,g.Name,g.GroupRole,g.Sequence)).ToArray(),p.Series.OrderBy(x=>x.Sequence).Select(s=>Series(s,matches)).ToArray())).ToArray());
+            teams.Select(x=>new PublicCompetitionTeamDto(x.TeamEntryId,x.TeamId,x.Team.Name,x.Team.Club is null?null:ClubService.LogoUrl(x.Team.Club))).ToArray(),competition.Phases.OrderBy(x=>x.Sequence).Select(p=>new PublicCompetitionPhaseDto(p.CompetitionPhaseId,p.Code,p.Name,p.PhaseType,p.PhaseRole,p.Sequence,p.Status,p.Groups.OrderBy(x=>x.Sequence).Select(g=>new PublicCompetitionGroupDto(g.PhaseGroupId,g.Code,g.Name,g.GroupRole,g.Sequence)).ToArray(),p.Series.OrderBy(x=>x.Sequence).Select(s=>Series(s,matches)).ToArray())).ToArray(),
+            matches.Where(x=>x.Status==MatchStatus.Scheduled&&x.MatchDate.HasValue).OrderBy(x=>x.MatchDate).ThenBy(x=>x.MatchId).Take(5).Select(x=>FixtureMatch(x,x.SeriesId.HasValue)).ToArray(),
+            matches.Where(x=>x.Status==MatchStatus.Finished).OrderByDescending(x=>x.MatchDate).ThenByDescending(x=>x.MatchId).Take(5).Select(x=>FixtureMatch(x,x.SeriesId.HasValue)).ToArray());
     }
 
     public async Task<PublicCompetitionFixtureDto> GetFixtureAsync(int id,int? phaseId,int? phaseGroupId,int? teamEntryId,IReadOnlySet<MatchStatus>? statuses,CancellationToken ct)

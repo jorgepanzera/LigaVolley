@@ -22,7 +22,7 @@ public static class PublicQueryEndpoints
 
         // GET /api/public/competitions/123
         group.MapGet("/competitions/{competitionId:int}",async(int competitionId,PublicQueryService service,CancellationToken ct)=>Results.Ok(await service.GetCompetitionAsync(competitionId,ct)))
-            .WithSummary("Get public competition").WithDescription("Returns teams and ordered sporting structure, including playoff bracket series.").Produces<PublicCompetitionDto>().Produces<ProblemDetails>(404,"application/problem+json").Produces<ProblemDetails>(409,"application/problem+json");
+            .WithSummary("Get public competition").WithDescription("Returns the public competition summary: public participants with current club logos, ordered materialized sporting structure including playoff bracket series, and bounded upcoming and recent match summaries. Upcoming scheduled matches and finished results are ordered deterministically and limited to five each.").Produces<PublicCompetitionDto>().Produces<ProblemDetails>(404,"application/problem+json").Produces<ProblemDetails>(409,"application/problem+json");
         // GET /api/public/seasons/2026/home
         group.MapGet("/seasons/{seasonId:int}/home",async(int seasonId,PublicQueryService service,CancellationToken ct)=>Results.Ok(await service.GetSeasonHomeAsync(seasonId,ct)))
             .WithSummary("Get public Season home")
