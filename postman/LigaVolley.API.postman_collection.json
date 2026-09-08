@@ -3117,6 +3117,27 @@
                                                                  ]
                                                    }
                                                ]
+                                   },
+                                  {
+                                      "name":  "Season Home",
+                                      "item":  {
+                                                   "name":  "01a - Public Season Home",
+                                                   "request":  {
+                                                                   "method":  "GET",
+                                                                   "url":  "{{baseUrl}}/api/public/seasons/{{seasonId}}/home"
+                                                               },
+                                                   "event":  [
+                                                                 {
+                                                                     "listen":  "test",
+                                                                     "script":  {
+                                                                                    "type":  "text/javascript",
+                                                                                    "exec":  [
+                                                                                                 "pm.test('public season home',()=>{pm.response.to.have.status(200);const body=pm.response.json();pm.expect(Object.keys(body).sort()).to.eql(['activeCompetitions','finishedCompetitions','liveMatches','recentResults','season','upcomingMatches']);});"
+                                                                                             ]
+                                                                                }
+                                                                 }
+                                                             ]
+                                               }
                                   },
                                   {
                                       "name":  "Fixture y Results",

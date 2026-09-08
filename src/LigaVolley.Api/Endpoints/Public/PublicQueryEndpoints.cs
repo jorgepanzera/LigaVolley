@@ -23,6 +23,11 @@ public static class PublicQueryEndpoints
         // GET /api/public/competitions/123
         group.MapGet("/competitions/{competitionId:int}",async(int competitionId,PublicQueryService service,CancellationToken ct)=>Results.Ok(await service.GetCompetitionAsync(competitionId,ct)))
             .WithSummary("Get public competition").WithDescription("Returns teams and ordered sporting structure, including playoff bracket series.").Produces<PublicCompetitionDto>().Produces<ProblemDetails>(404,"application/problem+json").Produces<ProblemDetails>(409,"application/problem+json");
+        // GET /api/public/seasons/2026/home
+        group.MapGet("/seasons/{seasonId:int}/home",async(int seasonId,PublicQueryService service,CancellationToken ct)=>Results.Ok(await service.GetSeasonHomeAsync(seasonId,ct)))
+            .WithSummary("Get public Season home")
+            .WithDescription("Returns bounded public summaries for active and finished competitions, live matches, upcoming matches and recent results. It excludes rosters, people, officials and operational live state.")
+            .Produces<PublicSeasonHomeDto>().Produces<ProblemDetails>(404,"application/problem+json");
 
         // GET /api/public/competitions/123/fixture?phaseId=10&phaseGroupId=20&teamEntryId=30&status=Scheduled&status=Finished
         group.MapGet("/competitions/{competitionId:int}/fixture",async(int competitionId,int? phaseId,int? phaseGroupId,int? teamEntryId,[FromQuery]MatchStatus[]? status,PublicQueryService service,CancellationToken ct)=>Results.Ok(await service.GetFixtureAsync(competitionId,phaseId,phaseGroupId,teamEntryId,status?.ToHashSet(),ct)))

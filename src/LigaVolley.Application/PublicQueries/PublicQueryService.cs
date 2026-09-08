@@ -21,6 +21,24 @@ public sealed class PublicQueryService(IPublicQueryRepository repository, Standi
         if (status.HasValue && !PublicStatuses.Contains(status.Value)) return [];
         return (await repository.ListCompetitionsAsync(seasonId,divisionId,gender,status,ct)).Select(Summary).ToArray();
     }
+    public async Task<PublicSeasonHomeDto> GetSeasonHomeAsync(int seasonId,CancellationToken ct)
+    {
+        var season=(await repository.ListSeasonsAsync(ct)).SingleOrDefault(x=>x.SeasonId==seasonId)
+            ??throw new ResourceNotFoundException("PublicSeason",seasonId);
+        var competitions=await ListCompetitionsAsync(seasonId,null,null,null,ct);
+        var matches=await repository.ListSeasonMatchesAsync(seasonId,ct);
+
+        PublicSeasonMatchSummaryDto Map(Match match)=>new(match.MatchId,match.CompetitionId,match.Competition.Name,
+            Team(match.HomeTeamEntry)!,Team(match.AwayTeamEntry)!,Date(match.MatchDate),Venue(match),match.Status,Score(match));
+
+        return new(new(season.SeasonId,season.Year,season.Name),
+            competitions.Where(x=>x.Status is CompetitionStatus.Scheduled or CompetitionStatus.InProgress)
+                .OrderByDescending(x=>x.Status==CompetitionStatus.InProgress).ThenBy(x=>x.Name).ToArray(),
+            matches.Where(x=>x.Status==MatchStatus.InProgress).OrderBy(x=>x.MatchDate).ThenBy(x=>x.MatchId).Take(8).Select(Map).ToArray(),
+            matches.Where(x=>x.Status==MatchStatus.Scheduled&&x.MatchDate.HasValue).OrderBy(x=>x.MatchDate).ThenBy(x=>x.MatchId).Take(8).Select(Map).ToArray(),
+            matches.Where(x=>x.Status==MatchStatus.Finished).OrderByDescending(x=>x.MatchDate).ThenByDescending(x=>x.MatchId).Take(8).Select(Map).ToArray(),
+            competitions.Where(x=>x.Status==CompetitionStatus.Finished).OrderByDescending(x=>x.EndDate).ThenBy(x=>x.Name).ToArray());
+    }
 
     public async Task<PublicCompetitionDto> GetCompetitionAsync(int id,CancellationToken ct)
     {

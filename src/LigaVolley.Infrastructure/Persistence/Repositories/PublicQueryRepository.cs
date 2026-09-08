@@ -22,6 +22,7 @@ internal sealed class PublicQueryRepository(LigaVolleyDbContext db) : IPublicQue
     public Task<Competition?> GetCompetitionAsync(int id,CancellationToken ct)=>Complete(BaseCompetitions()).SingleOrDefaultAsync(x=>x.CompetitionId==id,ct);
     public async Task<IReadOnlyList<TeamEntry>> ListTeamsAsync(int id,CancellationToken ct)=>await db.TeamEntries.AsNoTracking().Include(x=>x.Team).ThenInclude(x=>x.Club).Where(x=>x.CompetitionId==id&&(x.Status==TeamEntryStatus.Registered||x.Status==TeamEntryStatus.Active)).OrderBy(x=>x.Team.Name).ToListAsync(ct);
     public async Task<IReadOnlyList<Match>> ListMatchesAsync(int id,CancellationToken ct)=>await Matches().Where(x=>x.CompetitionId==id).OrderBy(x=>x.Phase.Sequence).ThenBy(x=>x.RoundNumber).ThenBy(x=>x.MatchNumber).ToListAsync(ct);
+    public async Task<IReadOnlyList<Match>> ListSeasonMatchesAsync(int seasonId,CancellationToken ct)=>await Matches().Include(x=>x.Competition).Where(x=>x.Competition.SeasonId==seasonId&&PublicStatuses.Contains(x.Competition.Status)).ToListAsync(ct);
     public Task<Match?> GetMatchAsync(int id,CancellationToken ct)=>Matches().Include(x=>x.Competition).ThenInclude(x=>x.Season).Include(x=>x.Competition).ThenInclude(x=>x.Division).SingleOrDefaultAsync(x=>x.MatchId==id,ct);
     public Task<MatchSheet?> GetMatchSheetAsync(int id,CancellationToken ct)=>new MatchSheetRepository(db).GetAsync(id,false,ct);
 

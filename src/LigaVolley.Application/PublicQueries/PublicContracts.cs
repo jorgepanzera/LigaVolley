@@ -9,6 +9,8 @@ namespace LigaVolley.Application.PublicQueries;
 public sealed record PublicSeasonDto(int SeasonId, short Year, string Name);
 public sealed record PublicDivisionDto(int DivisionId,string Name,short LevelOrder,Gender Gender);
 public sealed record PublicCompetitionSummaryDto(int CompetitionId,string Name,PublicSeasonDto Season,PublicDivisionDto Division,CompetitionPeriodType PeriodType,DateOnly? StartDate,DateOnly? EndDate,CompetitionStatus Status);
+public sealed record PublicSeasonMatchSummaryDto(int MatchId,int CompetitionId,string CompetitionName,PublicTeamSummaryDto HomeTeam,PublicTeamSummaryDto AwayTeam,DateTimeOffset? MatchDate,PublicVenueDto? Venue,MatchStatus Status,PublicMatchScoreDto? Score);
+public sealed record PublicSeasonHomeDto(PublicSeasonDto Season,IReadOnlyList<PublicCompetitionSummaryDto> ActiveCompetitions,IReadOnlyList<PublicSeasonMatchSummaryDto> LiveMatches,IReadOnlyList<PublicSeasonMatchSummaryDto> UpcomingMatches,IReadOnlyList<PublicSeasonMatchSummaryDto> RecentResults,IReadOnlyList<PublicCompetitionSummaryDto> FinishedCompetitions);
 public sealed record PublicCompetitionTeamDto(int TeamEntryId,int TeamId,string TeamName);
 public sealed record PublicTeamSummaryDto(int TeamEntryId,string TeamName,string? ClubLogoUrl);
 public sealed record PublicVenueDto(int VenueId,string Name);

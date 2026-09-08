@@ -14,6 +14,7 @@ public interface IPublicQueryRepository
     Task<Competition?> GetCompetitionAsync(int competitionId, CancellationToken ct);
     Task<IReadOnlyList<TeamEntry>> ListTeamsAsync(int competitionId, CancellationToken ct);
     Task<IReadOnlyList<Match>> ListMatchesAsync(int competitionId, CancellationToken ct);
+    Task<IReadOnlyList<Match>> ListSeasonMatchesAsync(int seasonId, CancellationToken ct);
     Task<Match?> GetMatchAsync(int matchId, CancellationToken ct);
     Task<MatchSheet?> GetMatchSheetAsync(int matchId, CancellationToken ct);
 }
