@@ -12,3 +12,20 @@
 8. [Consulta pública y Live](08-public-query-and-live.md): publicación, detalle, Live y polling.
 
 `AGENTS.md` contiene reglas de implementación y un resumen operativo. Estos documentos describen módulos y decisiones permanentes del sistema; no registran slices, bitácoras ni resultados transitorios de ejecución.
+
+# Seeders especificos
+
+# Seed principal LIVOSUR 2026
+dotnet run --project src/LigaVolley.Api -- --seed-livosur-2026
+
+# Seed de logos de clubes
+dotnet run --project src/LigaVolley.Api -- --seed-livosur-2026-club-logos
+
+# Seed del partido demo para Scorer
+dotnet run --project src/LigaVolley.Api -- --seed-demo-match
+
+# Reset controlado de datos competitivos de prueba
+dotnet run --project src/LigaVolley.Api -- --reset-competition-test-data
+
+# Aplicar migrations pendientes de Entity Framework
+dotnet ef database update parado en src/LigaVolley.Infraestructure
