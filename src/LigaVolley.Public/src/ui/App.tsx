@@ -4,6 +4,7 @@ import { publicApi } from '../api/publicApi';
 import type { Competition, CompetitionSummary, Fixture, MatchDetail, Season, SeasonHome as SeasonHomeDto, SeasonMatch, Standings } from '../api/types';
 import { PublicMatchLive } from '../live/PublicMatchLive';
 import { Bracket, MatchCard, StandingsTableView, TeamLogo, label } from './components';
+import { FixtureResults } from './FixtureResults';
 import './app.css';
 
 function Load<T>({ run, children }: { run: () => Promise<T>; children: (value: T) => React.ReactNode }) {
@@ -36,7 +37,7 @@ function CompetitionContent({ competition }: { competition: Competition }) { con
 
 function CompetitionSectionContent({competition,children}:{competition:Competition;children:React.ReactNode}){const {setCompetition}=useOutletContext<Context>();useEffect(()=>{setCompetition(competition);return()=>setCompetition(undefined)},[competition,setCompetition]);return <>{children}</>}
 function CompetitionSection({children}:{children:React.ReactNode}) { const id=Number(useParams().competitionId); return <Load key={id} run={()=>publicApi.competition(id)}>{competition=><CompetitionSectionContent competition={competition}>{children}</CompetitionSectionContent>}</Load>; }
-function FixturePage(){const id=Number(useParams().competitionId);return <Load key={id} run={()=>publicApi.fixture(id)}>{fixture=><CompetitionSection><h1>Fixture y resultados</h1>{fixture.phases.map(phase=><section key={phase.phaseId}><h2>{phase.name}</h2>{phase.rounds.map(round=><div key={round.roundNumber}><h3>Ronda {round.roundNumber}</h3>{round.matches.map(match=><MatchCard key={match.matchId} match={match}/>)}</div>)}</section>)}</CompetitionSection>}</Load>;}
+function FixturePage(){const id=Number(useParams().competitionId);return <Load key={id} run={()=>publicApi.fixture(id)}>{fixture=><CompetitionSection><h1>Fixture y resultados</h1><FixtureResults fixture={fixture}/></CompetitionSection>}</Load>;}
 function StandingsPage(){const id=Number(useParams().competitionId);return <Load key={id} run={()=>publicApi.standings(id)}>{standings=><CompetitionSection><h1>Posiciones</h1>{standings.tables.length?standings.tables.map(table=><StandingsTableView key={`${table.phaseId}-${table.phaseGroupId??0}`} table={table}/>):<p>No hay posiciones disponibles aún.</p>}</CompetitionSection>}</Load>;}
 function PlayoffsPage(){const id=Number(useParams().competitionId);return <Load key={id} run={()=>publicApi.competition(id)}>{competition=><CompetitionSectionContent competition={competition}><h1>Playoffs</h1>{competition.phases.filter(phase=>phase.playoffSeries.length).map(phase=><section key={phase.phaseId}><h2>{phase.name}</h2><Bracket series={phase.playoffSeries}/></section>)}</CompetitionSectionContent>}</Load>;}
 function MatchPage() { const id = Number(useParams().matchId); return <Load key={id} run={() => publicApi.match(id)}>{match => <MatchContent match={match} />}</Load>; }
