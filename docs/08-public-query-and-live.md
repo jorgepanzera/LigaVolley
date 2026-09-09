@@ -34,14 +34,14 @@ A partir de 768 px se amplían espacios y tipografía. Desde 1024 px se usa una 
 
 | Estado / frescura | Presentación |
 | --- | --- |
-| IN_PROGRESS, edad ≤ 30 s | EN VIVO; puntos actuales dominantes |
-| IN_PROGRESS, 30 s < edad ≤ 90 s | EN VIVO · actualización demorada |
-| IN_PROGRESS, edad > 90 s | PARTIDO EN CURSO + DATOS SIN ACTUALIZAR |
-| IN_PROGRESS, LastUpdatedAt null | PARTIDO EN CURSO + Frescura desconocida; hora no disponible |
-| SUSPENDED | PARTIDO SUSPENDIDO; conserva puntos, sets y última cancha |
-| FINISHED | FINAL; sets ganados dominantes; sin saque ni servidor |
+| IN_PROGRESS, edad ≤ 30 s | EN VIVO; `Actualizado hace …` junto al estado |
+| IN_PROGRESS, 30 s < edad ≤ 90 s | EN VIVO · actualización demorada; `Datos demorados · hace …` |
+| IN_PROGRESS, edad > 90 s | PARTIDO EN CURSO; `Sin actualizar · hace …` |
+| IN_PROGRESS, LastUpdatedAt null | PARTIDO EN CURSO; Frescura desconocida |
+| SUSPENDED | PARTIDO SUSPENDIDO con tratamiento visual propio; conserva puntos, sets, cancha y frescura |
+| FINISHED | FINAL; sets ganados dominantes, sin saque, servidor ni frescura operacional |
 
-La edad inicial es `ServerTime - LastUpdatedAt`. Un reloj monotónico del cliente (`performance.now`) mide el tiempo transcurrido desde la recepción de esa respuesta; un temporizador visual actualiza el texto cada segundo sin generar requests. Los umbrales 30/90 viven en `livePolicy.ts`. El redondeo de segundos es sólo textual, no altera la clasificación de los límites. Una fecha nula o inválida produce UNKNOWN; nunca se inventa una fecha ni se presume frescura. Recibir otra respuesta con el mismo LastUpdatedAt no rejuvenece el dato: su ServerTime ya refleja el tiempo transcurrido.
+La edad inicial es `ServerTime - LastUpdatedAt`. Un reloj monotónico del cliente (`performance.now`) mide el tiempo transcurrido desde la recepción de esa respuesta; un temporizador visual actualiza el texto junto al estado cada segundo sin generar requests. Los umbrales 30/90 viven en `livePolicy.ts`; la duración se humaniza como segundos, minutos, horas o días. Una fecha nula o inválida produce UNKNOWN; nunca se inventa una fecha ni se presume frescura. Recibir otra respuesta con el mismo LastUpdatedAt no rejuvenece el dato: su ServerTime ya refleja el tiempo transcurrido.
 
 El timestamp operacional conserva su semántica: generado en servidor, cambia sólo con mutaciones deportivas observables aceptadas, nunca por GET, polling, reintentos idempotentes, UUID conocidos o rechazos. Estado deportivo, frescura y fallo de transporte son conceptos separados. Un fallo de polling conserva marcador, cancha y edad del último Live válido y añade un aviso discreto de reintento.
 
@@ -61,6 +61,6 @@ Live expone `servingSide`, cancha efectiva y el siguiente servidor explícito:
 "servingPlayer": { "jerseyNumber": 7, "displayName": "Pérez" }
 ```
 
-`servingPlayer` es nullable; `jerseyNumber` es entero y `displayName` es string. Se mantiene `servingSide` sin cambios. La proyección reutiliza `MatchCourtStateCalculator.Calculate` sobre la formación regular con sustituciones y offset, y `MatchCourtStateCalculator.Server`, exactamente como la derivación existente del servidor en Scorer. No se incorpora una regla de saque nueva ni se obtiene el servidor desde P1 en React. Sólo se proyecta durante Match y set IN_PROGRESS con servidor y dorsal determinables; en READY, entre sets, SUSPENDED y FINISHED es null. No se publican IDs, convocatoria, perfiles, oficiales ni otros atributos del jugador. La cancha mantiene su contrato anterior, incluido su dorsal textual.
+`servingPlayer` es nullable; `jerseyNumber` es entero y `displayName` es string. Se mantiene `servingSide` sin cambios. La proyección reutiliza `MatchCourtStateCalculator.Calculate` sobre la formación regular con sustituciones y offset, y `MatchCourtStateCalculator.Server`, exactamente como la derivación existente del servidor en Scorer. No se incorpora una regla de saque nueva ni se obtiene el servidor desde P1 en React. Cuando el jugador recibido coincide con una posición visible, esa posición se destaca discretamente como quien saca; si falta o no está visible, React no infiere un reemplazo. Sólo se proyecta durante Match y set IN_PROGRESS con servidor y dorsal determinables; en READY, entre sets, SUSPENDED y FINISHED es null. No se publican IDs, convocatoria, perfiles, oficiales ni otros atributos del jugador. La cancha mantiene su contrato anterior, incluido su dorsal textual.
 
 El contrato no expone IDs, convocatoria, perfiles, oficiales ni reglas deportivas adicionales. OpenAPI y Postman lo mantienen consistente.

@@ -14,14 +14,14 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.use
 const view = (overrides: Parameters<typeof liveFixture>[0] = {}) => render(<LiveMatchView live={liveFixture(overrides)} receivedAt={performance.now()} />);
 
 describe('public match live UI', () => {
-  it.each([[4, 'EN VIVO'], [31, 'actualización demorada'], [91, 'PARTIDO EN CURSO']])('shows freshness at %s seconds', (age, label) => {
+  it.each([[4, 'Actualizado hace 4 s'], [31, 'Datos demorados · hace 31 s'], [91, 'Sin actualizar · hace 1 min']])('shows freshness at %s seconds', (age, label) => {
     view({ lastUpdatedAt: new Date(Date.parse('2026-09-05T12:00:00Z') - Number(age) * 1000).toISOString() });
     expect(screen.getByRole('status').textContent).toContain(label);
     expect(within(screen.getByRole('group', { name: 'Puntos del set actual' })).getByLabelText('Olimpia: 18')).toBeTruthy();
   });
   it('does not claim freshness for historical null timestamps', () => {
     view({ lastUpdatedAt: null });
-    expect(screen.getByText('Hora de actualización no disponible')).toBeTruthy();
+    expect(screen.getByText('Frescura desconocida')).toBeTruthy();
     expect(screen.getByRole('status').textContent).not.toContain('EN VIVO');
   });
   it('renders the server supplied by the DTO, independently of P1', () => {
@@ -30,6 +30,14 @@ describe('public match live UI', () => {
     expect(serve.textContent).toContain('#7');
     expect(serve.textContent).toContain('Pérez');
     expect(serve.textContent).not.toContain('Jugador 1');
+  });
+  it('highlights only the received serving player when they are visible on court', () => {
+    const { container } = view({ servingSide: 'Away', servingPlayer: { jerseyNumber: 11, displayName: 'CBPS Jugador 1' } });
+    fireEvent.click(screen.getByText('Cancha actual'));
+    const player = screen.getByText('CBPS Jugador 1').closest('li')!;
+    expect(player.className).toContain('is-serving');
+    expect(within(player).getByText('Saca')).toBeTruthy();
+    expect(container.querySelectorAll('.is-serving')).toHaveLength(1);
   });
   it('keeps mobile court collapsed and renders exactly the received six positions per side', () => {
     const { container } = view();
@@ -69,10 +77,13 @@ describe('public match live UI', () => {
     expect(screen.queryByRole('group', { name: 'Puntos del set actual' })).toBeNull();
     expect(screen.queryByRole('group', { name: 'Saque actual' })).toBeNull();
     expect(screen.getByText('Última formación en cancha')).toBeTruthy();
+    expect(screen.queryByText(/Actualizado|Datos demorados|Sin actualizar/)).toBeNull();
   });
   it('hides the serve between sets and when the server is null', () => {
     const { rerender } = view({ servingPlayer: null });
     expect(screen.queryByRole('group', { name: 'Saque actual' })).toBeNull();
+    fireEvent.click(screen.getByText('Cancha actual'));
+    expect(document.querySelector('.is-serving')).toBeNull();
     rerender(<LiveMatchView live={liveFixture({ currentSetNumber: 2 })} receivedAt={performance.now()} />);
     expect(screen.queryByRole('group', { name: 'Saque actual' })).toBeNull();
   });
@@ -102,7 +113,9 @@ describe('public match live UI', () => {
     await act(async () => {});
     await act(async () => { await vi.advanceTimersByTimeAsync(91000); });
     expect(screen.getByRole('group', { name: 'Puntos del set actual' })).toBeTruthy();
-    expect(screen.getByText('DATOS SIN ACTUALIZAR')).toBeTruthy();
+    expect(screen.getByText(/Sin actualizar/)).toBeTruthy();
+    expect(screen.queryByText('DATOS SIN ACTUALIZAR')).toBeNull();
+    expect(screen.queryByText(/Última información recibida/)).toBeNull();
     expect(screen.getByText(/No se pudo obtener una actualización/)).toBeTruthy();
     expect(request).toHaveBeenCalledTimes(6);
   });

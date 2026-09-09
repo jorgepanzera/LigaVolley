@@ -20,9 +20,13 @@ export function classifyLiveFreshness(serverTime: string, lastUpdatedAt?: string
 export function formatLiveAge(age: number | null): string {
   if (age === null) return 'Hora de actualización no disponible';
   const seconds = Math.floor(age);
+  if (seconds < 60) return `hace ${seconds} s`;
   const minutes = Math.floor(seconds / 60);
-  const duration = minutes ? `${minutes} min${seconds % 60 ? ` ${seconds % 60} s` : ''}` : `${seconds} s`;
-  return `${age <= LIVE_FRESH_SECONDS ? 'Actualizado' : 'Última actualización'} hace ${duration}`;
+  if (minutes < 60) return `hace ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 48) return `hace ${hours} h`;
+  const days = Math.floor(hours / 24);
+  return `hace ${days} día${days === 1 ? '' : 's'}`;
 }
 
 export function livePresentation(status: Status, freshness: LiveFreshness) {

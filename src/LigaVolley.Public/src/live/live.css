@@ -14,6 +14,8 @@
 .live-badge.final{background:#113f50;color:white}
 .live-set-number{color:#52616b}
 .live-stale-label{flex-basis:100%;color:#79500b;font-size:.7rem}
+.live-freshness-summary{flex-basis:100%;color:#52616b;font-size:.7rem;letter-spacing:normal}
+.live-freshness-summary.delayed,.live-freshness-summary.stale{color:#79500b}
 .live-teams,.live-sets{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;text-align:center}
 .live-team{min-width:0;display:flex;align-items:center;flex-direction:column;gap:.7rem}
 .live-team .team-logo{margin:0;width:64px;height:64px}
@@ -30,6 +32,7 @@
 .set-history li{display:flex;align-items:center;gap:.5rem;border-radius:7px;background:#f3f6f7;padding:.4rem .6rem}
 .set-history b{font-variant-numeric:tabular-nums;color:#243d48}
 .set-history b span{color:#81939c;font-weight:400}
+.set-history b .set-winner{color:#123f50;font-weight:800}
 .set-history p{margin:0}
 .serve-indicator{display:flex;flex-direction:column;gap:.3rem;text-align:center;margin:1.1rem 0;color:#1d5447;font-size:.9rem}
 .serve-indicator>span{color:#435962;font-size:.85rem}
@@ -48,11 +51,15 @@
 .live-player strong{font-size:1.1rem;color:#173e4b}
 .player-name{font-size:.6rem;line-height:1.2;overflow-wrap:anywhere}
 .live-player.is-libero{background:#fff4d7}
+.live-player.is-serving{outline:2px solid #087f5b;outline-offset:-2px}
 .live-player small{font-size:.6rem;color:#705008;font-weight:650}
+.live-player .player-serving{color:#087f5b;font-weight:800}
 .live-freshness{text-align:center;color:#52616b;margin:1.25rem 0 .2rem;font-size:.78rem}
 .live-freshness p{margin:.4rem 0}
 .live-freshness small{font-size:.68rem;color:#657780}
 .live-freshness .live-transport{color:#79500b}
+.public-live.is-suspended{background:#fffdf7;box-shadow:inset 0 0 0 1px #f0d9a0}
+.public-live.is-finished{background:#fbfcfc}
 .live-empty{text-align:center;color:#52616b;margin:1.5rem .4rem .5rem;font-size:.9rem}
 @media(min-width:768px){.public-live{padding:1.75rem 2rem 1rem}.live-team .team-logo{width:80px;height:80px}.live-teams,.live-sets,.live-points{gap:3rem}.live-scoreboard{max-width:620px;margin:auto}.live-status{font-size:.85rem}.live-player{min-height:105px}.player-name{font-size:.8rem}.player-position,.live-player small{font-size:.7rem}.live-court-side h3{font-size:.9rem;min-height:1.5em}.live-court-floor{gap:.75rem;padding:1rem}.live-court-side ol{gap:.5rem;padding:.5rem}}
 @media(min-width:1024px){.public-live{padding:2rem 3rem 1rem}.live-points>strong{font-size:7rem}.live-team .team-logo{width:88px;height:88px}.live-court{margin-top:1.75rem}.live-player strong{font-size:1.4rem}}

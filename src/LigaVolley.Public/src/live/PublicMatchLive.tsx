@@ -10,14 +10,14 @@ export function LiveMatchView({ live, receivedAt, error = false, unavailable = f
   live: Live; receivedAt: number; error?: boolean; unavailable?: boolean;
 }) {
   const freshness = useLiveFreshness(live, receivedAt);
-  return <section className="public-live" aria-label="Marcador del partido">
-    <LiveStatusBadge live={live} classification={freshness.classification} />
+  return <section className={`public-live${live.status === 'Suspended' ? ' is-suspended' : live.status === 'Finished' ? ' is-finished' : ''}`} aria-label="Marcador del partido">
+    <LiveStatusBadge live={live} classification={freshness.classification} age={freshness.age} />
     <LiveScoreboard home={live.home} away={live.away} homeSets={live.home.setsWon} awaySets={live.away.setsWon}
       current={live.sets.find(set => set.setNumber === live.currentSetNumber)} finished={live.status === 'Finished'}
       sets={live.sets.filter(set => set.status === 'Finished')} />
     <ServeIndicator live={live} />
     {(live.homeCourt || live.awayCourt) && <LiveCourt live={live} />}
-    <LiveFreshness age={freshness.age} error={error} unavailable={unavailable} />
+    {live.status !== 'Finished' && <LiveFreshness error={error} unavailable={unavailable} />}
   </section>;
 }
 

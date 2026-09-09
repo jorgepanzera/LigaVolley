@@ -8,7 +8,7 @@ export function LiveTeam({ team }: { team: Team }) {
 export function SetScoreHistory({ sets }: { sets: SetResult[] }) {
   return <div className="set-history" aria-label="Resultados de sets">
     {sets.length ? <ol>{[...sets].sort((a, b) => a.setNumber - b.setNumber).map(set =>
-      <li key={set.setNumber}><span>Set {set.setNumber}</span><b>{set.homePoints} <span>–</span> {set.awayPoints}</b></li>
+      <li key={set.setNumber}><span>Set {set.setNumber}</span><b><span className={set.homePoints > set.awayPoints ? 'set-winner' : ''}>{set.homePoints}</span> <span>–</span> <span className={set.awayPoints > set.homePoints ? 'set-winner' : ''}>{set.awayPoints}</span></b></li>
     )}</ol> : <p>Aún no hay sets finalizados</p>}
   </div>;
 }

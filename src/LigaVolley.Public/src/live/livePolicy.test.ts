@@ -16,7 +16,10 @@ describe('public livescore presentation policy', () => {
   it('advances relative time without consulting the client wall clock', () => {
     expect(liveAgeSeconds(serverTime, serverTime, 31000)).toBe(31);
     expect(classifyLiveFreshness(serverTime, serverTime, 91000)).toBe('STALE');
-    expect(formatLiveAge(72)).toContain('1 min 12 s');
+    expect(formatLiveAge(72)).toBe('hace 1 min');
+    expect(formatLiveAge(48 * 60)).toBe('hace 48 min');
+    expect(formatLiveAge(3 * 60 * 60)).toBe('hace 3 h');
+    expect(formatLiveAge(2 * 24 * 60 * 60)).toBe('hace 2 días');
   });
   it('clamps future timestamps', () => expect(liveAgeSeconds(serverTime, '2026-09-05T12:01:00Z')).toBe(0));
   it('keeps sporting state independent from freshness', () => {
