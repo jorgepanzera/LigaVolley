@@ -8,6 +8,7 @@ public interface IFixtureRepository
     Task<bool> GenerationExistsAsync(int competitionId, int phaseId, int? phaseGroupId, CancellationToken ct);
     Task<IReadOnlyList<FixtureGeneration>> ListGenerationsAsync(int competitionId, CancellationToken ct);
     Task<IReadOnlyList<Match>> ListMatchesAsync(int competitionId, CancellationToken ct);
+    Task RemoveInitialGenerationAsync(int competitionId, int phaseId, CancellationToken ct);
     void AddGeneration(FixtureGeneration generation);
     void AddMatches(IEnumerable<Match> matches);
 }

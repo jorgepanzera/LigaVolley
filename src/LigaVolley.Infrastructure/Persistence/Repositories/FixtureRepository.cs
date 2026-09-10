@@ -18,6 +18,13 @@ internal sealed class FixtureRepository(LigaVolleyDbContext db) : IFixtureReposi
     public Task<bool> GenerationExistsAsync(int competitionId,int phaseId,int? phaseGroupId,CancellationToken ct)=>db.FixtureGenerations.AnyAsync(x=>x.CompetitionId==competitionId&&x.PhaseId==phaseId&&x.PhaseGroupId==phaseGroupId,ct);
     public async Task<IReadOnlyList<FixtureGeneration>> ListGenerationsAsync(int competitionId,CancellationToken ct)=>await db.FixtureGenerations.AsNoTracking().Where(x=>x.CompetitionId==competitionId).ToListAsync(ct);
     public async Task<IReadOnlyList<Match>> ListMatchesAsync(int competitionId,CancellationToken ct)=>await db.Matches.AsNoTracking().Include(x=>x.HomeTeamEntry).ThenInclude(x=>x!.Team).ThenInclude(x=>x.Club).Include(x=>x.AwayTeamEntry).ThenInclude(x=>x!.Team).ThenInclude(x=>x.Club).Where(x=>x.CompetitionId==competitionId).OrderBy(x=>x.PhaseId).ThenBy(x=>x.RoundNumber).ThenBy(x=>x.MatchNumber).ToListAsync(ct);
+    public async Task RemoveInitialGenerationAsync(int competitionId, int phaseId, CancellationToken ct)
+    {
+        var matches = db.Matches.Where(x => x.CompetitionId == competitionId && x.PhaseId == phaseId && x.PhaseGroupId == null && x.SeriesId == null);
+        await db.MatchOfficials.Where(x => matches.Select(m => m.MatchId).Contains(x.MatchId)).ExecuteDeleteAsync(ct);
+        await matches.ExecuteDeleteAsync(ct);
+        await db.FixtureGenerations.Where(x => x.CompetitionId == competitionId && x.PhaseId == phaseId && x.PhaseGroupId == null).ExecuteDeleteAsync(ct);
+    }
     public void AddGeneration(FixtureGeneration generation)=>db.FixtureGenerations.Add(generation);
     public void AddMatches(IEnumerable<Match> matches)=>db.Matches.AddRange(matches);
 }

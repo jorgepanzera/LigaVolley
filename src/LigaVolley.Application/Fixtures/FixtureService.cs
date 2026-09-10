@@ -37,6 +37,36 @@ public sealed class FixtureService(ICompetitionRepository competitions, ITeamEnt
         return new(competitionId, matches.Length, randomSeed, [new(phase.CompetitionPhaseId, phase.Code, matches.Length)]);
     }
 
+    public async Task<GenerateFixtureResponse> RegenerateInitialAsync(int competitionId, GenerateFixtureRequest request, CancellationToken ct)
+    {
+        await using var transaction = await unit.BeginSerializableTransactionAsync(ct);
+        var competition = await RequiredCompetition(competitionId, true, ct);
+        if (competition.Status != CompetitionStatus.Draft)
+            throw new ResourceConflictException("fixture_competition_not_draft", "Fixture can only be regenerated for a Draft competition.");
+
+        var phase = ResolveInitialScope(competition);
+        var existing = await fixtures.ListMatchesAsync(competitionId, ct);
+        var scopeMatches = existing.Where(x => x.PhaseId == phase.CompetitionPhaseId && x.PhaseGroupId is null && x.SeriesId is null).ToArray();
+        if (scopeMatches.Any(x => x.Status is MatchStatus.InProgress or MatchStatus.Finished))
+            throw new ResourceConflictException("fixture_regeneration_match_started", "Fixture cannot be regenerated after a match has started or finished.");
+
+        var validEntries = (await entries.ListAsync(competitionId, true, ct)).Where(x => x.Status == TeamEntryStatus.Active).OrderBy(x => x.TeamEntryId).ToArray();
+        var format = competition.CompetitionFormat;
+        if (validEntries.Length < format.MinTeams || validEntries.Length > format.MaxTeams)
+            throw new ResourceConflictException("fixture_team_count_out_of_range", $"Fixture requires between {format.MinTeams} and {format.MaxTeams} valid teams; found {validEntries.Length}.");
+
+        var randomSeed = request.RandomSeed ?? RandomNumberGenerator.GetInt32(int.MaxValue);
+        var pairings = RoundRobinFixtureGenerator.Generate(validEntries.Select(x => x.TeamEntryId).ToArray(), randomSeed, phase.FixtureMode == FixtureMode.MirroredHomeAway);
+        var byId = validEntries.ToDictionary(x => x.TeamEntryId);
+        var matches = pairings.Select(x => new Match(competition, phase, null, byId[x.HomeParticipantId], byId[x.AwayParticipantId], x.RoundNumber, x.MatchNumber)).ToArray();
+        await fixtures.RemoveInitialGenerationAsync(competitionId, phase.CompetitionPhaseId, ct);
+        fixtures.AddGeneration(new FixtureGeneration(competition, phase, null, randomSeed, DateTime.UtcNow));
+        fixtures.AddMatches(matches);
+        await unit.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
+        return new(competitionId, matches.Length, randomSeed, [new(phase.CompetitionPhaseId, phase.Code, matches.Length)]);
+    }
+
     public async Task<CompetitionFixtureDto> GetAsync(int competitionId, CancellationToken ct)
     {
         var competition = await RequiredCompetition(competitionId, false, ct);

@@ -177,7 +177,7 @@ Ambos formatos canónicos asignan 2 puntos al ganador y 1 al perdedor en 3–0, 
 
 Generar fixture no programa la Competition ni requiere roster, oficiales, fecha o sede. Cada Match inicial nace con participantes resueltos; no se generan partidos futuros de playoffs sin participantes. Schedule Preview verifica DRAFT, estructura materializada compatible, ACTIVE dentro de rango, fixture inicial completo con exactamente esos participantes y ausencia de Matches comenzados. `ScheduleCompetition` es transaccional e idempotente si ya está SCHEDULED con timestamp. Fecha y Venue son opcionales para scheduling y editables administrativamente después; las fechas se transportan como UTC cuando se proyectan a Public.
 
-Los partidos de fases posteriores se generan incrementalmente al conocer los clasificados. La implementación expone generación inicial y generación dentro de Phase Completion; no hay un endpoint de regeneración de fixture actualmente expuesto.
+Los partidos de fases posteriores se generan incrementalmente al conocer los clasificados. La implementación expone generación inicial y generación dentro de Phase Completion. `POST /api/admin/competitions/{competitionId}/fixture/regenerate` reemplaza el fixture inicial solamente en DRAFT: vuelve a usar la estructura materializada y los TeamEntries ACTIVE, conserva la semántica de `Rounds` y `FixtureMode`, y se ejecuta transaccionalmente. Rechaza la operación si algún Match del ámbito inicial está IN_PROGRESS o FINISHED; la programación y los oficiales de los partidos reemplazados se descartan junto con esos partidos.
 
 ## 9. Standings
 

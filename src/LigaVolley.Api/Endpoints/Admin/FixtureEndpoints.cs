@@ -12,6 +12,10 @@ internal static class FixtureEndpoints
         // Body: { "randomSeed": 12345 }
         group.MapPost("/generate", async (int competitionId, GenerateFixtureRequest request, FixtureService service, CancellationToken ct) => Results.Ok(await service.GenerateInitialAsync(competitionId, request, ct)));
 
+        // Example: POST /api/admin/competitions/25/fixture/regenerate
+        // Body: { "randomSeed": 12345 }
+        group.MapPost("/regenerate", async (int competitionId, GenerateFixtureRequest request, FixtureService service, CancellationToken ct) => Results.Ok(await service.RegenerateInitialAsync(competitionId, request, ct)));
+
         // Example: GET /api/admin/competitions/25/fixture
         group.MapGet("/", async (int competitionId, FixtureService service, CancellationToken ct) => Results.Ok(await service.GetAsync(competitionId, ct)));
         return endpoints;

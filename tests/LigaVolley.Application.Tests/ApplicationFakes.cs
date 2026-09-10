@@ -58,6 +58,7 @@ internal sealed class FakeFixtureRepository : IFixtureRepository
     public Task<bool> GenerationExistsAsync(int competitionId,int phaseId,int? phaseGroupId,CancellationToken ct)=>Task.FromResult(GenerationExists);
     public Task<IReadOnlyList<FixtureGeneration>> ListGenerationsAsync(int competitionId,CancellationToken ct)=>Task.FromResult<IReadOnlyList<FixtureGeneration>>(Generations);
     public Task<IReadOnlyList<Match>> ListMatchesAsync(int competitionId,CancellationToken ct)=>Task.FromResult<IReadOnlyList<Match>>(Matches);
+    public Task RemoveInitialGenerationAsync(int competitionId,int phaseId,CancellationToken ct){Matches.Clear();Generations.Clear();GenerationExists=false;return Task.CompletedTask;}
     public void AddGeneration(FixtureGeneration generation)=>Generations.Add(generation);
     public void AddMatches(IEnumerable<Match> matches)=>Matches.AddRange(matches);
 }

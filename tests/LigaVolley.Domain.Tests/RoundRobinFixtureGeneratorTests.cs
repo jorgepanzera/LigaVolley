@@ -2,6 +2,19 @@ using LigaVolley.Domain.Fixtures;
 namespace LigaVolley.Domain.Tests;
 public sealed class RoundRobinFixtureGeneratorTests
 {
+    [Theory]
+    [InlineData(6, 10, 30)]
+    [InlineData(7, 14, 42)]
+    [InlineData(8, 14, 56)]
+    public void MirroredFixtures_HaveContinuousRounds_OneMatchPerTeamAndExactReverseLeg(int teams, int rounds, int matches)
+    {
+        var fixture = RoundRobinFixtureGenerator.Generate(Enumerable.Range(1, teams).ToArray(), 81, true);
+        Assert.Equal(matches, fixture.Count); Assert.Equal(Enumerable.Range(1, rounds), fixture.Select(x => (int)x.RoundNumber).Distinct().Order());
+        Assert.All(fixture.GroupBy(x => x.RoundNumber), round => Assert.Equal(round.Count() * 2, round.SelectMany(x => new[] { x.HomeParticipantId, x.AwayParticipantId }).Distinct().Count()));
+        var firstLegRounds = teams % 2 == 0 ? teams - 1 : teams;
+        foreach (var first in fixture.Where(x => x.RoundNumber <= firstLegRounds))
+            Assert.Contains(fixture, x => x.RoundNumber == first.RoundNumber + firstLegRounds && x.HomeParticipantId == first.AwayParticipantId && x.AwayParticipantId == first.HomeParticipantId);
+    }
     [Fact] public void MirroredEightTeams_HasExactMirrorAndBalancedLocality()
     {
         var fixture=RoundRobinFixtureGenerator.Generate(Enumerable.Range(1,8).ToArray(),12345,true);
