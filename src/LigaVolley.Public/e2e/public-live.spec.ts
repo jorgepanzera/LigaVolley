@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { liveFixture, matchFixture } from '../src/live/liveFixtures';
 
-for (const width of [320, 390, 768, 1024, 1440]) {
+for (const width of [320, 375, 768, 1024, 1440]) {
   test(`score hierarchy and court interaction at ${width}px`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: width >= 1024 ? 900 : 844 });
     await page.route('**/api/public/matches/1', route => route.fulfill({ json: matchFixture() }));

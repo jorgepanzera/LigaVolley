@@ -32,6 +32,13 @@ describe('public standings', () => {
     expect(screen.queryByText('Segunda fase Championship')).toBeNull();
   });
 
+  it('disables the group selector with an explicit label until public groups can be selected', () => {
+    view({ ...standings, tables: [table(1, 'Regular'), table(1, 'Regular', 11)] });
+    const group = screen.getByLabelText('Grupo') as HTMLSelectElement;
+    expect(group.disabled).toBe(true);
+    expect(group.options[0].text).toBe('Grupos aún no disponibles');
+  });
+
   it('clears group on phase changes and restores a valid query selection', () => {
     view(standings, '/competitions/1/standings?phase=2&group=22');
     expect(screen.getByText('Segunda fase Relegation')).toBeTruthy();
