@@ -25,6 +25,7 @@ public sealed class LigaVolleyDbContext(DbContextOptions<LigaVolleyDbContext> op
     public DbSet<Division> Divisions => Set<Division>();
     public DbSet<CompetitionFormat> CompetitionFormats => Set<CompetitionFormat>();
     public DbSet<Competition> Competitions => Set<Competition>();
+    public DbSet<CompetitionMovement> CompetitionMovements => Set<CompetitionMovement>();
     public DbSet<Club> Clubs => Set<Club>();
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<Venue> Venues => Set<Venue>();

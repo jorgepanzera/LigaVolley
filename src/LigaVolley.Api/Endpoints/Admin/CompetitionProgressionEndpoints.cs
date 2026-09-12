@@ -23,6 +23,12 @@ internal static class CompetitionProgressionEndpoints
             .Produces<CompetitionCompletionPreviewDto>().Produces<ProblemDetails>(404, "application/problem+json")
             .Produces<ProblemDetails>(409, "application/problem+json");
 
+        // Example: GET /api/admin/competitions/25/movements
+        group.MapGet("/movements", async (int competitionId, CompetitionProgressionService service, CancellationToken ct) =>
+                Results.Ok(await service.GetMovementsAsync(competitionId, ct)))
+            .WithName("GetAdminCompetitionMovements").WithSummary("Get persisted sporting movements for a completed Competition")
+            .Produces<IReadOnlyList<MovementResultDto>>().Produces<ProblemDetails>(404, "application/problem+json");
+
         // Example: POST /api/admin/competitions/25/complete
         group.MapPost("/complete", async (int competitionId, CompetitionProgressionService service, CancellationToken ct) =>
                 Results.Ok(await service.CompleteAsync(competitionId, ct)))

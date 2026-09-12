@@ -1,6 +1,8 @@
 using System.Data;
 using LigaVolley.Application.Abstractions.Persistence;
 using LigaVolley.Domain.Fixtures;
+using LigaVolley.Domain.Competitions;
+using LigaVolley.Domain.TeamEntries;
 using Microsoft.EntityFrameworkCore;
 
 namespace LigaVolley.Infrastructure.Persistence.Repositories;
@@ -20,4 +22,14 @@ internal sealed class CompetitionProgressionRepository(LigaVolleyDbContext db) :
 
     public async Task<IReadOnlyList<Match>> ListMatchesAsync(int competitionId, CancellationToken ct) =>
         await db.Matches.AsNoTracking().Where(x => x.CompetitionId == competitionId).OrderBy(x => x.MatchId).ToListAsync(ct);
+
+    public async Task<IReadOnlyList<CompetitionMovement>> ListMovementsAsync(int competitionId, CancellationToken ct) =>
+        await db.CompetitionMovements.AsNoTracking().Include(x => x.TeamEntry).ThenInclude(x => x.Team)
+            .Include(x => x.SourceDivision).Include(x => x.TargetDivision).Where(x => x.CompetitionId == competitionId)
+            .OrderBy(x => x.MovementRuleId).ThenBy(x => x.TeamEntryId).ToListAsync(ct);
+
+    public void AddMovement(CompetitionMovement movement) => db.CompetitionMovements.Add(movement);
+
+    public async Task<TeamEntry> RequiredTeamEntryAsync(int competitionId, int teamEntryId, CancellationToken ct) =>
+        await db.TeamEntries.Include(x => x.Team).SingleAsync(x => x.CompetitionId == competitionId && x.TeamEntryId == teamEntryId, ct);
 }

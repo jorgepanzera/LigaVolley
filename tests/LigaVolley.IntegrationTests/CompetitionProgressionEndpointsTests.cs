@@ -126,7 +126,16 @@ public sealed class CompetitionProgressionEndpointsTests : IClassFixture<LigaVol
             var db = scope.ServiceProvider.GetRequiredService<LigaVolleyDbContext>();
             Assert.Equal(entriesBefore, await db.TeamEntries.CountAsync(x => x.CompetitionId == competition.CompetitionId));
             Assert.Equal(matchesBefore, await db.Matches.CountAsync(x => x.CompetitionId == competition.CompetitionId));
+            var persisted = await db.CompetitionMovements.SingleAsync(x => x.CompetitionId == competition.CompetitionId);
+            Assert.Equal(winnerEntryId, persisted.TeamEntryId);
+            Assert.Equal(MovementType.Promotion, persisted.MovementType);
+            Assert.Equal(1, persisted.SourcePosition);
+            Assert.Equal(top.DivisionId, persisted.TargetDivisionId);
         }
+
+        var movements = await factory.Client.GetFromJsonAsync<List<MovementResultDto>>($"/api/admin/competitions/{competition.CompetitionId}/movements", Json);
+        Assert.Single(movements!);
+        Assert.Equal(winnerEntryId, movements![0].TeamEntryId);
 
         var patch = await factory.Client.PatchAsJsonAsync($"/api/admin/competitions/{competition.CompetitionId}/status",
             new ChangeCompetitionStatusRequest(CompetitionStatus.Finished), Json);
@@ -142,6 +151,7 @@ public sealed class CompetitionProgressionEndpointsTests : IClassFixture<LigaVol
         Assert.True(paths.GetProperty($"{prefix}/progression").TryGetProperty("get", out _));
         Assert.True(paths.GetProperty($"{prefix}/completion-preview").TryGetProperty("get", out _));
         Assert.True(paths.GetProperty($"{prefix}/complete").TryGetProperty("post", out _));
+        Assert.True(paths.GetProperty($"{prefix}/movements").TryGetProperty("get", out _));
     }
 
     private async Task<T> Create<T>(string url, object body)

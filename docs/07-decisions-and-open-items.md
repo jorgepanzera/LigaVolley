@@ -5,7 +5,7 @@
 - Arquitectura: modular monolith .NET con una base SQL Server y tres frontends.
 - API: prefijos obligatorios `/api/admin`, `/api/scorer` y `/api/public`; cada superficie tiene contratos propios.
 - Competición: toda Competition requiere Season, Division y CompetitionFormat. Cambios estructurales de formatos usados requieren clonación.
-- Fixture y progresión: fixture incremental con participantes resueltos; `CompletePhase` y `CompleteCompetition` son explícitos, transaccionales e idempotentes.
+- Fixture y progresión: fixture incremental con participantes resueltos; `CompletePhase` y `CompleteCompetition` son explícitos, transaccionales e idempotentes. Los ascensos y descensos aplicables quedan como resultados deportivos históricos y no inscriben equipos futuros.
 - Personas y roster: perfiles opcionales sobre Person, roster explícito, 15 jugadores ACTIVE y dos técnicos ACTIVE. Función habitual nullable e informativa; no existe máximo de funciones habituales LIBERO.
 - MatchSheet: convocatoria, dorsal, capitanía, reglas y declaración `MATCH_LIBERO` quedan congeladas al abrir.
 - Scorer: PWA con cinco stores Dexie, eventos locales secuenciados, snapshot canónico, replay y takeover.

@@ -193,7 +193,7 @@ Las reglas materializan `PHASE_GROUP_ENTRY` con source position o lados de una s
 
 Una serie tiene PENDING, READY, IN_PROGRESS, FINISHED o CANCELLED. Sus victorias son `initialWins + Matches FINISHED ganados`; no hay contador mutable. Al cerrar un Match de serie, PlayoffProgression recalcula resultado, inicia/termina serie, resuelve ganador y perdedor en las series dependientes y crea sólo el siguiente Match real necesario. En partidos de serie el lado 1 es local en números impares y lado 2 en pares. No existe endpoint para cerrar manualmente una serie.
 
-`CompleteCompetition` sólo termina una Competition IN_PROGRESS si fases/series obligatorias están resueltas y no hay cancelaciones sin resolución. Calcula movimientos por regla; busca Division del mismo género y nivel exacto, nunca salta niveles, y reporta NotApplicable si `AppliesIfTargetExists` permite que falte. No crea TeamEntries en competencias futuras.
+`CompleteCompetition` sólo termina una Competition IN_PROGRESS si fases/series obligatorias están resueltas y no hay cancelaciones sin resolución. Persiste en la misma transacción los movimientos deportivos aplicables de `FORMAT_MOVEMENT_RULE`; busca Division del mismo género y nivel exacto, nunca salta niveles, y reporta NotApplicable si `AppliesIfTargetExists` permite que falte. Los movimientos son resultados históricos y no crean ni obligan TeamEntries en competencias futuras; un retry devuelve los persistidos.
 
 ## 11. Admin Web
 

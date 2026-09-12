@@ -21,6 +21,12 @@ public sealed class CompetitionProgressionService(ICompetitionRepository competi
         return ToProgression(competition, matches);
     }
 
+    public async Task<IReadOnlyList<MovementResultDto>> GetMovementsAsync(int competitionId, CancellationToken ct)
+    {
+        var competition = await Required(competitionId, false, ct);
+        return ToPersistedResults(competition, await progression.ListMovementsAsync(competitionId, ct));
+    }
+
     public async Task<CompetitionCompletionPreviewDto> PreviewCompletionAsync(int competitionId, CancellationToken ct)
     {
         var competition = await Required(competitionId, false, ct);
@@ -35,19 +41,42 @@ public sealed class CompetitionProgressionService(ICompetitionRepository competi
         {
             var competition = await Required(competitionId, true, innerCt);
             var alreadyCompleted = competition.Status == CompetitionStatus.Finished;
+            if (alreadyCompleted)
+            {
+                var persisted = await progression.ListMovementsAsync(competitionId, innerCt);
+                return new(competition.CompetitionId, competition.Status, true, competition.CompletedAt, ToPersistedResults(competition, persisted));
+            }
             var evaluation = await Evaluate(competition, innerCt);
             if (evaluation.Blockers.Count > 0)
                 throw new ResourceConflictException("competition_cannot_complete", "The competition cannot be completed because sporting blockers remain.")
                 {
                     Extensions = new Dictionary<string, object?> { ["blockers"] = evaluation.Blockers }
                 };
-            if (!alreadyCompleted)
+            var achievedAt = DateTimeOffset.UtcNow;
+            competition.Complete(achievedAt);
+            foreach (var result in evaluation.Movements.Where(x => x.Status == MovementResultStatus.Applied))
             {
-                competition.Complete(DateTimeOffset.UtcNow);
-                await unit.SaveChangesAsync(innerCt);
+                var entry = await progression.RequiredTeamEntryAsync(competition.CompetitionId, result.TeamEntryId, innerCt);
+                progression.AddMovement(new CompetitionMovement(competition.CompetitionId, result.MovementRuleId, result.MovementType, entry,
+                    result.Source.Type, result.Source.PhaseId, result.Source.PhaseGroupId, result.Source.SeriesId,
+                    (short)result.SourcePosition, result.StandingPosition is null ? null : (short)result.StandingPosition,
+                    result.SourceDivisionId, result.TargetDivisionId!.Value, result.TargetLevelDelta, achievedAt));
             }
-            return new(competition.CompetitionId, competition.Status, alreadyCompleted, competition.CompletedAt, evaluation.Movements);
+            await unit.SaveChangesAsync(innerCt);
+            var persistedMovements = await progression.ListMovementsAsync(competitionId, innerCt);
+            return new(competition.CompetitionId, competition.Status, false, competition.CompletedAt, ToPersistedResults(competition, persistedMovements));
         }, ct);
+
+    private static IReadOnlyList<MovementResultDto> ToPersistedResults(Competition competition, IReadOnlyList<CompetitionMovement> movements) => movements.Select(movement =>
+    {
+        var phase = competition.Phases.Single(x => x.CompetitionPhaseId == movement.SourcePhaseId);
+        var group = movement.SourcePhaseGroupId is null ? null : phase.Groups.Single(x => x.PhaseGroupId == movement.SourcePhaseGroupId);
+        var series = movement.SourceSeriesId is null ? null : phase.Series.Single(x => x.PlayoffSeriesId == movement.SourceSeriesId);
+        return new MovementResultDto(movement.MovementRuleId, movement.MovementType, ToSource(movement.SourceType, phase, group, series),
+            movement.TeamEntryId, movement.TeamId, movement.TeamEntry.Team.Name, movement.SourcePosition, movement.StandingPosition,
+            movement.SourceDivisionId, movement.SourceDivision!.Name, movement.SourceDivision.LevelOrder, MovementResultStatus.Applied,
+            movement.TargetDivisionId, movement.TargetDivision.Name, movement.TargetDivision.LevelOrder, movement.TargetLevelDelta, null);
+    }).ToArray();
 
     private async Task<Evaluation> Evaluate(Competition competition, CancellationToken ct)
     {

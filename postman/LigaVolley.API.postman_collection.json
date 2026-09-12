@@ -1779,7 +1779,7 @@
                                                                          "script":  {
                                                                                         "type":  "text/javascript",
                                                                                         "exec":  [
-                                                                                                     "pm.test(\u0027Finished con CompletedAt\u0027, () =\u003e { pm.response.to.have.status(200); const body=pm.response.json(); pm.expect(body.status).to.eql(\u0027Finished\u0027); pm.expect(body.alreadyCompleted).to.be.false; pm.expect(body.completedAt).to.not.be.null; });"
+                                                                                                     "pm.test(\u0027Finished con movimientos históricos\u0027, () =\u003e { pm.response.to.have.status(200); const body=pm.response.json(); pm.expect(body.status).to.eql(\u0027Finished\u0027); pm.expect(body.alreadyCompleted).to.be.false; pm.expect(body.completedAt).to.not.be.null; pm.expect(body.movements).to.be.an(\u0027array\u0027); });"
                                                                                                  ]
                                                                                     }
                                                                      }
@@ -1797,7 +1797,7 @@
                                                                          "script":  {
                                                                                         "type":  "text/javascript",
                                                                                         "exec":  [
-                                                                                                     "pm.test(\u0027Cierre idempotente\u0027, () =\u003e { pm.response.to.have.status(200); const body=pm.response.json(); pm.expect(body.status).to.eql(\u0027Finished\u0027); pm.expect(body.alreadyCompleted).to.be.true; });"
+                                                                                                     "pm.test(\u0027Cierre idempotente con movimientos históricos\u0027, () =\u003e { pm.response.to.have.status(200); const body=pm.response.json(); pm.expect(body.status).to.eql(\u0027Finished\u0027); pm.expect(body.alreadyCompleted).to.be.true; pm.expect(body.movements).to.be.an(\u0027array\u0027); });"
                                                                                                  ]
                                                                                     }
                                                                      }

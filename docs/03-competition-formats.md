@@ -461,9 +461,7 @@ Regla v1:
 - `DRAFT / SCHEDULED → CANCELLED`: cancelación administrativa inicial.
 
 El cierre persiste `Competition.completed_at` independientemente de `end_date`.
-Los movimientos de promoción/relegación se derivan al previsualizar o cerrar,
-pero no se almacenan ni crean inscripciones futuras. La Division destino se
-resuelve por nivel exacto y mismo género; un nivel faltante nunca se salta.
+Los movimientos de promoción/relegación aplicables se persisten como `COMPETITION_MOVEMENT` junto con el cierre, conservando regla, fuente, posiciones, TeamEntry, divisiones y destino deportivo resuelto. No crean ni obligan inscripciones futuras. La Division destino se resuelve por nivel exacto y mismo género; un nivel faltante nunca se salta.
 
 `CompleteCompetition` sólo puede ejecutarse cuando todas las fases obligatorias y series requeridas estén resueltas.
 

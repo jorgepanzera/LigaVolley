@@ -1083,12 +1083,13 @@ Se incorporan:
 |---|---|---|---|
 | Previsualizar cierre | `GET /api/admin/competitions/{competitionId}/completion-preview` | — | `CompetitionCompletionPreviewDto` |
 | Completar Competition | `POST /api/admin/competitions/{competitionId}/complete` | sin body | `CompetitionCompletionResultDto` |
+| Consultar movimientos deportivos | `GET /api/admin/competitions/{competitionId}/movements` | — | `IReadOnlyList<MovementResultDto>` |
 
 La Competition no pasa automáticamente a `FINISHED` al terminar la Final.
 
 `CompleteCompetition` debe validar que todas las fases y series obligatorias estén resueltas.
 
-Las `FORMAT_MOVEMENT_RULE` pueden producir un resultado calculado de promoción/relegación en el preview/cierre, pero en v1 no crean automáticamente `TeamEntry` en futuras competiciones.
+Las `FORMAT_MOVEMENT_RULE` producen resultados de promoción/relegación en el preview y, al completar exitosamente, los resultados aplicables se persisten como movimientos deportivos históricos. No crean automáticamente `TeamEntry` ni obligan participación en futuras competiciones. Un retry de cierre devuelve los movimientos persistidos, sin recalcular reglas ni standings.
 
 DTOs conceptuales:
 
