@@ -26,3 +26,6 @@ Las reglas efectivas se congelan como `RulesSnapshot` al abrir el acta. Esto inc
 Los maestros y planteles no tienen DELETE físico en los alcances vigentes. Las relaciones competitivas conservan historia, y los cambios posteriores en roster, personas o formato no reescriben la convocatoria ni el estado de un MatchSheet materializado. `COMPETITION_MOVEMENT` conserva cada ascenso o descenso deportivo aplicable al cerrar una Competition; referencia la regla, el TeamEntry, la fuente y las divisiones resueltas, sin representar una inscripción futura.
 
 Para estructura de competición, consultar [03 — Formatos y competiciones](03-competition-formats.md). Para personas y planteles, consultar [04 — Personas y planteles](04-people-and-rosters.md). Para operación de partido, consultar [05 — Acta electrónica y Scorer](05-match-scorer.md).
+# ComposiciÃ³n asistida de participantes
+
+`COMPETITION_PARTICIPANT_SUGGESTION_SOURCE` conserva fuentes histÃ³ricas explÃ­citas para una Competition DRAFT. Cada fuente debe estar FINISHED y tener el mismo gÃ©nero; la relaciÃ³n es restrictiva, Ãºnica por par y no permite autoreferencia. Sus sugerencias conservan procedencia y no reemplazan ni crean `TEAM_ENTRY`.

@@ -496,3 +496,6 @@ Ambos formatos otorgan 2/1 puntos de tabla para resultados 3-0, 3-1 y 3-2. Los d
 ## Referencias de decisiones vigentes
 
 - [Acta electrónica y Scorer](05-match-scorer.md): reglas congeladas, confirmaciones, declaración por partido y cancha efectiva.
+# ComposiciÃ³n futura asistida
+
+Admin puede seleccionar Competitions FINISHED del mismo gÃ©nero para una Competition DRAFT. Los movimientos histÃ³ricos hacia la Division destino sugieren ascensos y descensos recibidos; desde la misma Division, los TeamEntries sin salida hacia otra Division sugieren permanencia. La alta final de `TEAM_ENTRY` siempre es manual y las divergencias son warnings no bloqueantes.

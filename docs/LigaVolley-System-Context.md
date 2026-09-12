@@ -314,3 +314,6 @@ Crear competencia: formato activo → Competition DRAFT con estructura materiali
 - `src/LigaVolley.Api/Endpoints`, `Program.cs`, error handling y OpenAPI filters.
 - `src/LigaVolley.Admin`, `src/LigaVolley.Scorer` y `src/LigaVolley.Public`.
 - `tests/` y `postman/LigaVolley.API.postman_collection.json`.
+# ComposiciÃ³n asistida
+
+Admin puede preparar los participantes de una Competition DRAFT seleccionando fuentes histÃ³ricas FINISHED del mismo gÃ©nero. El asistente muestra permanencia, ascensos, descensos, otros elegibles y warnings, pero conserva `TEAM_ENTRY` como Ãºnica decisiÃ³n efectiva y manual.

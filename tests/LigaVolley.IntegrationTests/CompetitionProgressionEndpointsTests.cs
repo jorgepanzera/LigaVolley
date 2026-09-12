@@ -152,6 +152,9 @@ public sealed class CompetitionProgressionEndpointsTests : IClassFixture<LigaVol
         Assert.True(paths.GetProperty($"{prefix}/completion-preview").TryGetProperty("get", out _));
         Assert.True(paths.GetProperty($"{prefix}/complete").TryGetProperty("post", out _));
         Assert.True(paths.GetProperty($"{prefix}/movements").TryGetProperty("get", out _));
+        Assert.True(paths.GetProperty($"{prefix}/participant-suggestion-sources").TryGetProperty("get", out _));
+        Assert.True(paths.GetProperty($"{prefix}/participant-suggestion-sources").TryGetProperty("put", out _));
+        Assert.True(paths.GetProperty($"{prefix}/participant-composition").TryGetProperty("get", out _));
     }
 
     private async Task<T> Create<T>(string url, object body)

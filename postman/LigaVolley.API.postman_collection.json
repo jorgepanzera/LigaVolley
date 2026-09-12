@@ -88,6 +88,14 @@
                          "value":  ""
                      },
                      {
+                         "key":  "participantCompositionCompetitionId",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "participantSuggestionSourceCompetitionIds",
+                         "value":  "[]"
+                     },
+                     {
                          "key":  "completionPhaseId",
                          "value":  ""
                      },
@@ -1816,6 +1824,75 @@
                                                                                         "type":  "text/javascript",
                                                                                         "exec":  [
                                                                                                      "pm.test(\u0027409 con blockers estructurados\u0027, () =\u003e { pm.response.to.have.status(409); const body=pm.response.json(); pm.expect(body.code).to.eql(\u0027competition_cannot_complete\u0027); pm.expect(body.blockers).to.be.an(\u0027array\u0027).that.is.not.empty; });"
+                                                                                                 ]
+                                                                                    }
+                                                                     }
+                                                                 ]
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "Participant Composition Assistant",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Consultar fuentes histÃ³ricas configuradas",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  "{{baseUrl}}/api/admin/competitions/{{participantCompositionCompetitionId}}/participant-suggestion-sources"
+                                                                   },
+                                                       "event":  [
+                                                                     {
+                                                                         "listen":  "test",
+                                                                         "script":  {
+                                                                                        "type":  "text/javascript",
+                                                                                        "exec":  [
+                                                                                                     "pm.test('200 y fuentes configuradas', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array'); });"
+                                                                                                 ]
+                                                                                    }
+                                                                     }
+                                                                 ]
+                                                   },
+                                                   {
+                                                       "name":  "Reemplazar fuentes histÃ³ricas",
+                                                       "request":  {
+                                                                       "method":  "PUT",
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
+                                                                                  ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{ \"sourceCompetitionIds\": {{participantSuggestionSourceCompetitionIds}} }"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/admin/competitions/{{participantCompositionCompetitionId}}/participant-suggestion-sources"
+                                                                   },
+                                                       "event":  [
+                                                                     {
+                                                                         "listen":  "test",
+                                                                         "script":  {
+                                                                                        "type":  "text/javascript",
+                                                                                        "exec":  [
+                                                                                                     "pm.test('200 y reemplazo atÃ³mico de fuentes', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array'); });"
+                                                                                                 ]
+                                                                                    }
+                                                                     }
+                                                                 ]
+                                                   },
+                                                   {
+                                                       "name":  "Consultar composiciÃ³n sugerida",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  "{{baseUrl}}/api/admin/competitions/{{participantCompositionCompetitionId}}/participant-composition"
+                                                                   },
+                                                       "event":  [
+                                                                     {
+                                                                         "listen":  "test",
+                                                                         "script":  {
+                                                                                        "type":  "text/javascript",
+                                                                                        "exec":  [
+                                                                                                     "pm.test('200 y composiciÃ³n completa', () => { pm.response.to.have.status(200); const body=pm.response.json(); ['sources','remaining','promotedIn','relegatedIn','otherEligible','warnings'].forEach(key=>pm.expect(body[key]).to.be.an('array')); });"
                                                                                                  ]
                                                                                     }
                                                                      }

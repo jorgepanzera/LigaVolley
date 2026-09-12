@@ -1384,3 +1384,6 @@ Create/Clone responden 201 y nacen inactivos. Update estructural bloqueado respo
 ## Referencias de decisiones vigentes
 
 - [Acta electrónica y Scorer](05-match-scorer.md): reglas congeladas, confirmaciones, declaración por partido y cancha efectiva.
+# Participant composition assistant
+
+`GET/PUT /api/admin/competitions/{competitionId}/participant-suggestion-sources` consulta o reemplaza las fuentes con `{ "sourceCompetitionIds": [2, 7] }`; sólo PUT admite Competition DRAFT. `GET /api/admin/competitions/{competitionId}/participant-composition` devuelve fuentes, permanencia, ascensos, descensos, otros elegibles y warnings con procedencia. Ninguno crea TeamEntries.

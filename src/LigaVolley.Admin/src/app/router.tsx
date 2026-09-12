@@ -5,11 +5,13 @@ import{MatchOfficialsPage,MatchPreparationPage,MatchSheetPage,MatchSummaryPage,P
 import{ClubsPage,TeamsPage,VenuesPage}from'../masterDataPages';
 import{CompetitionFormatEditorPage,CompetitionFormatsPage}from'../competitionFormatPages';
 import{CompetitionMovementsPage}from'../competitionMovementsPage';
+import{ParticipantCompositionPage}from'../participantCompositionPage';
 export const router=createBrowserRouter([{path:'/admin',element:<AdminShell/>,children:[
 {index:true,element:<Dashboard/>},{path:'competition-formats',element:<CompetitionFormatsPage/>},{path:'competition-formats/:id',element:<CompetitionFormatEditorPage/>},
 {path:'clubs',element:<ClubsPage/>},{path:'teams',element:<TeamsPage/>},{path:'venues',element:<VenuesPage/>},{path:'seasons',element:<SeasonsPage/>},{path:'divisions',element:<DivisionsPage/>},
 {path:'people',element:<PeoplePage/>},{path:'people/:id',element:<PersonPage/>},{path:'players',element:<ProfilesPage kind="players"/>},{path:'coaches',element:<ProfilesPage kind="coaches"/>},{path:'referees',element:<ProfilesPage kind="referees"/>},
 {path:'competitions',element:<CompetitionsPage/>},{path:'competitions/new',element:<CreateCompetitionPage/>},{path:'competitions/:id',element:<CompetitionRedirect/>},{path:'competitions/:id/overview',element:<OverviewPage/>},{path:'competitions/:id/entries',element:<EntriesPage/>},{path:'competitions/:id/fixture',element:<FixturePage/>},{path:'competitions/:id/rosters',element:<RostersPage/>},{path:'competitions/:id/progression',element:<ProgressionPage/>},{path:'competitions/:competitionId/entries/:teamEntryId/roster',element:<RosterPage/>},
 {path:'competitions/:id/movements',element:<CompetitionMovementsPage/>},
+{path:'competitions/:id/participants',element:<ParticipantCompositionPage/>},
 {path:'matches/:id',element:<Navigate replace to="summary"/>},{path:'matches/:id/summary',element:<MatchSummaryPage/>},{path:'matches/:id/preparation',element:<MatchPreparationPage/>},{path:'matches/:id/officials',element:<MatchOfficialsPage/>},{path:'matches/:id/match-sheet',element:<MatchSheetPage/>}
 ]}]);

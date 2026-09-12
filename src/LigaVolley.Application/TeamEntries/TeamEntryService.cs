@@ -22,6 +22,8 @@ public sealed class TeamEntryService(
     {
         var competition = await RequiredDraftCompetition(competitionId, ct);
         var team = await teams.GetAsync(request.TeamId, true, ct) ?? throw new ResourceNotFoundException("Team", request.TeamId);
+        if (!team.Active) throw new ResourceConflictException("team_inactive", "Only active teams can be entered in a competition.");
+        if (team.Gender != competition.Division.Gender) throw new ResourceConflictException("team_gender_mismatch", "The team's gender must match the competition division.");
         if (await entries.TeamExistsAsync(competitionId, request.TeamId, ct))
             throw new ResourceConflictException("team_already_entered", $"Team '{request.TeamId}' is already entered in competition '{competitionId}'.");
         var validCount = await entries.CountValidAsync(competitionId, ct);

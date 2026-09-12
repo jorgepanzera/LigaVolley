@@ -25,3 +25,6 @@
 8. Decisión operativa sobre promoción y descenso futuro.
 
 Los documentos 03, 05, 09 y 10 contienen las decisiones detalladas que gobiernan estos temas.
+# ComposiciÃ³n de participantes
+
+La promociÃ³n y el descenso persistidos se pueden usar como sugerencia histÃ³rica para una Competition DRAFT, mediante fuentes seleccionadas explÃ­citamente. No se inscribe ningÃºn equipo en forma automÃ¡tica; quedan pendientes las reglas de cupos y cascadas entre competiciones futuras.

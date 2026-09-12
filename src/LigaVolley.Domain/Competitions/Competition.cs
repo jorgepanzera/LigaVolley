@@ -54,6 +54,20 @@ public sealed class Competition
     public DateTimeOffset? ScheduledAt { get; private set; }
     public DateTimeOffset? CompletedAt { get; private set; }
     public List<CompetitionPhase> Phases { get; private set; } = [];
+    public List<CompetitionParticipantSuggestionSource> ParticipantSuggestionSources { get; private set; } = [];
+
+    public void ReplaceParticipantSuggestionSources(IEnumerable<Competition> sources)
+    {
+        if (Status != CompetitionStatus.Draft)
+            throw new DomainValidationException("Participant suggestion sources can only be changed while the competition is in Draft status.");
+        var values = sources?.ToArray() ?? throw new DomainValidationException("Participant suggestion sources are required.");
+        if (values.Any(x => x is null || x.CompetitionId == CompetitionId))
+            throw new DomainValidationException("A competition cannot be its own participant suggestion source.");
+        if (values.Select(x => x.CompetitionId).Distinct().Count() != values.Length)
+            throw new DomainValidationException("Participant suggestion sources cannot be duplicated.");
+        ParticipantSuggestionSources.Clear();
+        ParticipantSuggestionSources.AddRange(values.Select(x => new CompetitionParticipantSuggestionSource(x)));
+    }
 
     public void Update(string name, CompetitionPeriodType periodType, DateOnly? startDate, DateOnly? endDate)
     {
@@ -121,6 +135,19 @@ public sealed class Competition
             foreach (var source in formatSeries.ParticipantSources)
                 seriesMap[formatSeries].ParticipantSources.Add(new CompetitionSeriesParticipantSource(source.TargetSide, source.SourceType, seriesMap[source.SourceSeries]));
     }
+}
+
+public sealed class CompetitionParticipantSuggestionSource
+{
+    private CompetitionParticipantSuggestionSource() { }
+    internal CompetitionParticipantSuggestionSource(Competition source)
+    {
+        SourceCompetition = source ?? throw new DomainValidationException("Source competition is required.");
+        SourceCompetitionId = source.CompetitionId;
+    }
+    public int CompetitionId { get; private set; }
+    public int SourceCompetitionId { get; private set; }
+    public Competition SourceCompetition { get; private set; } = null!;
 }
 
 public sealed class CompetitionPhase

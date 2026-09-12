@@ -16,6 +16,21 @@ internal sealed class CompetitionConfiguration : IEntityTypeConfiguration<Compet
         b.HasOne(x => x.Division).WithMany().HasForeignKey(x => x.DivisionId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.CompetitionFormat).WithMany().HasForeignKey(x => x.CompetitionFormatId).OnDelete(DeleteBehavior.Restrict);
         b.HasMany(x => x.Phases).WithOne().HasForeignKey(x => x.CompetitionId).OnDelete(DeleteBehavior.Restrict);
+        b.HasMany(x => x.ParticipantSuggestionSources).WithOne().HasForeignKey(x => x.CompetitionId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+internal sealed class CompetitionParticipantSuggestionSourceConfiguration : IEntityTypeConfiguration<CompetitionParticipantSuggestionSource>
+{
+    public void Configure(EntityTypeBuilder<CompetitionParticipantSuggestionSource> b)
+    {
+        b.ToTable("COMPETITION_PARTICIPANT_SUGGESTION_SOURCE", "dbo", t =>
+            t.HasCheckConstraint("CK_COMPETITION_PARTICIPANT_SUGGESTION_SOURCE_not_self", "[competition_id] <> [source_competition_id]"));
+        b.HasKey(x => new { x.CompetitionId, x.SourceCompetitionId }).HasName("PK_COMPETITION_PARTICIPANT_SUGGESTION_SOURCE");
+        b.Property(x => x.CompetitionId).HasColumnName("competition_id");
+        b.Property(x => x.SourceCompetitionId).HasColumnName("source_competition_id");
+        b.HasOne(x => x.SourceCompetition).WithMany().HasForeignKey(x => x.SourceCompetitionId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_COMPETITION_PARTICIPANT_SUGGESTION_SOURCE_SOURCE");
+        b.HasIndex(x => x.SourceCompetitionId).HasDatabaseName("IX_COMPETITION_PARTICIPANT_SUGGESTION_SOURCE_source");
     }
 }
 

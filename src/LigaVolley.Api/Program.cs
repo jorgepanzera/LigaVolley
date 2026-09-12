@@ -23,6 +23,7 @@ using LigaVolley.Application.CompetitionRosters;
 using LigaVolley.Application.MatchOfficials;
 using LigaVolley.Application.MatchSheets;
 using LigaVolley.Application.PublicQueries;
+using LigaVolley.Application.ParticipantComposition;
 using LigaVolley.Infrastructure;
 using LigaVolley.Infrastructure.Persistence.Seed;
 
@@ -75,6 +76,7 @@ builder.Services.AddScoped<MatchSheetService>();
 builder.Services.AddScoped<MatchEngineService>();
 builder.Services.AddScoped<OfflineSyncService>();
 builder.Services.AddScoped<PublicQueryService>();
+builder.Services.AddScoped<ParticipantCompositionService>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -155,6 +157,7 @@ app.MapClubEndpoints();
 app.MapTeamEndpoints();
 app.MapVenueEndpoints();
 app.MapTeamEntryEndpoints();
+app.MapParticipantCompositionEndpoints();
 app.MapFixtureEndpoints();
 app.MapMatchEndpoints();
 app.MapStandingsEndpoints();

@@ -30,6 +30,8 @@ internal sealed class CompetitionRepository(LigaVolleyDbContext db) : ICompetiti
         .Include(x => x.CompetitionFormat).ThenInclude(x => x.MovementRules).ThenInclude(x => x.SourcePhase)
         .Include(x => x.CompetitionFormat).ThenInclude(x => x.MovementRules).ThenInclude(x => x.SourceGroup)
         .Include(x => x.CompetitionFormat).ThenInclude(x => x.MovementRules).ThenInclude(x => x.SourceSeries)
+        .Include(x => x.ParticipantSuggestionSources).ThenInclude(x => x.SourceCompetition).ThenInclude(x => x.Season)
+        .Include(x => x.ParticipantSuggestionSources).ThenInclude(x => x.SourceCompetition).ThenInclude(x => x.Division)
         .Include(x => x.Phases).ThenInclude(x => x.Groups)
         .Include(x => x.Phases).ThenInclude(x => x.Series).ThenInclude(x => x.Team1Entry).ThenInclude(x=>x!.Team)
         .Include(x => x.Phases).ThenInclude(x => x.Series).ThenInclude(x => x.Team2Entry).ThenInclude(x=>x!.Team)
