@@ -44,6 +44,10 @@ internal static class ScorerMatchEngineEndpoints
         // Body: { "timeoutUuid": "4bc868ec-5d72-4995-8765-38df5310ecc2", "side": "AWAY" }
         group.MapPost("/sets/{setNumber:int}/timeouts",async(int matchId,byte setNumber,AddTimeoutRequest request,MatchEngineService service,CancellationToken ct)=>Results.Ok(await service.TimeoutAsync(matchId,setNumber,request,ct))).Produces<MatchEngineCommandResult>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
 
+        // Example: POST /api/scorer/matches/123/sets/1/sanctions
+        // Body: { "eventUuid": "4bc868ec-5d72-4995-8765-38df5310ecc2", "side": "Home", "type": "MisconductPenalty", "subjectType": "Player", "matchPlayerId": 101, "matchTeamStaffId": null, "confirmedRuleWarnings": [] }
+        group.MapPost("/sets/{setNumber:int}/sanctions",async(int matchId,byte setNumber,RecordSanctionRequest request,MatchEngineService service,CancellationToken ct)=>Results.Ok(await service.RecordSanctionAsync(matchId,setNumber,request,ct))).Produces<MatchEngineCommandResult>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
+
         // Example: POST /api/scorer/matches/123/close
         // Body: { "closeUuid": "7f88581e-acbe-4232-8917-f6a94011b3d3" }
         group.MapPost("/close",async(int matchId,CloseMatchRequest request,MatchEngineService service,CancellationToken ct)=>Results.Ok(await service.CloseAsync(matchId,request,ct))).Produces<CloseMatchResult>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);

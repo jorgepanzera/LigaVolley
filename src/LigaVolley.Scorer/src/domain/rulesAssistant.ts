@@ -114,6 +114,13 @@ export function evaluateCommand(state: MatchState, command: MatchCommand): RuleE
       hard('point_not_last_effective_event');
     return result();
   }
+  if (command.type === 'SANCTION') {
+    if (set.status !== 'IN_PROGRESS') hard('match_set_invalid_state');
+    if (!['HOME', 'AWAY'].includes(side)) hard('invalid_side');
+    if (!['MisconductWarning', 'MisconductPenalty', 'Expulsion', 'Disqualification', 'ImproperRequest', 'DelayWarning', 'DelayPenalty'].includes(String(p.type))) hard('sanction_type_invalid');
+    if (!['Player', 'Staff', 'Team'].includes(String(p.subjectType))) hard('sanction_subject_invalid');
+    return result();
+  }
   if (set.status !== 'IN_PROGRESS') hard('match_set_invalid_state');
   if (!['HOME', 'AWAY'].includes(side)) hard('invalid_side');
   if (hardViolations.length) return result();

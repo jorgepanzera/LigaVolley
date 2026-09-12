@@ -40,7 +40,7 @@ Scorer es una PWA React/TypeScript/Vite. Dexie conserva exactamente cinco stores
 
 Sync usa UUID idempotente y secuencia local contigua por sesión. La reconciliación parte de un snapshot canónico y reaplica pendientes. `TakeOverMatchSheet` abandona la sesión esperada y crea la única ACTIVE sin alterar el estado deportivo. BLOCKED preserva cola y estado para recuperación; no es una sanción deportiva.
 
-`MATCH_LIBERO`, las confirmaciones y las coberturas observadas se conservan en `GET /sheet`, IndexedDB, replay, sync y takeover; nunca se recalculan desde el roster. Las actas v2 usan `rulesProtocolVersion` y `rulesSnapshotVersion` 2. Actas y eventos v0/v1 mantienen su semántica histórica durante replay.
+`MATCH_LIBERO`, las confirmaciones, las coberturas observadas y las sanciones disciplinarias se conservan en `GET /sheet`, IndexedDB, replay, sync y takeover; nunca se recalculan desde el roster. Una sanción identifica lado y sujeto (jugador, staff o equipo); las penalidades de conducta o demora otorgan exactamente un punto y saque al rival sin crear un evento `POINT` adicional. Actas y eventos v0/v1 mantienen su semántica histórica durante replay.
 
 ## Interfaces y límites
 
@@ -48,4 +48,4 @@ La consola mantiene HOME a la izquierda y AWAY a la derecha, con marcador y canc
 
 Admin muestra convocatoria congelada, declaraciones, cancha efectiva e historial. Public no publica planteles, funciones habituales ni oficiales y no ejecuta MatchEngine, IndexedDB o estado deportivo local.
 
-No cubre sanciones, obligatoriedad de uno o dos líberos, detección de posiciones físicas reales, corrección histórica general, autenticación nueva ni branching/rebase offline.
+No cubre obligatoriedad de uno o dos líberos, detección de posiciones físicas reales, corrección histórica general, autenticación nueva ni branching/rebase offline.

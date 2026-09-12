@@ -53,6 +53,9 @@ export function applyCommand(source: MatchState, command: MatchCommand, origin: 
     case 'TIMEOUT':
       timeout(state, parseSide(command.payload));
       break;
+    case 'SANCTION':
+      sanction(state, command.payload, legacyAutomatic);
+      break;
     case 'MATCH_CLOSE':
       close(state);
       break;
@@ -304,6 +307,15 @@ function timeout(state: MatchState, team: Side) {
   set[key]++;
   set.lastSportingEvent = 'TIMEOUT';
   set.lastConsequences = [{ kind: 'TIMEOUT', side: team, text: `Timeout ${team}` }];
+}
+function sanction(state: MatchState, payload: Record<string, unknown>, legacyAutomatic: boolean) {
+  const type = String(payload.type ?? '');
+  const side = parseSide(payload);
+  if (!['MisconductWarning', 'MisconductPenalty', 'Expulsion', 'Disqualification', 'ImproperRequest', 'DelayWarning', 'DelayPenalty'].includes(type)) throw new Error('sanction_type_invalid');
+  if (type === 'MisconductPenalty' || type === 'DelayPenalty') point(state, side === 'HOME' ? 'AWAY' : 'HOME', legacyAutomatic);
+  const set = currentSet(state);
+  set.lastSportingEvent = 'SANCTION';
+  set.lastConsequences = [{ kind: type === 'MisconductPenalty' || type === 'DelayPenalty' ? 'POINT' : 'REMINDER', side, text: `Sanción ${type}` }];
 }
 function close(state: MatchState) {
   if (!state.matchDecided) throw new Error('match_not_decided');

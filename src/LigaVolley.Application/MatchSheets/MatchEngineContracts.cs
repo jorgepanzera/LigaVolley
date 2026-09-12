@@ -12,6 +12,9 @@ public sealed record AddSubstitutionRequest(Guid SubstitutionUuid,int PlayerOutM
 public sealed record LiberoEnterRequest(Guid EventUuid,int LiberoMatchPlayerId,int ReplacedMatchPlayerId,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
 public sealed record LiberoExitRequest(Guid EventUuid,int LiberoMatchPlayerId,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
 public sealed record AddTimeoutRequest(Guid TimeoutUuid,MatchSide Side,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
+public enum SanctionType { MisconductWarning, MisconductPenalty, Expulsion, Disqualification, ImproperRequest, DelayWarning, DelayPenalty }
+public enum SanctionSubjectType { Player, Staff, Team }
+public sealed record RecordSanctionRequest(Guid EventUuid, MatchSide Side, SanctionType Type, SanctionSubjectType SubjectType, int? MatchPlayerId, int? MatchTeamStaffId, IReadOnlyList<string>? ConfirmedRuleWarnings=null);
 public sealed record CloseMatchRequest(Guid CloseUuid);
 public sealed record CourtPositionDto(LineupPosition LogicalLineupPosition,LineupPosition PhysicalPosition,int EffectiveMatchPlayerId,bool IsLiberoReplacement);
 public sealed record MatchSetStateDto(byte SetNumber,MatchSetStatus SetStatus,short HomePoints,short AwayPoints,byte HomeSets,byte AwaySets,MatchSide? InitialServingSide,MatchSide? CurrentServingSide,int? ServerMatchPlayerId,byte HomeRotationOffset,byte AwayRotationOffset,int HomeTimeouts,int AwayTimeouts,MatchSide? WinnerSide,bool MatchDecided,IReadOnlyList<CourtPositionDto> HomeCourtState,IReadOnlyList<CourtPositionDto> AwayCourtState);

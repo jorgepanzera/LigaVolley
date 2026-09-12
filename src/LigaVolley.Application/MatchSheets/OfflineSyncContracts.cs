@@ -2,7 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 namespace LigaVolley.Application.MatchSheets;
 [JsonConverter(typeof(UpperSnakeCaseEnumConverter<ScorerSyncEventType>))]
-public enum ScorerSyncEventType{PrepareSet,SetLineup,StartSet,Point,CorrectLastPoint,Substitution,LiberoEnter,LiberoExit,Timeout,MatchClose,SubstitutionRequest}
+public enum ScorerSyncEventType{PrepareSet,SetLineup,StartSet,Point,CorrectLastPoint,Substitution,LiberoEnter,LiberoExit,Timeout,MatchClose,SubstitutionRequest,Sanction}
 [JsonConverter(typeof(UpperSnakeCaseEnumConverter<ScorerSyncResultStatus>))]
 public enum ScorerSyncResultStatus{Applied,AlreadyAccepted}
 public sealed record ScorerSyncEvent(Guid EventUuid,long Sequence,ScorerSyncEventType Type,DateTimeOffset OccurredAt,JsonElement Payload);
@@ -19,6 +19,7 @@ internal sealed record SyncSubstitutionPayload(byte SetNumber,int PlayerOutMatch
 internal sealed record SyncLiberoEnterPayload(byte SetNumber,int LiberoMatchPlayerId,int ReplacedMatchPlayerId,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
 internal sealed record SyncLiberoExitPayload(byte SetNumber,int LiberoMatchPlayerId,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
 internal sealed record SyncTimeoutPayload(byte SetNumber,Domain.MatchSheets.MatchSide Side,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
+internal sealed record SyncSanctionPayload(byte SetNumber,Domain.MatchSheets.MatchSide Side,SanctionType Type,SanctionSubjectType SubjectType,int? MatchPlayerId,int? MatchTeamStaffId,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
 
 public sealed class UpperSnakeCaseEnumConverter<TEnum> : JsonConverter<TEnum> where TEnum : struct, Enum
 {

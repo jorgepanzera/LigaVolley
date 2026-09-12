@@ -4,7 +4,7 @@ using LigaVolley.Domain.Fixtures;
 namespace LigaVolley.Domain.MatchSheets;
 
 public enum LineupPosition { P1 = 1, P2, P3, P4, P5, P6 }
-public enum MatchEventType { PrepareSet, SetLineup, StartSet, Point, PointCorrection, Substitution, LiberoEnter, LiberoExit, Timeout, MatchClosed, SubstitutionRequest }
+public enum MatchEventType { PrepareSet, SetLineup, StartSet, Point, PointCorrection, Substitution, LiberoEnter, LiberoExit, Timeout, MatchClosed, SubstitutionRequest, MisconductWarning, MisconductPenalty, Expulsion, Disqualification, ImproperRequest, DelayWarning, DelayPenalty }
 public enum MatchEventStatus { Active, Cancelled }
 
 public sealed class MatchLineup
@@ -67,8 +67,8 @@ public sealed class MatchSetLiberoPlan
 public sealed class MatchEvent
 {
     private MatchEvent() { }
-    internal MatchEvent(MatchSheet sheet, MatchSet? set, Guid uuid, MatchEventType type, long sequence, MatchSide? side, int? playerId, DateTimeOffset now, MatchEvent? related)
-    { if (uuid == Guid.Empty) throw new DomainValidationException("EventUuid is required."); MatchSheet = sheet; MatchSet = set; EventUuid = uuid; EventType = type; SequenceNumber = sequence; Side = side; MatchPlayerId = playerId; OccurredAt = now; Status = MatchEventStatus.Active; RelatedEvent = related; }
+    internal MatchEvent(MatchSheet sheet, MatchSet? set, Guid uuid, MatchEventType type, long sequence, MatchSide? side, int? playerId, DateTimeOffset now, MatchEvent? related, int? staffId = null)
+    { if (uuid == Guid.Empty) throw new DomainValidationException("EventUuid is required."); MatchSheet = sheet; MatchSet = set; EventUuid = uuid; EventType = type; SequenceNumber = sequence; Side = side; MatchPlayerId = playerId; MatchTeamStaffId = staffId; OccurredAt = now; Status = MatchEventStatus.Active; RelatedEvent = related; }
     public string? CommandPayload { get; private set; }
     public void RecordCommand(string payload) => CommandPayload = payload;
     public int MatchEventId { get; private set; }
@@ -81,6 +81,7 @@ public sealed class MatchEvent
     public long SequenceNumber { get; private set; }
     public MatchSide? Side { get; private set; }
     public int? MatchPlayerId { get; private set; }
+    public int? MatchTeamStaffId { get; private set; }
     public DateTimeOffset OccurredAt { get; private set; }
     public MatchEventStatus Status { get; private set; }
     public int? MatchSheetSessionId { get; private set; }
@@ -177,8 +178,8 @@ public static class MatchSetRebuilder
     public static (short Home, short Away, MatchSide Serving, byte HomeOffset, byte AwayOffset) Rebuild(MatchSide initial, IEnumerable<MatchEvent> events)
     {
         short home = 0, away = 0; byte ho = 0, ao = 0; var serving = initial;
-        foreach (var e in events.Where(x => x.Status == MatchEventStatus.Active && x.EventType == MatchEventType.Point).OrderBy(x => x.SequenceNumber))
-        { var side = e.Side!.Value; if (side == MatchSide.Home) home++; else away++; if (serving != side) { if (side == MatchSide.Home) ho = (byte)((ho + 1) % 6); else ao = (byte)((ao + 1) % 6); } serving = side; }
+        foreach (var e in events.Where(x => x.Status == MatchEventStatus.Active && x.EventType is MatchEventType.Point or MatchEventType.MisconductPenalty or MatchEventType.DelayPenalty).OrderBy(x => x.SequenceNumber))
+        { var side = e.EventType == MatchEventType.Point ? e.Side!.Value : e.Side == MatchSide.Home ? MatchSide.Away : MatchSide.Home; if (side == MatchSide.Home) home++; else away++; if (serving != side) { if (side == MatchSide.Home) ho = (byte)((ho + 1) % 6); else ao = (byte)((ao + 1) % 6); } serving = side; }
         return (home, away, serving, ho, ao);
     }
 }

@@ -14,6 +14,7 @@ export type EventType =
   | 'LIBERO_ENTER'
   | 'LIBERO_EXIT'
   | 'TIMEOUT'
+  | 'SANCTION'
   | 'MATCH_CLOSE';
 export interface PlayerRef {
   matchPlayerId: number;

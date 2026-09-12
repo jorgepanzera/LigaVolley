@@ -17,7 +17,7 @@
 
 1. Proveedor de identidad y permisos finos.
 2. Reglas reglamentarias finas sobre obligatoriedad y cantidad de líberos.
-3. Sanciones, estadísticas por posición y funciones tácticas por set.
+3. Estadísticas por posición y funciones tácticas por set.
 4. Corrección histórica general distinta de CorrectLastPoint.
 5. Branching o rebase offline después de un evento rechazado.
 6. Auditoría deportiva definitiva de reemplazo de oficiales.

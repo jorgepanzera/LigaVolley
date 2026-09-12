@@ -11,6 +11,7 @@ const syncEventTypes = {
   LIBERO_ENTER: 'LiberoEnter',
   LIBERO_EXIT: 'LiberoExit',
   TIMEOUT: 'Timeout',
+  SANCTION: 'Sanction',
   MATCH_CLOSE: 'MatchClose',
 } as const satisfies Record<LocalEvent['type'], string>;
 
