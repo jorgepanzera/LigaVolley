@@ -300,7 +300,8 @@
                  {
                      "name":  "00 - Setup y diagnóstico",
                      "description":  "Seleccionar un environment de despliegue. Los IDs producidos durante una corrida se guardan como variables de colección.",
-                     "item":  {
+                     "item":  [
+                              {
                                   "name":  "Swagger disponible",
                                   "request":  {
                                                   "method":  "GET",
@@ -319,6 +320,7 @@
                                                 }
                                             ]
                               }
+                            ]
                  },
                  {
                      "name":  "01 - Admin",
@@ -409,23 +411,6 @@
                                   {
                                       "name":  "Clubs",
                                       "item":  [
-                                                   {
-                                                       "name":  "Clubs - Create",
-                                                       "request":  {
-                                                                       "method":  "POST",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "Content-Type",
-                                                                                          "value":  "application/json"
-                                                                                      }
-                                                                                  ],
-                                                                       "body":  {
-                                                                                    "mode":  "raw",
-                                                                                    "raw":  "{ \"name\": \"Club {{$randomCompanyName}} {{runSuffix}}\", \"shortName\": \"LV\" }"
-                                                                                },
-                                                                       "url":  "{{baseUrl}}/api/admin/clubs"
-                                                                   }
-                                                   },
                                                    {
                                                        "name":  "Clubs - List paged",
                                                        "request":  {
@@ -532,23 +517,6 @@
                                   {
                                       "name":  "Teams",
                                       "item":  [
-                                                   {
-                                                       "name":  "Teams - Create",
-                                                       "request":  {
-                                                                       "method":  "POST",
-                                                                       "header":  [
-                                                                                      {
-                                                                                          "key":  "Content-Type",
-                                                                                          "value":  "application/json"
-                                                                                      }
-                                                                                  ],
-                                                                       "body":  {
-                                                                                    "mode":  "raw",
-                                                                                    "raw":  "{ \"name\": \"Team {{runSuffix}}\", \"gender\": \"Female\", \"clubId\": {{clubId}} }"
-                                                                                },
-                                                                       "url":  "{{baseUrl}}/api/admin/teams"
-                                                                   }
-                                                   },
                                                    {
                                                        "name":  "Teams - List paged",
                                                        "request":  {
@@ -1740,6 +1708,24 @@
                                                                  ]
                                                    },
                                                    {
+                                                       "name":  "Consultar movimientos histÃ³ricos persistidos",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  "{{baseUrl}}/api/admin/competitions/{{completionCompetitionId}}/movements"
+                                                                   },
+                                                       "event":  [
+                                                                     {
+                                                                         "listen":  "test",
+                                                                         "script":  {
+                                                                                        "type":  "text/javascript",
+                                                                                        "exec":  [
+                                                                                                     "pm.test('200 y movimientos histÃ³ricos', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array'); });"
+                                                                                                 ]
+                                                                                    }
+                                                                     }
+                                                                 ]
+                                                   },
+                                                   {
                                                        "name":  "Preview de cierre exitoso",
                                                        "request":  {
                                                                        "method":  "GET",
@@ -2028,7 +2014,8 @@
                                   },
                                   {
                                       "name":  "Match Readiness",
-                                      "item":  {
+                                      "item":  [
+                                               {
                                                    "name":  "Match Readiness - ready o blockers",
                                                    "request":  {
                                                                    "method":  "GET",
@@ -2046,10 +2033,12 @@
                                                                  }
                                                              ]
                                                }
+                                             ]
                                   },
                                   {
                                       "name":  "MatchSheet Supervision",
-                                      "item":  {
+                                      "item":  [
+                                               {
                                                    "name":  "Admin MatchSheet - no sheet/open/in progress",
                                                    "request":  {
                                                                    "method":  "GET",
@@ -2077,6 +2066,7 @@
                                                                  }
                                                              ]
                                                }
+                                             ]
                                   },
                                   {
                                       "name":  "Match Rules",
@@ -2590,7 +2580,8 @@
                                   },
                                   {
                                       "name":  "Officials Replacement",
-                                      "item":  {
+                                      "item":  [
+                                               {
                                                    "name":  "Reemplazar desde Scorer en IN_PROGRESS",
                                                    "request":  {
                                                                    "method":  "PUT",
@@ -2607,6 +2598,7 @@
                                                                    "url":  "{{baseUrl}}/api/scorer/matches/{{matchId}}/officials/FirstReferee"
                                                                }
                                                }
+                                             ]
                                   },
                                   {
                                       "name":  "Offline Sync",
@@ -3107,17 +3099,20 @@
                      "item":  [
                                   {
                                       "name":  "Club Assets",
-                                      "item":  {
+                                      "item":  [
+                                               {
                                                    "name":  "Club Logos - Public read",
                                                    "request":  {
                                                                    "method":  "GET",
                                                                    "url":  "{{baseUrl}}/api/public/clubs/{{clubId}}/logo?v=1"
                                                                }
                                                }
+                                             ]
                                   },
                                   {
                                       "name":  "Seasons",
-                                      "item":  {
+                                      "item":  [
+                                               {
                                                    "name":  "01 - Public Seasons",
                                                    "request":  {
                                                                    "method":  "GET",
@@ -3135,6 +3130,7 @@
                                                                  }
                                                              ]
                                                }
+                                             ]
                                   },
                                   {
                                       "name":  "Competitions",
@@ -3197,7 +3193,8 @@
                                    },
                                   {
                                       "name":  "Season Home",
-                                      "item":  {
+                                      "item":  [
+                                               {
                                                    "name":  "01a - Public Season Home",
                                                    "request":  {
                                                                    "method":  "GET",
@@ -3215,10 +3212,12 @@
                                                                  }
                                                              ]
                                                }
+                                             ]
                                   },
                                   {
                                       "name":  "Fixture y Results",
-                                      "item":  {
+                                      "item":  [
+                                               {
                                                    "name":  "04 - Fixture and Results",
                                                    "request":  {
                                                                    "method":  "GET",
@@ -3236,10 +3235,12 @@
                                                                  }
                                                              ]
                                                }
+                                             ]
                                   },
                                   {
                                       "name":  "Standings",
-                                      "item":  {
+                                      "item":  [
+                                               {
                                                    "name":  "05 - Standings",
                                                    "request":  {
                                                                    "method":  "GET",
@@ -3257,10 +3258,12 @@
                                                                  }
                                                              ]
                                                }
+                                             ]
                                   },
                                   {
                                       "name":  "Match Detail",
-                                      "item":  {
+                                      "item":  [
+                                               {
                                                    "name":  "06 - Match Detail",
                                                    "request":  {
                                                                    "method":  "GET",
@@ -3278,6 +3281,7 @@
                                                                  }
                                                              ]
                                                }
+                                             ]
                                   },
                                   {
                                       "name":  "Live",
@@ -3343,7 +3347,8 @@
                  {
                      "name":  "04 - Recorridos end-to-end",
                      "description":  "Escenarios deliberadamente transversales que reutilizan más de una superficie.",
-                     "item":  {
+                     "item":  [
+                              {
                                   "name":  "Preparar competición desde cero",
                                   "item":  [
                                                {
@@ -3681,6 +3686,7 @@
                                                }
                                            ]
                               }
+                            ]
                  },
                  {
                      "name":  "90 - Casos de error y contratos",
