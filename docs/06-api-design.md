@@ -1287,6 +1287,7 @@ El request contiene `clientRequestId`, `deviceId` y selecciones de miembros con 
 - `POST /api/scorer/matches/{matchId}/sets/{setNumber}/libero/enter`
 - `POST /api/scorer/matches/{matchId}/sets/{setNumber}/libero/exit`
 - `POST /api/scorer/matches/{matchId}/sets/{setNumber}/timeouts`
+- `POST /api/scorer/matches/{matchId}/sets/{setNumber}/sanctions`
 - `POST /api/scorer/matches/{matchId}/close`
 
 Cada mutación devuelve DTO Scorer con set, puntos, sets ganados, saque, servidor derivado, offsets, timeouts, ganador, MatchDecided y cancha efectiva. Los comandos deportivos usan UUID idempotente; errores usan ProblemDetails y `code` estable con 400/404/409. El cierre es explícito, idempotente y definitivo.

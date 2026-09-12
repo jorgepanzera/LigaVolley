@@ -246,6 +246,9 @@ export class ScorerController {
       payload: { setNumber: this.view.state?.currentSetNumber, side },
     });
   }
+  sanction(side: Side, type: string, subjectType: 'Player' | 'Staff' | 'Team', subjectId?: number) {
+    return this.command({ type: 'SANCTION', payload: { setNumber: this.view.state?.currentSetNumber, side, type, subjectType, matchPlayerId: subjectType === 'Player' ? subjectId : null, matchTeamStaffId: subjectType === 'Staff' ? subjectId : null } });
+  }
   correctLastPoint() {
     return this.command({
       type: 'CORRECT_LAST_POINT',

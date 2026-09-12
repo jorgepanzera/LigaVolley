@@ -19,7 +19,7 @@ internal sealed record SyncSubstitutionPayload(byte SetNumber,int PlayerOutMatch
 internal sealed record SyncLiberoEnterPayload(byte SetNumber,int LiberoMatchPlayerId,int ReplacedMatchPlayerId,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
 internal sealed record SyncLiberoExitPayload(byte SetNumber,int LiberoMatchPlayerId,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
 internal sealed record SyncTimeoutPayload(byte SetNumber,Domain.MatchSheets.MatchSide Side,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
-internal sealed record SyncSanctionPayload(byte SetNumber,Domain.MatchSheets.MatchSide Side,SanctionType Type,SanctionSubjectType SubjectType,int? MatchPlayerId,int? MatchTeamStaffId,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
+internal sealed record SyncSanctionPayload(byte SetNumber,Domain.MatchSheets.MatchSide Side,SanctionType Type,SanctionSubjectType SubjectType,int? MatchPlayerId=null,int? MatchTeamStaffId=null,IReadOnlyList<string>? ConfirmedRuleWarnings=null);
 
 public sealed class UpperSnakeCaseEnumConverter<TEnum> : JsonConverter<TEnum> where TEnum : struct, Enum
 {

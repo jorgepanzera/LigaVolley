@@ -16,6 +16,7 @@ import {
   HistoryDrawer,
   MatchReview,
   PlayerActionSheet,
+  SanctionDialog,
 } from './console/ConsoleDialogs';
 import { team } from './console/model';
 import { isOpeningTeamValid } from './console/openSheetValidation';
@@ -24,7 +25,7 @@ import './app.css';
 
 const matchId = Number(new URLSearchParams(location.search).get('matchId') ?? 1);
 type Panel = 'history' | 'sheet' | 'more';
-type Dialog = 'timeout' | 'correct' | 'review' | 'close' | 'takeover';
+type Dialog = 'timeout' | 'correct' | 'review' | 'close' | 'takeover' | 'sanction';
 
 export default function App() {
   const controller = useMemo(createScorerController, []);
@@ -195,6 +196,7 @@ export default function App() {
           }}
         />
       )}
+      {dialog === 'sanction' && set && <SanctionDialog snapshot={view.bootstrap} onClose={() => setDialog(undefined)} onConfirm={(side, type, subjectType, subjectId) => { if (subjectType !== 'Team' && !subjectId) return; void controller.sanction(side, type, subjectType, subjectId); setDialog(undefined); }} />}
       {dialog === 'review' && set && (
         <MatchReview
           set={set}
@@ -528,6 +530,9 @@ function MatchWorkspace({
             </span>
           </button>
         )}
+        <button disabled={blocked} onClick={() => onDialog('sanction')}>
+          Sanciones <span>Conducta, demora y disciplina</span>
+        </button>
       </section>
       <PreviousSets
         sets={state.sets.filter((x) => x.status === 'FINISHED')}
@@ -1051,6 +1056,35 @@ function OpeningTeam({
           );
         })}
       </div>
+      <section className="opening-staff" aria-label={`Staff ${side}`}>
+        <h3>Staff convocado</h3>
+        {context.staff.length === 0 ? (
+          <p>Sin staff activo en el plantel.</p>
+        ) : (
+          context.staff.map((staff) => {
+            const selected = value.competitionRosterStaffIds.includes(staff.competitionRosterStaffId);
+            return (
+              <label key={staff.competitionRosterStaffId}>
+                <input
+                  type="checkbox"
+                  checked={selected}
+                  onChange={() =>
+                    onChange({
+                      ...value,
+                      competitionRosterStaffIds: selected
+                        ? value.competitionRosterStaffIds.filter(
+                            (id) => id !== staff.competitionRosterStaffId,
+                          )
+                        : [...value.competitionRosterStaffIds, staff.competitionRosterStaffId],
+                    })
+                  }
+                />
+                {staff.displayName}
+              </label>
+            );
+          })
+        )}
+      </section>
       <footer>
         {duplicate ? (
           <span>⚠ Dorsal repetido en {context.teamName}.</span>

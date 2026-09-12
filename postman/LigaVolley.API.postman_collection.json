@@ -2558,6 +2558,19 @@
                                                                    }
                                                    },
                                                    {
+                                                       "name":  "Sanctions - all variants and subjects",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [ { "key": "Content-Type", "value": "application/json" } ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{ \"eventUuid\": \"{{$guid}}\", \"side\": \"HOME\", \"type\": \"MisconductWarning\", \"subjectType\": \"Player\", \"matchPlayerId\": {{homeP1}} }"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/scorer/matches/{{matchId}}/sets/{{setNumber}}/sanctions",
+                                                                       "description":  "Run this request with: MisconductWarning/Player, MisconductPenalty/Player, Expulsion/Player, Disqualification/Player, ImproperRequest/Team, DelayWarning/Staff (set matchTeamStaffId and remove matchPlayerId), and DelayPenalty/Team. For TEAM remove both participant fields. Penalties award exactly one point and service to the rival."
+                                                                   }
+                                                   },
+                                                   {
                                                        "name":  "Close Match 3-1",
                                                        "request":  {
                                                                        "method":  "POST",

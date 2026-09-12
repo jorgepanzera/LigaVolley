@@ -151,12 +151,15 @@ public sealed partial class MatchEngineService
         var last = events.LastOrDefault(x => x.Side == team.Side && x.EventType is MatchEventType.LiberoEnter or MatchEventType.LiberoExit);
         var lastEnter = events.LastOrDefault(x => x.Side == team.Side && x.EventType == MatchEventType.LiberoEnter);
         var lastReplacement = lastEnter is null ? null : set.LiberoReplacements.SingleOrDefault(x => x.ReplacementUuid == lastEnter.EventUuid);
+        var ineligible = sheet.Events.Where(x => x.Status == MatchEventStatus.Active && x.MatchPlayerId.HasValue &&
+                (x.EventType == MatchEventType.Disqualification || x.EventType == MatchEventType.Expulsion && x.MatchSetId == set.MatchSetId))
+            .Select(x => x.MatchPlayerId!.Value).Distinct().ToArray();
         return new(team.Players.Select(x => x.MatchPlayerId).ToArray(), team.Liberos.Select(x => x.MatchPlayerId).ToArray(),
             set.Lineups.SingleOrDefault(x => x.MatchTeamId == team.MatchTeamId)?.Positions.OrderBy(x => x.Position).Select(x => x.MatchPlayerId).ToArray() ?? [],
             set.Substitutions.Where(x => x.MatchTeamId == team.MatchTeamId).OrderBy(x => x.MatchSubstitutionId == 0 ? int.MaxValue : x.MatchSubstitutionId).Select(x => new RuleSubstitution((int)x.LineupPosition - 1, x.PlayerOutMatchPlayerId, x.PlayerInMatchPlayerId)).ToArray(),
             set.LiberoReplacements.Where(x => x.MatchTeamId == team.MatchTeamId && !x.ExitedAt.HasValue).Select(x => new RuleReplacement((int)x.LineupPosition - 1, x.LiberoMatchPlayerId, x.ReplacedMatchPlayerId)).ToArray(),
             team.Side == MatchSide.Home ? set.HomeRotationOffset : set.AwayRotationOffset, set.Timeouts.Count(x => x.MatchTeamId == team.MatchTeamId),
             last is null ? null : events.Count(x => x.EventType == MatchEventType.Point && x.SequenceNumber < last.SequenceNumber),
-            lastReplacement?.ReplacedMatchPlayerId);
+            lastReplacement?.ReplacedMatchPlayerId, ineligible);
     }
 }

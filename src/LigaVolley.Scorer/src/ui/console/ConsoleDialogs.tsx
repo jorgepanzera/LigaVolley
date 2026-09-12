@@ -354,6 +354,12 @@ export function HistoryDrawer({ events, snapshot, onClose }: { events: LocalEven
     </div>
   );
 }
+export function SanctionDialog({ snapshot, onClose, onConfirm }: { snapshot: ServerSheetSnapshot; onClose: () => void; onConfirm: (side: Side, type: string, subjectType: 'Player' | 'Staff' | 'Team', subjectId?: number) => void }) {
+  const [side, setSide] = useState<Side>('HOME'); const [type, setType] = useState('MisconductWarning'); const [subjectType, setSubjectType] = useState<'Player' | 'Staff' | 'Team'>('Player'); const [subjectId, setSubjectId] = useState<number>();
+  const points = type === 'MisconductPenalty' || type === 'DelayPenalty'; const entries = subjectType === 'Player' ? (team(snapshot, side)?.players ?? []).map(x => ({ id: x.matchPlayerId, label: `#${x.jerseyNumber} ${x.displayName}` })) : subjectType === 'Staff' ? (team(snapshot, side)?.staff ?? []).map(x => ({ id: x.matchTeamStaffId, label: x.displayName })) : [];
+  useEffect(() => setSubjectId(undefined), [side, subjectType]);
+  return <ConfirmDialog title="SANCIONES" onClose={onClose} confirmLabel="Confirmar" onConfirm={() => onConfirm(side, type, subjectType, subjectId)}><label>Lado<select value={side} onChange={e => setSide(e.target.value as Side)}><option>HOME</option><option>AWAY</option></select></label><label>Tipo<select value={type} onChange={e => setType(e.target.value)}>{[['MisconductWarning','Advertencia por conducta'],['MisconductPenalty','Penalización por conducta'],['Expulsion','Expulsión'],['Disqualification','Descalificación'],['ImproperRequest','Solicitud improcedente'],['DelayWarning','Advertencia por demora'],['DelayPenalty','Penalización por demora']].map(([v,l]) => <option value={v} key={v}>{l}</option>)}</select></label><label>Sujeto<select value={subjectType} onChange={e => setSubjectType(e.target.value as 'Player' | 'Staff' | 'Team')}><option value="Player">Jugador</option><option value="Staff">Staff</option><option value="Team">Equipo</option></select></label>{subjectType !== 'Team' && <label>Persona<select value={subjectId ?? ''} onChange={e => setSubjectId(Number(e.target.value))}><option value="">Seleccionar...</option>{entries.map(x => <option value={x.id} key={x.id}>{x.label}</option>)}</select></label>}<p>{points ? `Consecuencia: +1 punto y saque para ${side === 'HOME' ? 'AWAY' : 'HOME'}` : 'Consecuencia: se registra la sanción sin punto.'}</p></ConfirmDialog>;
+}
 function eventLabel(event: LocalEvent, snapshot?: ServerSheetSnapshot) {
   if (event.type === 'LIBERO_ENTER' || event.type === 'LIBERO_EXIT') {
     const side = String(event.payload.side).toUpperCase() as Side;
@@ -361,6 +367,19 @@ function eventLabel(event: LocalEvent, snapshot?: ServerSheetSnapshot) {
     return event.type === 'LIBERO_ENTER' ? `${side}: sale ${label(event.payload.replacedMatchPlayerId)} → entra líbero ${label(event.payload.liberoMatchPlayerId)}` : `${side}: sale líbero ${label(event.payload.liberoMatchPlayerId)} → vuelve regular vigente`;
   }
   const side = String(event.payload.winningSide ?? event.payload.side ?? '');
+  if (event.type === 'SANCTION') {
+    const sanctionSide = side.toUpperCase() as Side;
+    const subjectType = String(event.payload.subjectType ?? '');
+    const subjectId = subjectType === 'Player'
+      ? event.payload.matchPlayerId
+      : event.payload.matchTeamStaffId;
+    const subject = subjectType === 'Team'
+      ? team(snapshot, sanctionSide)?.teamName ?? sanctionSide
+      : subjectType === 'Player'
+        ? player(snapshot, sanctionSide, Number(subjectId))?.displayName ?? `jugador ${subjectId}`
+        : team(snapshot, sanctionSide)?.staff?.find((x) => x.matchTeamStaffId === Number(subjectId))?.displayName ?? `staff ${subjectId}`;
+    return `Sanción ${String(event.payload.type)} · ${side} · ${subject}`;
+  }
   return event.type === 'POINT'
     ? `Punto ${side}`
     : event.type === 'TIMEOUT'

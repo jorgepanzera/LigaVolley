@@ -79,7 +79,8 @@ public sealed class LigaVolleyApiFactory : IAsyncLifetime
             await dbContext.Database.EnsureDeletedAsync();
         }
 
-        application?.Dispose();
+        if (application is not null)
+            await application.DisposeAsync();
         if (database is not null)
         {
             await database.DisposeAsync();

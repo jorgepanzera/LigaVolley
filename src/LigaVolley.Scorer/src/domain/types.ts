@@ -92,7 +92,13 @@ export interface MatchState {
   closed: boolean;
   closeConfirmed: boolean;
   declaredLiberoMatchPlayerIds: { HOME: number[]; AWAY: number[] };
+  disciplinaryEvents?: DisciplinaryEvent[];
+  currentSetIneligiblePlayerIds?: number[];
+  matchIneligiblePlayerIds?: number[];
+  currentSetIneligibleStaffIds?: number[];
+  matchIneligibleStaffIds?: number[];
 }
+export interface DisciplinaryEvent { eventUuid: string; type: string; side: Side; setNumber: number; subjectType: 'Player' | 'Staff' | 'Team'; matchPlayerId?: number; matchTeamStaffId?: number; subjectDisplayName?: string; awardsPoint: boolean; awardedPointSide?: Side; }
 export interface LocalEvent {
   eventUuid: string;
   matchId: number;
@@ -153,6 +159,7 @@ export interface ServerSheetSnapshot {
       role?: string;
     }>;
     liberos: Array<{ matchPlayerId: number }>;
+    staff?: Array<{ matchTeamStaffId: number; displayName: string }>;
   };
   away: {
     teamName: string;
@@ -164,6 +171,7 @@ export interface ServerSheetSnapshot {
       role?: string;
     }>;
     liberos: Array<{ matchPlayerId: number }>;
+    staff?: Array<{ matchTeamStaffId: number; displayName: string }>;
   };
   session: {
     sessionUuid: string;

@@ -209,4 +209,23 @@ describe('local MatchEngine', () => {
     });
     expect(effectivePlayers(s.sets[0], 'HOME')[0]).toBe(99);
   });
+  it('projects every disciplinary sanction and applies penalty scoring exactly once', () => {
+    for (const type of ['MisconductWarning', 'MisconductPenalty', 'Expulsion', 'Disqualification', 'ImproperRequest', 'DelayWarning', 'DelayPenalty']) {
+      let state = ready();
+      state = applyCommand(state, { type: 'SANCTION', payload: { eventUuid: `sanction-${type}`, side: 'HOME', type, subjectType: 'Player', matchPlayerId: 10 } });
+      expect(state.disciplinaryEvents?.at(-1)?.type).toBe(type);
+      expect(state.disciplinaryEvents).toHaveLength(1);
+      expect(state.sets[0].points).toHaveLength(['MisconductPenalty', 'DelayPenalty'].includes(type) ? 1 : 0);
+      if (type === 'Expulsion') expect(state.currentSetIneligiblePlayerIds).toContain(10);
+      if (type === 'Disqualification') expect(state.matchIneligiblePlayerIds).toContain(10);
+    }
+  });
+  it('does not allow a sanctioned player to enter, serve, or continue on court', () => {
+    let state = ready();
+    state = applyCommand(state, { type: 'SANCTION', payload: { eventUuid: 'expelled', side: 'HOME', type: 'Expulsion', subjectType: 'Player', matchPlayerId: 10 } });
+    expect(() => applyCommand(state, { type: 'POINT', payload: { winningSide: 'HOME' } })).toThrow('sanctioned_player_must_leave_court');
+    expect(() => applyCommand(state, { type: 'SUBSTITUTION', payload: { side: 'HOME', playerOutMatchPlayerId: 11, playerInMatchPlayerId: 10 } })).toThrow('sanctioned_player_ineligible');
+    state = applyCommand(state, { type: 'SUBSTITUTION', payload: { side: 'HOME', playerOutMatchPlayerId: 10, playerInMatchPlayerId: 99 } });
+    expect(regularPlayers(state.sets[0], 'HOME')).toContain(99);
+  });
 });

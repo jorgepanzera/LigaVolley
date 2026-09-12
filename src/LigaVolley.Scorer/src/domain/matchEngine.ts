@@ -69,6 +69,7 @@ function prepare(state: MatchState) {
   if (state.matchDecided) throw new Error('match_already_decided');
   if (state.sets.some((x) => x.status !== 'FINISHED')) throw new Error('match_set_invalid_state');
   const setNumber = state.sets.length + 1;
+  state.currentSetIneligiblePlayerIds = [];
   if (setNumber > 5) throw new Error('match_already_decided');
   state.sets.push({
     setNumber,
@@ -220,6 +221,8 @@ export function effectivePlayers(set: SetState, team: Side) {
 function substitute(state: MatchState, command: MatchCommand) {
   const set = currentSet(state), team = parseSide(command.payload), regular = regularPlayers(set, team);
   const pairs = command.type === 'SUBSTITUTION' ? [command.payload] : command.payload.replacements as Record<string, unknown>[];
+  const ineligible = new Set([...(state.currentSetIneligiblePlayerIds ?? []), ...(state.matchIneligiblePlayerIds ?? [])]);
+  if (pairs.some(pair => ineligible.has(Number(pair.playerInMatchPlayerId)))) throw new Error('player_ineligible');
   for (const pair of pairs) set.substitutions.push({ side: team, position: regular.indexOf(Number(pair.playerOutMatchPlayerId)), playerOutMatchPlayerId: Number(pair.playerOutMatchPlayerId), playerInMatchPlayerId: Number(pair.playerInMatchPlayerId) });
   set.lastSportingEvent = command.type;
   set.lastConsequences = [{ kind: 'SUBSTITUTION', side: team, text: `Sustitucion ${team}` }];
@@ -314,6 +317,12 @@ function sanction(state: MatchState, payload: Record<string, unknown>, legacyAut
   if (!['MisconductWarning', 'MisconductPenalty', 'Expulsion', 'Disqualification', 'ImproperRequest', 'DelayWarning', 'DelayPenalty'].includes(type)) throw new Error('sanction_type_invalid');
   if (type === 'MisconductPenalty' || type === 'DelayPenalty') point(state, side === 'HOME' ? 'AWAY' : 'HOME', legacyAutomatic);
   const set = currentSet(state);
+  const subjectType = String(payload.subjectType) as 'Player' | 'Staff' | 'Team';
+  const playerId = subjectType === 'Player' ? Number(payload.matchPlayerId) : undefined;
+  state.disciplinaryEvents ??= [];
+  state.disciplinaryEvents.push({ eventUuid: String(payload.eventUuid ?? `sanction-${state.disciplinaryEvents.length + 1}`), type, side, setNumber: set.setNumber, subjectType, matchPlayerId: playerId, matchTeamStaffId: subjectType === 'Staff' ? Number(payload.matchTeamStaffId) : undefined, awardsPoint: type === 'MisconductPenalty' || type === 'DelayPenalty', awardedPointSide: type === 'MisconductPenalty' || type === 'DelayPenalty' ? (side === 'HOME' ? 'AWAY' : 'HOME') : undefined });
+  if (playerId && type === 'Expulsion') state.currentSetIneligiblePlayerIds = [...new Set([...(state.currentSetIneligiblePlayerIds ?? []), playerId])];
+  if (playerId && type === 'Disqualification') state.matchIneligiblePlayerIds = [...new Set([...(state.matchIneligiblePlayerIds ?? []), playerId])];
   set.lastSportingEvent = 'SANCTION';
   set.lastConsequences = [{ kind: type === 'MisconductPenalty' || type === 'DelayPenalty' ? 'POINT' : 'REMINDER', side, text: `Sanción ${type}` }];
 }

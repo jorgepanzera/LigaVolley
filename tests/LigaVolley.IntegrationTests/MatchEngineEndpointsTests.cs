@@ -61,7 +61,40 @@ public sealed partial class MatchEngineEndpointsTests(LigaVolleyApiFactory facto
     public async Task Point_uuid_is_idempotent_and_openapi_contains_all_engine_routes()
     {
         var x=await Open();await Prepare(x.MatchId);await Lineup(x.MatchId,1,MatchSide.Home,x.Home.Take(6).ToArray());await Lineup(x.MatchId,1,MatchSide.Away,x.Away.Take(6).ToArray());await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/start",new StartSetRequest(MatchSide.Home));var uuid=Guid.NewGuid();var responses=await Task.WhenAll(factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/sets/1/points",new AddPointRequest(uuid,MatchSide.Home),Json),factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/sets/1/points",new AddPointRequest(uuid,MatchSide.Home),Json));Assert.All(responses,r=>Assert.Equal(HttpStatusCode.OK,r.StatusCode));var points=await Task.WhenAll(responses.Select(r=>r.Content.ReadFromJsonAsync<MatchEngineCommandResult>(Json)));Assert.All(points,p=>Assert.Equal((short)1,p!.State.HomePoints));Assert.Single(points.Where(p=>!p!.AlreadyApplied));Assert.Single(points.Where(p=>p!.AlreadyApplied));
-        using var doc=JsonDocument.Parse(await factory.Client.GetStringAsync("/swagger/v1/swagger.json"));var paths=doc.RootElement.GetProperty("paths");foreach(var path in new[]{"/api/scorer/matches/{matchId}/sets/prepare","/api/scorer/matches/{matchId}/sets/{setNumber}/lineups/{side}","/api/scorer/matches/{matchId}/sets/{setNumber}/start","/api/scorer/matches/{matchId}/sets/{setNumber}/points","/api/scorer/matches/{matchId}/sets/{setNumber}/points/correct-last","/api/scorer/matches/{matchId}/sets/{setNumber}/substitutions","/api/scorer/matches/{matchId}/sets/{setNumber}/libero/enter","/api/scorer/matches/{matchId}/sets/{setNumber}/libero/exit","/api/scorer/matches/{matchId}/sets/{setNumber}/timeouts","/api/scorer/matches/{matchId}/close"})Assert.True(paths.TryGetProperty(path,out _),path);
+        using var doc=JsonDocument.Parse(await factory.Client.GetStringAsync("/swagger/v1/swagger.json"));var paths=doc.RootElement.GetProperty("paths");foreach(var path in new[]{"/api/scorer/matches/{matchId}/sets/prepare","/api/scorer/matches/{matchId}/sets/{setNumber}/lineups/{side}","/api/scorer/matches/{matchId}/sets/{setNumber}/start","/api/scorer/matches/{matchId}/sets/{setNumber}/points","/api/scorer/matches/{matchId}/sets/{setNumber}/points/correct-last","/api/scorer/matches/{matchId}/sets/{setNumber}/substitutions","/api/scorer/matches/{matchId}/sets/{setNumber}/libero/enter","/api/scorer/matches/{matchId}/sets/{setNumber}/libero/exit","/api/scorer/matches/{matchId}/sets/{setNumber}/timeouts","/api/scorer/matches/{matchId}/sets/{setNumber}/sanctions","/api/scorer/matches/{matchId}/close"})Assert.True(paths.TryGetProperty(path,out _),path);
+    }
+
+    [Theory]
+    [InlineData(SanctionType.MisconductWarning, false)]
+    [InlineData(SanctionType.MisconductPenalty, true)]
+    [InlineData(SanctionType.Expulsion, false)]
+    [InlineData(SanctionType.Disqualification, false)]
+    [InlineData(SanctionType.ImproperRequest, false)]
+    [InlineData(SanctionType.DelayWarning, false)]
+    [InlineData(SanctionType.DelayPenalty, true)]
+    public async Task Sanction_directly_projects_the_canonical_history(SanctionType type, bool awardsPoint)
+    {
+        var x = await Open(); await Prepare(x.MatchId); await Lineup(x.MatchId, 1, MatchSide.Home, x.Home.Take(6).ToArray()); await Lineup(x.MatchId, 1, MatchSide.Away, x.Away.Take(6).ToArray()); await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/start", new StartSetRequest(MatchSide.Home));
+        var uuid = Guid.NewGuid(); var result = await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/sanctions", new RecordSanctionRequest(uuid, MatchSide.Home, type, SanctionSubjectType.Player, x.Home[0], null));
+        Assert.Equal((short)(awardsPoint ? 1 : 0), result.State.AwayPoints);
+        var sheet = (await factory.Client.GetFromJsonAsync<MatchSheetSnapshotDto>($"/api/scorer/matches/{x.MatchId}/sheet", Json))!;
+        var sanction = Assert.Single(sheet.OperationalState.DisciplinaryEvents!); Assert.Equal(uuid, sanction.EventUuid); Assert.Equal(type.ToString(), sanction.Type); Assert.Equal(x.Home[0], sanction.MatchPlayerId); Assert.Equal(awardsPoint, sanction.AwardsPoint);
+        if (type == SanctionType.Expulsion) Assert.Contains(x.Home[0], sheet.OperationalState.CurrentSetIneligiblePlayerIds!);
+        if (type == SanctionType.Disqualification) Assert.Contains(x.Home[0], sheet.OperationalState.MatchIneligiblePlayerIds!);
+        await using var scope = factory.Services.CreateAsyncScope(); var db = scope.ServiceProvider.GetRequiredService<LigaVolleyDbContext>(); Assert.Equal(0, await db.MatchEvents.CountAsync(e => e.MatchSheet.MatchId == x.MatchId && e.EventType == MatchEventType.Point));
+    }
+
+    [Fact]
+    public async Task Sanction_uuid_conflicts_and_takeover_preserves_disqualification()
+    {
+        var x = await Open(); var sheet = (await factory.Client.GetFromJsonAsync<MatchSheetSnapshotDto>($"/api/scorer/matches/{x.MatchId}/sheet", Json))!;
+        var events = new List<(Guid Id,long Sequence,ScorerSyncEventType Type,object Payload)> { (Guid.NewGuid(), 1, ScorerSyncEventType.PrepareSet, new { }), (Guid.NewGuid(), 2, ScorerSyncEventType.SetLineup, new { setNumber=1, side=MatchSide.Home, p1MatchPlayerId=x.Home[0], p2MatchPlayerId=x.Home[1], p3MatchPlayerId=x.Home[2], p4MatchPlayerId=x.Home[3], p5MatchPlayerId=x.Home[4], p6MatchPlayerId=x.Home[5] }), (Guid.NewGuid(), 3, ScorerSyncEventType.SetLineup, new { setNumber=1, side=MatchSide.Away, p1MatchPlayerId=x.Away[0], p2MatchPlayerId=x.Away[1], p3MatchPlayerId=x.Away[2], p4MatchPlayerId=x.Away[3], p5MatchPlayerId=x.Away[4], p6MatchPlayerId=x.Away[5] }), (Guid.NewGuid(), 4, ScorerSyncEventType.StartSet, new { setNumber=1, initialServingSide=MatchSide.Home }) };
+        var ready = await Post<SyncMatchSheetResponse>($"/api/scorer/matches/{x.MatchId}/sync", Sync(sheet, events)); var sanctionId = Guid.NewGuid();
+        var sanction = Sync(ready.Snapshot, [(sanctionId, 5L, ScorerSyncEventType.Sanction, new { setNumber=1, side=MatchSide.Home, type=SanctionType.Disqualification, subjectType=SanctionSubjectType.Player, matchPlayerId=x.Home[0] })]);
+        var accepted = await Post<SyncMatchSheetResponse>($"/api/scorer/matches/{x.MatchId}/sync", sanction); Assert.Equal(ScorerSyncResultStatus.Applied, accepted.Results.Single().Status);
+        var retry = await Post<SyncMatchSheetResponse>($"/api/scorer/matches/{x.MatchId}/sync", sanction); Assert.Equal(ScorerSyncResultStatus.AlreadyAccepted, retry.Results.Single().Status);
+        var conflict = await factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/sync", Sync(accepted.Snapshot, [(sanctionId, 5L, ScorerSyncEventType.Sanction, new { setNumber=1, side=MatchSide.Home, type=SanctionType.Expulsion, subjectType=SanctionSubjectType.Player, matchPlayerId=x.Home[0] })]), Json); Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
+        var takeover = await Post<TakeOverMatchSheetResponse>($"/api/scorer/matches/{x.MatchId}/take-over", new TakeOverMatchSheetRequest(accepted.Snapshot.Sheet.SheetUuid, accepted.Snapshot.Session.SessionUuid, "sanction-device-b", Guid.NewGuid())); Assert.Contains(x.Home[0], takeover.Snapshot.OperationalState.MatchIneligiblePlayerIds!);
     }
 
     [Fact]

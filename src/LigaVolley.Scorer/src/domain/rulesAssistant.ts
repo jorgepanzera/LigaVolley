@@ -91,6 +91,8 @@ export function evaluateCommand(state: MatchState, command: MatchCommand): RuleE
       hard('lineup_player_wrong_team');
     if (ids.some((x) => state.declaredLiberoMatchPlayerIds[side].includes(x)))
       hard('lineup_libero_not_allowed');
+    const ineligible = new Set([...(state.currentSetIneligiblePlayerIds ?? []), ...(state.matchIneligiblePlayerIds ?? [])]);
+    if (ids.some(id => ineligible.has(id))) hard('sanctioned_player_ineligible');
     if (
       state.trackLiberoReplacements !== false &&
       p.liberoMatchPlayerId != null &&
@@ -119,6 +121,10 @@ export function evaluateCommand(state: MatchState, command: MatchCommand): RuleE
     if (!['HOME', 'AWAY'].includes(side)) hard('invalid_side');
     if (!['MisconductWarning', 'MisconductPenalty', 'Expulsion', 'Disqualification', 'ImproperRequest', 'DelayWarning', 'DelayPenalty'].includes(String(p.type))) hard('sanction_type_invalid');
     if (!['Player', 'Staff', 'Team'].includes(String(p.subjectType))) hard('sanction_subject_invalid');
+    if (String(p.subjectType) === 'Player') {
+      const id = Number(p.matchPlayerId);
+      if (!Number.isInteger(id) || (state.matchPlayerIds !== undefined && !state.matchPlayerIds[side].includes(id))) hard('sanction_subject_invalid');
+    }
     return result();
   }
   if (set.status !== 'IN_PROGRESS') hard('match_set_invalid_state');
@@ -131,8 +137,13 @@ export function evaluateCommand(state: MatchState, command: MatchCommand): RuleE
     Number.isInteger(id) &&
     id > 0 &&
     (!state.matchPlayerIds || state.matchPlayerIds[side].includes(id));
+  const ineligible = new Set([...(state.currentSetIneligiblePlayerIds ?? []), ...(state.matchIneligiblePlayerIds ?? [])]);
   if (regular.length !== 6 || new Set(regular).size !== 6 || new Set(effective).size !== 6) {
     hard('invalid_court_state');
+    return result();
+  }
+  if (command.type !== 'SUBSTITUTION' && command.type !== 'SUBSTITUTION_REQUEST' && effective.some(id => ineligible.has(id))) {
+    hard('sanctioned_player_must_leave_court');
     return result();
   }
   switch (command.type) {
@@ -166,6 +177,7 @@ export function evaluateCommand(state: MatchState, command: MatchCommand): RuleE
           hard('invalid_substitution');
           continue;
         }
+        if (ineligible.has(into)) hard('sanctioned_player_ineligible');
         final[position] = into;
         const starter = set.lineups[side][position],
           history = substitutions.filter((x) => x.position === position);
@@ -252,6 +264,10 @@ export function evaluateCommand(state: MatchState, command: MatchCommand): RuleE
         position = effective.indexOf(replaced);
       if (!liberos.includes(libero)) {
         hard('libero_not_declared');
+        break;
+      }
+      if (ineligible.has(libero)) {
+        hard('sanctioned_player_ineligible');
         break;
       }
       if (position < 0 || !belongs(replaced)) {

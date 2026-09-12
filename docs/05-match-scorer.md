@@ -42,6 +42,8 @@ Sync usa UUID idempotente y secuencia local contigua por sesión. La reconciliac
 
 `MATCH_LIBERO`, las confirmaciones, las coberturas observadas y las sanciones disciplinarias se conservan en `GET /sheet`, IndexedDB, replay, sync y takeover; nunca se recalculan desde el roster. Una sanción identifica lado y sujeto (jugador, staff o equipo); las penalidades de conducta o demora otorgan exactamente un punto y saque al rival sin crear un evento `POINT` adicional. Actas y eventos v0/v1 mantienen su semántica histórica durante replay.
 
+Las sanciones disponibles son `MisconductWarning`, `MisconductPenalty`, `Expulsion`, `Disqualification`, `ImproperRequest`, `DelayWarning` y `DelayPenalty`. La decisión es humana desde Scorer y se registra como un único evento `SANCTION`; cancelar el diálogo no consume UUID ni secuencia. El snapshot canónico proyecta su historial y las inelegibilidades desde esos eventos: una expulsión de jugador impide su ingreso y continuidad durante ese set, y una descalificación lo impide durante el resto del partido. Una penalidad otorga el punto y saque rival dentro del mismo evento. `CorrectLastPoint` sólo corrige un `POINT` activo; nunca elimina una sanción. La corrección histórica general sigue pendiente.
+
 ## Interfaces y límites
 
 La consola mantiene HOME a la izquierda y AWAY a la derecha, con marcador y cancha efectiva P1..P6 como centro. Puntos son acciones primarias; drawers y modals agrupan decisiones secundarias. Los estados de apertura, READY, set en curso, fin de set, partido decidido y CLOSED son explícitos.

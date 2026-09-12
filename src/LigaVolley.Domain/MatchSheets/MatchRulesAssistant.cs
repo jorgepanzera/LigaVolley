@@ -5,7 +5,8 @@ public sealed record RuleSubstitution(int Position, int PlayerOutMatchPlayerId, 
 public sealed record RuleReplacement(int Position, int LiberoMatchPlayerId, int ReplacedMatchPlayerId);
 public sealed record RuleTeamState(int[] Players, int[] Liberos, int[] Lineup,
     IReadOnlyList<RuleSubstitution> Substitutions, IReadOnlyList<RuleReplacement> ActiveLiberos,
-    int RotationOffset, int Timeouts, int? LastLiberoRally = null, int? LastLiberoRegular = null);
+    int RotationOffset, int Timeouts, int? LastLiberoRally = null, int? LastLiberoRegular = null,
+    IReadOnlyList<int>? IneligiblePlayers = null);
 public sealed record RuleMatchState(bool Closed, string SetStatus, string? ServingSide, int RallyCount,
     bool TrackSubstitutions, bool TrackLiberoReplacements, RuleTeamState Home, RuleTeamState Away);
 public sealed record RulePair(int PlayerOutMatchPlayerId, int PlayerInMatchPlayerId);
@@ -33,6 +34,7 @@ public static class MatchRulesAssistant
         if (command.Side is not "HOME" and not "AWAY") Hard("invalid_side");
         if (hard.Count > 0) return Result();
         var team = command.Side == "HOME" ? state.Home : state.Away;
+        var ineligible = team.IneligiblePlayers ?? [];
         var regular = Regular(team);
         var effective = regular.ToArray();
         foreach (var l in team.ActiveLiberos)
@@ -42,6 +44,8 @@ public static class MatchRulesAssistant
         }
         if (regular.Length != 6 || regular.Distinct().Count() != 6 || effective.Distinct().Count() != 6)
             Hard("invalid_court_state");
+        if (command.Type is not "SUBSTITUTION" and not "SUBSTITUTION_REQUEST" && effective.Any(ineligible.Contains))
+            Hard("sanctioned_player_must_leave_court");
         if (hard.Count > 0) return Result();
         switch (command.Type)
         {
@@ -60,6 +64,7 @@ public static class MatchRulesAssistant
                     if (!team.Players.Contains(pair.PlayerOutMatchPlayerId) || !team.Players.Contains(pair.PlayerInMatchPlayerId) ||
                         position < 0 || pair.PlayerOutMatchPlayerId == pair.PlayerInMatchPlayerId)
                     { Hard("invalid_substitution"); continue; }
+                    if (ineligible.Contains(pair.PlayerInMatchPlayerId)) { Hard("sanctioned_player_ineligible"); continue; }
                     final[position] = pair.PlayerInMatchPlayerId;
                     var starter = team.Lineup[position];
                     var history = team.Substitutions.Where(x => x.Position == position).ToArray();
@@ -114,6 +119,7 @@ public static class MatchRulesAssistant
                 var libero = command.LiberoMatchPlayerId ?? 0;
                 var replaced = command.ReplacedMatchPlayerId ?? 0;
                 if (!team.Liberos.Contains(libero)) { Hard("libero_not_declared"); break; }
+                if (ineligible.Contains(libero)) { Hard("sanctioned_player_ineligible"); break; }
                 var position = Array.IndexOf(effective, replaced);
                 if (position < 0 || !team.Players.Contains(replaced)) { Hard("libero_invalid_replaced_player"); break; }
                 if (effective.Contains(libero)) { Hard("libero_already_on_court"); break; }
