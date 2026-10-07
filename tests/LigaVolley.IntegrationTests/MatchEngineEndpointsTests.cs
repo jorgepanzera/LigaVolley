@@ -49,6 +49,66 @@ public sealed partial class MatchEngineEndpointsTests(LigaVolleyApiFactory facto
     }
 
     [Fact]
+    public async Task Correct_last_point_replays_and_persists_the_complete_prior_sporting_state()
+    {
+        var x = await Open(); await Prepare(x.MatchId); await Lineup(x.MatchId, 1, MatchSide.Home, x.Home.Take(6).ToArray()); await Lineup(x.MatchId, 1, MatchSide.Away, x.Away.Take(6).ToArray());
+        await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/start", new StartSetRequest(MatchSide.Home));
+        await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/substitutions", new AddSubstitutionRequest(Guid.NewGuid(), x.Home[0], x.Home[6]));
+        await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/libero/enter", new LiberoEnterRequest(Guid.NewGuid(), x.Home[7], x.Home[4], ["libero_service_not_allowed"]));
+        await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/timeouts", new AddTimeoutRequest(Guid.NewGuid(), MatchSide.Home));
+        await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/sanctions", new RecordSanctionRequest(Guid.NewGuid(), MatchSide.Home, SanctionType.Expulsion, SanctionSubjectType.Player, x.Home[1], null));
+        await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/sanctions", new RecordSanctionRequest(Guid.NewGuid(), MatchSide.Home, SanctionType.MisconductPenalty, SanctionSubjectType.Player, x.Home[2], null));
+        await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/sanctions", new RecordSanctionRequest(Guid.NewGuid(), MatchSide.Home, SanctionType.Disqualification, SanctionSubjectType.Player, x.Home[3], null));
+        await Point(x.MatchId, 1, MatchSide.Away);
+
+        var corrected = await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/points/correct-last", new CorrectLastPointRequest(Guid.NewGuid()));
+        Assert.Equal((short)0, corrected.State.HomePoints); Assert.Equal((short)1, corrected.State.AwayPoints); Assert.Equal(MatchSide.Away, corrected.State.CurrentServingSide);
+        Assert.Equal((byte)1, corrected.State.HomeTimeouts); Assert.Contains(corrected.State.HomeCourtState, p => p.EffectiveMatchPlayerId == x.Home[6]); Assert.Contains(corrected.State.HomeCourtState, p => p.EffectiveMatchPlayerId == x.Home[7] && p.IsLiberoReplacement);
+
+        var reloaded = (await factory.Client.GetFromJsonAsync<MatchSheetSnapshotDto>($"/api/scorer/matches/{x.MatchId}/sheet", Json))!;
+        var set = Assert.Single(reloaded.OperationalState.Sets!); Assert.Equal((short)0, set.HomePoints); Assert.Equal((short)1, set.AwayPoints); Assert.Equal((byte)1, set.HomeTimeouts);
+        Assert.Single(set.Substitutions!); Assert.Contains(set.LiberoReplacements!, p => p.Active && p.LiberoMatchPlayerId == x.Home[7]); Assert.Contains(x.Home[1], reloaded.OperationalState.CurrentSetIneligiblePlayerIds!);
+        Assert.Contains(x.Home[3], reloaded.OperationalState.MatchIneligiblePlayerIds!); Assert.Contains(reloaded.OperationalState.DisciplinaryEvents!, p => p.Type == SanctionType.MisconductPenalty.ToString() && p.AwardsPoint);
+    }
+    [Fact]
+    public async Task Rejected_engine_commands_leave_persisted_events_and_projections_unchanged()
+    {
+        var x = await Open(); await Prepare(x.MatchId); await Lineup(x.MatchId, 1, MatchSide.Home, x.Home.Take(6).ToArray()); await Lineup(x.MatchId, 1, MatchSide.Away, x.Away.Take(6).ToArray());
+        await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/start", new StartSetRequest(MatchSide.Home));
+        await Point(x.MatchId, 1, MatchSide.Home);
+
+        await using var beforeScope = factory.Services.CreateAsyncScope();
+        var beforeDb = beforeScope.ServiceProvider.GetRequiredService<LigaVolleyDbContext>();
+        var eventCount = await beforeDb.MatchEvents.CountAsync(e => e.MatchSheet.MatchId == x.MatchId);
+        var substitutionCount = await beforeDb.Set<MatchSubstitution>().CountAsync(item => item.MatchSet.MatchId == x.MatchId);
+        var liberoCount = await beforeDb.Set<MatchLiberoReplacement>().CountAsync(item => item.MatchSet.MatchId == x.MatchId);
+
+        var invalidSubstitution = await factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/sets/1/substitution-requests",
+            new SubstitutionRequest(Guid.NewGuid(), MatchSide.Home, [new(x.Home[0], x.Home[6]), new(x.Home[1], x.Away[6])]), Json);
+        Assert.Equal(HttpStatusCode.Conflict, invalidSubstitution.StatusCode);
+        var invalidLibero = await factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/sets/1/libero/enter",
+            new LiberoEnterRequest(Guid.NewGuid(), x.Home[6], x.Home[0]), Json);
+        Assert.Equal(HttpStatusCode.BadRequest, invalidLibero.StatusCode);
+
+        await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/timeouts", new AddTimeoutRequest(Guid.NewGuid(), MatchSide.Home));
+        var beforeRejectedCorrection = (await factory.Client.GetFromJsonAsync<MatchSheetSnapshotDto>($"/api/scorer/matches/{x.MatchId}/sheet", Json))!;
+        var rejectedCorrection = await factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/sets/1/points/correct-last", new CorrectLastPointRequest(Guid.NewGuid()), Json);
+        Assert.Equal(HttpStatusCode.Conflict, rejectedCorrection.StatusCode);
+
+        await using var afterScope = factory.Services.CreateAsyncScope();
+        var afterDb = afterScope.ServiceProvider.GetRequiredService<LigaVolleyDbContext>();
+        Assert.Equal(eventCount + 1, await afterDb.MatchEvents.CountAsync(e => e.MatchSheet.MatchId == x.MatchId));
+        Assert.Equal(substitutionCount, await afterDb.Set<MatchSubstitution>().CountAsync(item => item.MatchSet.MatchId == x.MatchId));
+        Assert.Equal(liberoCount, await afterDb.Set<MatchLiberoReplacement>().CountAsync(item => item.MatchSet.MatchId == x.MatchId));
+        var afterRejectedCorrection = (await factory.Client.GetFromJsonAsync<MatchSheetSnapshotDto>($"/api/scorer/matches/{x.MatchId}/sheet", Json))!;
+        var expected = Assert.Single(beforeRejectedCorrection.OperationalState.Sets!);
+        var actual = Assert.Single(afterRejectedCorrection.OperationalState.Sets!);
+        Assert.Equal(expected.HomePoints, actual.HomePoints); Assert.Equal(expected.AwayPoints, actual.AwayPoints);
+        Assert.Equal(expected.ServingSide, actual.ServingSide); Assert.Equal(expected.HomeRotationOffset, actual.HomeRotationOffset);
+        Assert.Equal(expected.AwayRotationOffset, actual.AwayRotationOffset); Assert.Equal(expected.HomeTimeouts, actual.HomeTimeouts);
+    }
+
+    [Fact]
     public async Task Lineup_validation_start_guard_and_prepare_concurrency_are_enforced()
     {
         var x=await Open();var prepares=await Task.WhenAll(factory.Client.PostAsync($"/api/scorer/matches/{x.MatchId}/sets/prepare",null),factory.Client.PostAsync($"/api/scorer/matches/{x.MatchId}/sets/prepare",null));Assert.All(prepares,r=>Assert.Contains(r.StatusCode,new[]{HttpStatusCode.Created,HttpStatusCode.OK}));

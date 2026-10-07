@@ -73,7 +73,12 @@ public sealed partial class MatchEngineService(IMatchSheetRepository sheets, IUn
         Mutable(sheet); if (sheet.Sets.Any(x => x.SetNumber > setNumber)) throw Conflict("match_set_invalid_state", "A later set has already been prepared.");
         var sports = sheet.Events.Where(x => x.MatchSetId == set.MatchSetId && x.Status == MatchEventStatus.Active && x.EventType is MatchEventType.Point or MatchEventType.SubstitutionRequest or MatchEventType.Substitution or MatchEventType.LiberoEnter or MatchEventType.LiberoExit or MatchEventType.Timeout or MatchEventType.MisconductWarning or MatchEventType.MisconductPenalty or MatchEventType.Expulsion or MatchEventType.Disqualification or MatchEventType.ImproperRequest or MatchEventType.DelayWarning or MatchEventType.DelayPenalty).OrderByDescending(x => x.SequenceNumber).FirstOrDefault();
         if (sports is null) throw Conflict("no_point_to_correct", "There is no active point to correct."); if (sports.EventType != MatchEventType.Point) throw Conflict("point_not_last_effective_event", "The last effective sporting event is not a point.");
-        var now = DateTimeOffset.UtcNow; sports.Cancel(); sheet.AddEvent(request.CorrectionUuid, MatchEventType.PointCorrection, set, null, null, now, sports); var rebuilt = MatchSetRebuilder.Rebuild(set.InitialServingSide!.Value, sheet.Events.Where(x => x.MatchSetId == set.MatchSetId)); set.Rebuild(rebuilt.Home, rebuilt.Away, rebuilt.Serving, rebuilt.HomeOffset, rebuilt.AwayOffset, now); if (legacyAutomatic) foreach (var active in set.LiberoReplacements.Where(x => !x.ExitedAt.HasValue && !sheet.Events.Any(e => e.EventUuid == x.ReplacementUuid && e.EventType == MatchEventType.LiberoEnter))) active.Exit(now); if (legacyAutomatic) ReconcileAutomaticLiberos(sheet, set, now); sheet.RecalculateSets(); await unit.SaveChangesAsync(ct); return Result(false, sheet, set);
+        var now = DateTimeOffset.UtcNow;
+        sports.Cancel();
+        sheet.AddEvent(request.CorrectionUuid, MatchEventType.PointCorrection, set, null, null, now, sports);
+        ProjectReplayedSet(sheet, set, now);
+        if (legacyAutomatic) ReconcileAutomaticLiberos(sheet, set, now);
+        sheet.RecalculateSets(); await unit.SaveChangesAsync(ct); return Result(false, sheet, set);
     }, ct);
 
     public async Task<CloseMatchResult> CloseAsync(int matchId, CloseMatchRequest request, CancellationToken ct)
@@ -94,6 +99,62 @@ public sealed partial class MatchEngineService(IMatchSheetRepository sheets, IUn
     private static IReadOnlyList<CourtPlayerState> Court(MatchSet set, MatchTeam team) { var lineup = set.Lineups.SingleOrDefault(x => x.MatchTeamId == team.MatchTeamId); if (lineup is null) return []; return MatchCourtStateCalculator.Calculate(lineup, team.Side == MatchSide.Home ? set.HomeRotationOffset : set.AwayRotationOffset, set.Substitutions.Where(x => x.MatchTeamId == team.MatchTeamId), set.LiberoReplacements.Where(x => x.MatchTeamId == team.MatchTeamId)); }
     private static CourtPositionDto ToDto(CourtPlayerState x) => new(x.LogicalLineupPosition, x.PhysicalPosition, x.EffectiveMatchPlayerId, x.IsLiberoReplacement);
     private static int RegularServer(MatchSet set, MatchTeam team) { var lineup = set.Lineups.Single(x => x.MatchTeamId == team.MatchTeamId); var offset = team.Side == MatchSide.Home ? set.HomeRotationOffset : set.AwayRotationOffset; return MatchCourtStateCalculator.Server(MatchCourtStateCalculator.Calculate(lineup, offset, set.Substitutions.Where(x => x.MatchTeamId == team.MatchTeamId), [])); }
+    // CorrectLastPoint is the sole productive replay consumer for now. Its caller selects the active history.
+    private static void ProjectReplayedSet(MatchSheet sheet, MatchSet set, DateTimeOffset now)
+    {
+        var home = Team(sheet, MatchSide.Home); var away = Team(sheet, MatchSide.Away);
+        var effective = sheet.Events.Where(x => x.MatchSetId == set.MatchSetId && x.Status == MatchEventStatus.Active && (x.EventType is MatchEventType.Point or MatchEventType.SubstitutionRequest or MatchEventType.Substitution or MatchEventType.LiberoEnter or MatchEventType.LiberoExit or MatchEventType.Timeout or MatchEventType.MisconductWarning or MatchEventType.MisconductPenalty or MatchEventType.Expulsion or MatchEventType.Disqualification or MatchEventType.ImproperRequest or MatchEventType.DelayWarning or MatchEventType.DelayPenalty)).OrderBy(x => x.SequenceNumber).ToArray();
+        var replayEvents = effective.Select(x => { if (!SetReplayEventReader.TryRead(x, out var replay)) throw new DomainValidationException($"Sporting event '{x.EventType}' cannot be replayed."); return replay!; }).ToArray();
+        var priorPlayers = sheet.Events.Where(x => x.Status == MatchEventStatus.Active && x.MatchSetId != set.MatchSetId && x.EventType == MatchEventType.Disqualification && x.MatchPlayerId.HasValue).Select(x => x.MatchPlayerId!.Value).Distinct().ToArray();
+        var priorStaff = sheet.Events.Where(x => x.Status == MatchEventStatus.Active && x.MatchSetId != set.MatchSetId && x.EventType == MatchEventType.Disqualification && x.MatchTeamStaffId.HasValue).Select(x => x.MatchTeamStaffId!.Value).Distinct().ToArray();
+        var replay = SetReplayEngine.Replay(new(set.SetNumber, set.InitialServingSide!.Value, sheet.RulesSnapshot, sheet.TrackSubstitutions, sheet.TrackLiberoReplacements, ReplayTeam(home, set), ReplayTeam(away, set), priorPlayers, priorStaff), replayEvents);
+        set.Rebuild(replay.HomePoints, replay.AwayPoints, replay.ServingSide, replay.HomeRotationOffset, replay.AwayRotationOffset, now);
+        // A POINT correction does not invalidate earlier dependent projections. They stay
+        // bound to their immutable sporting-event UUIDs while the replay restores the
+        // score, service and rotation derived from the effective history.
+    }
+
+    private static SetReplayTeamBase ReplayTeam(MatchTeam team, MatchSet set) => new(team.Players.Select(x => x.MatchPlayerId).ToArray(), team.Liberos.Select(x => x.MatchPlayerId).ToArray(), set.Lineups.Single(x => x.MatchTeamId == team.MatchTeamId).Positions.OrderBy(x => x.Position).Select(x => x.MatchPlayerId).ToArray());
+
+    // MATCH_EVENT remains the authoritative audit trail; these dependent projections are rematerialized from it.
+    private static void RebuildSetDetails(MatchSet set, MatchTeam home, MatchTeam away, IReadOnlyList<MatchEvent> events)
+    {
+        set.Substitutions.Clear(); set.Timeouts.Clear(); set.LiberoReplacements.Clear();
+        var teams = new Dictionary<MatchSide, MatchTeam> { [MatchSide.Home] = home, [MatchSide.Away] = away };
+        var regular = teams.ToDictionary(x => x.Key, x => set.Lineups.Single(l => l.MatchTeamId == x.Value.MatchTeamId).Positions.OrderBy(p => p.Position).Select(p => p.MatchPlayerId).ToList());
+        var activeLiberos = new Dictionary<MatchSide, MatchLiberoReplacement?> { [MatchSide.Home] = null, [MatchSide.Away] = null };
+        foreach (var source in events)
+        {
+            if (!SetReplayEventReader.TryRead(source, out var replay) || replay is null) continue;
+            switch (replay)
+            {
+                case ReplaySubstitution substitution:
+                    var substitutionTeam = teams[substitution.Side];
+                    foreach (var pair in substitution.Replacements)
+                    {
+                        var position = regular[substitution.Side].IndexOf(pair.PlayerOutMatchPlayerId); if (position < 0) continue;
+                        regular[substitution.Side][position] = pair.PlayerInMatchPlayerId;
+                        var item = new MatchSubstitution(Guid.NewGuid(), set, substitutionTeam, substitutionTeam.Players.Single(x => x.MatchPlayerId == pair.PlayerOutMatchPlayerId), substitutionTeam.Players.Single(x => x.MatchPlayerId == pair.PlayerInMatchPlayerId), (LineupPosition)(position + 1), source.OccurredAt);
+                        item.BindRequest(source.EventUuid); set.Substitutions.Add(item);
+                    }
+                    break;
+                case ReplayTimeout timeout:
+                    var timeoutTeam = teams[timeout.Side]; set.Timeouts.Add(new MatchTimeout(source.EventUuid, set, timeoutTeam, set.Timeouts.Count(x => x.MatchTeamId == timeoutTeam.MatchTeamId) + 1, source.OccurredAt));
+                    break;
+                case ReplayLiberoEnter enter:
+                    var liberoTeam = teams[enter.Side]; var liberoPosition = regular[enter.Side].IndexOf(enter.ReplacedMatchPlayerId);
+                    if (liberoPosition < 0 && activeLiberos[enter.Side]?.LiberoMatchPlayerId == enter.ReplacedMatchPlayerId) liberoPosition = (int)activeLiberos[enter.Side]!.LineupPosition - 1;
+                    if (liberoPosition < 0) break;
+                    if (activeLiberos[enter.Side] is { } previous) previous.Exit(source.OccurredAt);
+                    var replacement = new MatchLiberoReplacement(source.EventUuid, set, liberoTeam, liberoTeam.Players.Single(x => x.MatchPlayerId == enter.LiberoMatchPlayerId), liberoTeam.Players.Single(x => x.MatchPlayerId == regular[enter.Side][liberoPosition]), (LineupPosition)(liberoPosition + 1), source.OccurredAt);
+                    set.LiberoReplacements.Add(replacement); activeLiberos[enter.Side] = replacement;
+                    break;
+                case ReplayLiberoExit exit:
+                    if (activeLiberos[exit.Side] is { } active && active.LiberoMatchPlayerId == exit.LiberoMatchPlayerId) { active.Exit(source.OccurredAt); activeLiberos[exit.Side] = null; }
+                    break;
+            }
+        }
+    }
     private static void ConfigureLiberoPlan(MatchSheet sheet, MatchSet set, MatchTeam team, SetLineupRequest request, int[] lineup)
     {
         var current = set.LiberoPlans.SingleOrDefault(x => x.MatchTeamId == team.MatchTeamId);
