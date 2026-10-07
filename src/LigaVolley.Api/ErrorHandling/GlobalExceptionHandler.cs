@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LigaVolley.Api.ErrorHandling;
 
-internal sealed class GlobalExceptionHandler(IProblemDetailsService problemDetailsService) : IExceptionHandler
+internal sealed class GlobalExceptionHandler(
+    IProblemDetailsService problemDetailsService,
+    ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
@@ -18,6 +20,13 @@ internal sealed class GlobalExceptionHandler(IProblemDetailsService problemDetai
             ResourceConflictException conflict => (StatusCodes.Status409Conflict, "Resource conflict", conflict.Code),
             _ => (StatusCodes.Status500InternalServerError, "Unexpected error", "internal_error")
         };
+
+        if (status == StatusCodes.Status500InternalServerError)
+            logger.LogError(exception,
+                "Unhandled exception for {Method} {Path}. TraceId={TraceId}",
+                httpContext.Request.Method,
+                httpContext.Request.Path,
+                httpContext.TraceIdentifier);
 
         httpContext.Response.StatusCode = status;
         var extensions = exception switch

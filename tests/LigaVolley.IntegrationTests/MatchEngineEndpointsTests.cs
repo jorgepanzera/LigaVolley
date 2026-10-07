@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LigaVolley.Application.MatchSheets;
+using LigaVolley.Application.PublicQueries;
 using LigaVolley.Domain.CompetitionFormats;
 using LigaVolley.Domain.CompetitionRosters;
 using LigaVolley.Domain.Competitions;
@@ -42,12 +43,29 @@ public sealed partial class MatchEngineEndpointsTests(LigaVolleyApiFactory facto
         var third=await factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/sets/1/timeouts",new AddTimeoutRequest(Guid.NewGuid(),MatchSide.Home),Json);Assert.Equal(HttpStatusCode.Conflict,third.StatusCode);
         await WinSet(x.MatchId,1,MatchSide.Home,25);
         for(byte set=2;set<=3;set++){await Prepare(x.MatchId);await Lineup(x.MatchId,set,MatchSide.Home,x.Home.Take(6).ToArray());await Lineup(x.MatchId,set,MatchSide.Away,x.Away.Take(6).ToArray());await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/{set}/start",new StartSetRequest(set==2?MatchSide.Away:MatchSide.Home));await WinSet(x.MatchId,set,MatchSide.Home,25);}
+        var decided=(await factory.Client.GetFromJsonAsync<MatchSheetSnapshotDto>($"/api/scorer/matches/{x.MatchId}/sheet",Json))!;Assert.True(decided.OperationalState.MatchDecided);Assert.False(decided.OperationalState.Closed);Assert.Equal(MatchSheetStatus.InProgress,decided.Sheet.Status);Assert.Equal(MatchStatus.InProgress,decided.Match.Status);
         var blocked=await factory.Client.PostAsync($"/api/scorer/matches/{x.MatchId}/sets/prepare",null);Assert.Equal(HttpStatusCode.Conflict,blocked.StatusCode);
         var closeUuid=Guid.NewGuid();var closeResponses=await Task.WhenAll(factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/close",new CloseMatchRequest(closeUuid),Json),factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/close",new CloseMatchRequest(closeUuid),Json));Assert.All(closeResponses,r=>Assert.Equal(HttpStatusCode.OK,r.StatusCode));var closes=await Task.WhenAll(closeResponses.Select(r=>r.Content.ReadFromJsonAsync<CloseMatchResult>(Json)));Assert.Single(closes.Where(c=>!c!.AlreadyClosed));Assert.Single(closes.Where(c=>c!.AlreadyClosed));var closed=closes[0]!;Assert.Equal(MatchSheetStatus.Closed,closed.MatchSheetStatus);Assert.Equal(MatchStatus.Finished,closed.MatchStatus);Assert.Equal((byte)3,closed.HomeSets);
         var after=await factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/sets/3/points",new AddPointRequest(Guid.NewGuid(),MatchSide.Home),Json);Assert.Equal(HttpStatusCode.Conflict,after.StatusCode);
+        var publicMatch=(await factory.Client.GetFromJsonAsync<PublicMatchDto>($"/api/public/matches/{x.MatchId}",Json))!;Assert.Equal(MatchStatus.Finished,publicMatch.Status);Assert.NotNull(publicMatch.Result);Assert.Equal(3,publicMatch.Result!.HomeSets);Assert.Equal(0,publicMatch.Result.AwaySets);Assert.Equal([new PublicSetResultDto(1,25,0),new PublicSetResultDto(2,25,0),new PublicSetResultDto(3,25,0)],publicMatch.Result.Sets);
         await using var scope=factory.Services.CreateAsyncScope();var db=scope.ServiceProvider.GetRequiredService<LigaVolleyDbContext>();var persisted=await db.Matches.Include(m=>m.Sets).SingleAsync(m=>m.MatchId==x.MatchId);Assert.Equal(MatchStatus.Finished,persisted.Status);Assert.Equal(3,persisted.Sets.Count);Assert.Equal(1,await db.MatchEvents.CountAsync(e=>e.MatchSheet.MatchId==x.MatchId&&e.EventType==MatchEventType.MatchClosed));Assert.Equal(1,await db.MatchEvents.CountAsync(e=>e.MatchSheet.MatchId==x.MatchId&&e.Status==MatchEventStatus.Cancelled));
     }
 
+    [Fact]
+    public async Task Finished_set_requires_two_point_margin_resets_the_next_set_and_rejects_late_sporting_commands()
+    {
+        var x=await Open();await Prepare(x.MatchId);await Lineup(x.MatchId,1,MatchSide.Home,x.Home.Take(6).ToArray());await Lineup(x.MatchId,1,MatchSide.Away,x.Away.Take(6).ToArray());await Post<MatchEngineCommandResult>($"/api/scorer/matches/{x.MatchId}/sets/1/start",new StartSetRequest(MatchSide.Home));
+        await WinSet(x.MatchId,1,MatchSide.Home,24);await WinSet(x.MatchId,1,MatchSide.Away,24);
+        var atTie=await Point(x.MatchId,1,MatchSide.Home);Assert.Equal(MatchSetStatus.InProgress,atTie.State.SetStatus);Assert.Equal((short)25,atTie.State.HomePoints);Assert.Equal((short)24,atTie.State.AwayPoints);
+        var finished=await Point(x.MatchId,1,MatchSide.Home);Assert.Equal(MatchSetStatus.Finished,finished.State.SetStatus);Assert.Equal(MatchSide.Home,finished.State.WinnerSide);Assert.Equal((byte)1,finished.State.HomeSets);
+        var prematureClose=await factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/close",new CloseMatchRequest(Guid.NewGuid()),Json);Assert.Equal(HttpStatusCode.Conflict,prematureClose.StatusCode);
+        var latePoint=await factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/sets/1/points",new AddPointRequest(Guid.NewGuid(),MatchSide.Home),Json);
+        var lateTimeout=await factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/sets/1/timeouts",new AddTimeoutRequest(Guid.NewGuid(),MatchSide.Home),Json);
+        var lateCorrection=await factory.Client.PostAsJsonAsync($"/api/scorer/matches/{x.MatchId}/sets/1/points/correct-last",new CorrectLastPointRequest(Guid.NewGuid()),Json);
+        Assert.Equal(HttpStatusCode.Conflict,latePoint.StatusCode);Assert.Equal(HttpStatusCode.Conflict,lateTimeout.StatusCode);Assert.Equal(HttpStatusCode.Conflict,lateCorrection.StatusCode);
+        var next=await Prepare(x.MatchId);Assert.Equal((byte)2,next.State.SetNumber);Assert.Equal(MatchSetStatus.Ready,next.State.SetStatus);Assert.Equal((short)0,next.State.HomePoints);Assert.Equal((short)0,next.State.AwayPoints);Assert.Equal((byte)0,next.State.HomeRotationOffset);Assert.Equal((byte)0,next.State.AwayRotationOffset);Assert.Null(next.State.WinnerSide);Assert.Equal((byte)0,next.State.HomeTimeouts);Assert.Equal((byte)0,next.State.AwayTimeouts);
+        await using var scope=factory.Services.CreateAsyncScope();var db=scope.ServiceProvider.GetRequiredService<LigaVolleyDbContext>();var persisted=await db.Matches.Include(m=>m.Sets).SingleAsync(m=>m.MatchId==x.MatchId);var first=Assert.Single(persisted.Sets.Where(s=>s.SetNumber==1));Assert.Equal(MatchSetStatus.Finished,first.Status);Assert.Equal((short)26,first.HomePoints);Assert.Equal((short)24,first.AwayPoints);Assert.Equal(MatchSide.Home,first.WinnerSide);Assert.Equal(50,await db.MatchEvents.CountAsync(e=>e.MatchSheet.MatchId==x.MatchId));
+    }
     [Fact]
     public async Task Correct_last_point_replays_and_persists_the_complete_prior_sporting_state()
     {

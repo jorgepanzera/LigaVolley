@@ -128,9 +128,16 @@ public sealed partial class MatchEngineEndpointsTests
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<LigaVolleyDbContext>();
         var migrator = Microsoft.EntityFrameworkCore.Infrastructure.AccessorExtensions.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrator>(db);
-        var error = await Assert.ThrowsAsync<Microsoft.Data.SqlClient.SqlException>(() => migrator.MigrateAsync("20260905233721_ScorerRulesAssistant"));
-        Assert.Contains("archival/conversion", error.Message);
-        Assert.Contains("20260906181534_ObservedLiberoReplacements", await db.Database.GetAppliedMigrationsAsync());
-        Assert.True(await db.MatchSheets.AnyAsync(s => s.MatchId == x.MatchId));
+        try
+        {
+            var error = await Assert.ThrowsAsync<Microsoft.Data.SqlClient.SqlException>(() => migrator.MigrateAsync("20260905233721_ScorerRulesAssistant"));
+            Assert.Contains("archival/conversion", error.Message);
+            Assert.Contains("20260906181534_ObservedLiberoReplacements", await db.Database.GetAppliedMigrationsAsync());
+            Assert.True(await db.MatchSheets.AnyAsync(s => s.MatchId == x.MatchId));
+        }
+        finally
+        {
+            await migrator.MigrateAsync();
+        }
     }
 }

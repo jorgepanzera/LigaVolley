@@ -73,6 +73,26 @@ public sealed class SetReplayEngineTests
         Assert.Equal(MatchSetStatus.Finished, state.Status); Assert.Equal(MatchSide.Home, state.WinnerSide);
     }
 
+    [Fact]
+    public void Extended_and_deciding_sets_finish_only_at_the_frozen_target_with_two_point_difference()
+    {
+        var extended = Replay(Enumerable.Repeat<SetReplayEvent>(new ReplayPoint(MatchSide.Home), 25)
+            .Concat(Enumerable.Repeat<SetReplayEvent>(new ReplayPoint(MatchSide.Away), 24)).ToArray());
+        Assert.Equal(MatchSetStatus.InProgress, extended.Status);
+
+        var wonExtended = Replay(Enumerable.Repeat<SetReplayEvent>(new ReplayPoint(MatchSide.Home), 26)
+            .Concat(Enumerable.Repeat<SetReplayEvent>(new ReplayPoint(MatchSide.Away), 24)).ToArray());
+        Assert.Equal(MatchSetStatus.Finished, wonExtended.Status); Assert.Equal(MatchSide.Home, wonExtended.WinnerSide);
+
+        var decidingBase = Base() with { SetNumber = 5 };
+        var deciding = SetReplayEngine.Replay(decidingBase, Enumerable.Repeat<SetReplayEvent>(new ReplayPoint(MatchSide.Home), 15)
+            .Concat(Enumerable.Repeat<SetReplayEvent>(new ReplayPoint(MatchSide.Away), 14)).ToArray());
+        Assert.Equal(MatchSetStatus.InProgress, deciding.Status);
+        var wonDeciding = SetReplayEngine.Replay(decidingBase, Enumerable.Repeat<SetReplayEvent>(new ReplayPoint(MatchSide.Home), 16)
+            .Concat(Enumerable.Repeat<SetReplayEvent>(new ReplayPoint(MatchSide.Away), 14)).ToArray());
+        Assert.Equal(MatchSetStatus.Finished, wonDeciding.Status); Assert.Equal(MatchSide.Home, wonDeciding.WinnerSide);
+    }
+
     private static SetReplayState Replay(params SetReplayEvent[] events) => SetReplayEngine.Replay(Base(), events);
     private static SetReplayBase Base(IReadOnlyList<int>? matchIneligible = null) => new(1, MatchSide.Home, RulesSnapshot.Create(6, 2), true, true,
         new([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [9, 10], [1, 2, 3, 4, 5, 6]),

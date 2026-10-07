@@ -35,7 +35,11 @@ public sealed class LigaVolleyApiFactory : IAsyncLifetime
         catch
         {
             databaseName = $"LigaVolleyIntegration_{Guid.NewGuid():N}";
-            var developmentConnection = Environment.GetEnvironmentVariable("LIGAVOLLEY_TEST_CONNECTION_STRING");
+            var developmentConnection = Environment.GetEnvironmentVariable("LIGAVOLLEY_TEST_CONNECTION_STRING")
+                ?? new ConfigurationBuilder()
+                    .AddUserSecrets<Program>(optional: true)
+                    .Build()
+                    .GetConnectionString("LigaVolley");
             if (string.IsNullOrWhiteSpace(developmentConnection))
                 connectionString = $"Server=(localdb)\\mssqllocaldb;Database={databaseName};Trusted_Connection=True;TrustServerCertificate=True";
             else
@@ -49,7 +53,12 @@ public sealed class LigaVolleyApiFactory : IAsyncLifetime
 
         application = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.ConfigureLogging(logging => logging.ClearProviders());
+            builder.ConfigureLogging(logging =>
+            {
+                logging.ClearProviders();
+                logging.SetMinimumLevel(LogLevel.Error);
+                logging.AddConsole();
+            });
             builder.ConfigureAppConfiguration((_, configuration) =>
                 configuration.AddInMemoryCollection(new Dictionary<string, string?>
                 {
